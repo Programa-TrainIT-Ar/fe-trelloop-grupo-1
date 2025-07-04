@@ -31,9 +31,19 @@ input{
 }
 
 .loginForm{
-  display: flex;
-  position: relative;
-  left: 100px;
+   /* display: flex;
+  justify-content: end; */
+  width: 25rem;
+  /* position: relative;
+  left: 270px;  */
   margin-top: 150px;
-  padding-left: 400px;
+   /* justify-content: end; */
+  /* padding-left: 400px; */
+
+}
+
+.imagenLogIn {
+  margin-top: 150px;
+
+
 }

@@ -1,23 +1,44 @@
-import React from 'react'
-import fondoPureba from '../login/fondoPureba.jpeg'
+'use client'
+import React, { useState } from 'react'
+import "./login.css"
 const Login = () => {
+
+  const [usuario, setUsuario] = useState({
+    correo: "",
+    contrasena: ""
+  })
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setUsuario({
+      ...usuario,
+      [event.target.name]: event.target.value
+    })
+  }
+
+  function handleLogIn() {
+
+  }
   return (
     <>
 
-      <div>
-        <button>Login</button>
-      </div>
-
+     
+      
       <div className='container '>
-        <div className='row justify-content-center loginForm'>
-          <div className="col-12 col-md-6">
+   
+        <div className='row d-flex justify-content-between'>
+          <div className='col-5 d-flex imagenLogIn'>
+            <img src="https://www.freeiconspng.com/thumbs/gear-icon-png/white-gear-png-gear-icon-png-white-gear-icon-30.png"/>
+          </div>
+       
+          <div className="col-5 loginForm">
             <form >
               <div className="form-group">
                 <label>Correo electronico</label>
                 <input 
                 type="text"
                 className='form-control'
-                name="email"
+                name="correo"
+                onChange={handleChange}
                 />
               </div>
 
@@ -26,7 +47,8 @@ const Login = () => {
                 <input 
                 className='form-control'
                 type="password"
-                name='password'
+                name='contrasena'
+                onChange={handleChange}
                 />
               </div>
 
@@ -37,7 +59,10 @@ const Login = () => {
                 <label>Recordarme</label>
               </div>
               <div className='row justify-content-center mt-3'>
-                    <button className='btn btn-primary '>Iniciar Sesion</button>
+                    <button 
+                    className='btn btn-primary'
+                    onClick={handleLogIn}
+                    >Iniciar Sesion</button>
               </div>
                 
               <p className='mt-3'>No tienes una cuenta? <a href="/register">Registrate</a></p>
