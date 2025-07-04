@@ -31,11 +31,9 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-white-100">
-      <h1 className="text-3xl font-bold mb-4 bg-dark-100">📡 Flask + Next.js + DB</h1>
-
-
-      <div className="flex mb-4"> 
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 bg-white">
+      <h1 className="text-3xl font-bold mb-4">📡 Flask + Next.js + DB</h1>
+      <div className="flex mb-4">
         <input
           type="text"
           value={content}
@@ -50,7 +48,6 @@ export default function Home() {
           Send
         </button>
       </div>
-
       <div className="w-full max-w-md">
         <h2 className="text-xl font-semibold mb-2">Messages:</h2>
         <ul className="bg-white p-4 rounded shadow">
