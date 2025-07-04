@@ -3,7 +3,6 @@ import fondoPureba from '../login/fondoPureba.jpeg'
 const Login = () => {
   return (
     <>
-    <img className='col-12 col-md-6' src={fondoPureba}/>
 
       <div>
         <button>Login</button>
