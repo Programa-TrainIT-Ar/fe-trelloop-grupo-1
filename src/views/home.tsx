@@ -1,6 +1,6 @@
 "use client";
 
-export default function HomeCustom() {
+export const HomeCustom: React.FC = () =>{
 
   return (
     <section className="bg-gray-900 text-white py-16">
