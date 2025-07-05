@@ -3,6 +3,7 @@
 export default function Registro() {
     return (
         <main className="p-4">
+
             <h1 className="text-2xl font-bold mb-4">Registro de usuario</h1>
 
             <form className="container">
@@ -13,7 +14,7 @@ export default function Registro() {
                             type="text"
                             id="Nombres"
                             name="Nombres"
-                            className="mt-1 block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="mt-1 p-3 bg-[#313131] block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Escribe tus nombres"
                             required
                         />
@@ -23,7 +24,7 @@ export default function Registro() {
                         <input type="text"
                             id="Apellidos"
                             name="Apellidos"
-                            className="mt-1 block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="mt-1 p-3 bg-[#313131] block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Ecribe tus apellidos"
                             required />
 
@@ -35,7 +36,7 @@ export default function Registro() {
                         <input type="text"
                             id="Correo"
                             name="Correo"
-                            className="mt-1 block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="mt-1 p-3 bg-[#313131] block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Escribe tu correo electrónico"
                             required />
                     </div>
@@ -46,7 +47,7 @@ export default function Registro() {
                         <input type="password"
                             id="Contraseña"
                             name="Contraseña"
-                            className="mt-1 block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="mt-1 p-3 bg-[#313131] block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Escribe tu contraseña"
                             required />
                     </div>
@@ -55,7 +56,7 @@ export default function Registro() {
                         <input type="password"
                             id="Contraseña"
                             name="Contraseña"
-                            className="mt-1 block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="mt-1 p-3 bg-[#313131] block w-full border-gray rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                             placeholder="Escribe tu confirmación"
                             required />
                     </div>
