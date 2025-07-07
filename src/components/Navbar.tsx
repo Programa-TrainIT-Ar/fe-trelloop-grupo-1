@@ -3,7 +3,11 @@ import React from 'react';
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
 
-export const Navbar: React.FC = () => {
+type NavbarProps = {
+  vistaActual?: string;
+};
+
+export const Navbar: React.FC<NavbarProps> = ({ vistaActual }) => {
   return (
     <main className="bg-[#313131] text-white flex items-center justify-between px-7 py-4">
       {/* Logo */}
@@ -23,19 +27,23 @@ export const Navbar: React.FC = () => {
       </ul>
 
       <div className="flex items-center gap-4">
+        {vistaActual !== "login" && (
         <Link
           href="/login"
           className="text-[#736CFD] border border-[#736CFD] rounded-full px-6 py-2 text-sm hover:bg-[#736CFD]/10 transition"
         >
           LOGIN
         </Link>
+        )}
+        {vistaActual !== "registro" && (
         <Link
-          href="/register"
+          href="/registro"
           className="bg-[#736CFD] text-white rounded-full px-6 py-2 text-sm hover:bg-[#5b53d8] transition"
         >
           REGISTRARSE
         </Link>
-      </div>
+        )}
+      </div> 
     </main>
   );
 };

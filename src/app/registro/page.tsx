@@ -4,12 +4,15 @@
 import { useState } from "react";
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
+import { Navbar } from "@/components/Navbar";
 
 
 
-export default function Registro() {
+export default function Registro() {  
+    
     const [mostrar, setMostrar] = useState(false);
     return (
+        <>
         <main className="min-h-screen flex items-start pt-16 text-white">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
 
@@ -28,7 +31,7 @@ export default function Registro() {
                                 className="mt-1 p-3 bg-[#313131] block w-full  rounded-xl border border-stone-400 sm:text-sm"
                                 placeholder="Escribe tus nombres"
                                 required
-                            />
+                                />
                         </div>
                         <div>
                             <label htmlFor="Apellidos" className="text-sm font-medium text-white">Apellidos*</label>
@@ -100,5 +103,6 @@ export default function Registro() {
 
 
         </main >
+    </>
     );
 }
