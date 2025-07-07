@@ -13,6 +13,7 @@ export default function Registro() {
     const [mostrar, setMostrar] = useState(false);
     return (
         <>
+        <Navbar vistaActual="registro" />
         <main className="min-h-screen flex items-start pt-16 text-white">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
 
