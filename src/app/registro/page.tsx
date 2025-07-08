@@ -4,16 +4,13 @@
 import { useState } from "react";
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
-import { Navbar } from "@/components/Navbar";
-
 
 
 export default function Registro() {  
     
     const [mostrar, setMostrar] = useState(false);
     return (
-        <>
-        <Navbar vistaActual="registro" />
+        <>        
         <main className="min-h-screen flex items-start pt-16 text-white">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
 
