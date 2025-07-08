@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
+import Link from "next/link";
 
 
 
@@ -20,7 +21,7 @@ export default function Registro() {
                 <div className="flex flex-col justify-center">
                     <form className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="Nombres" className="block text-sm font-medium text-white">Nombres*</label>
+                            <label htmlFor="Nombres" className="block text-sm font-medium text-white">Nombres<span style={{color: "var(--global-color-primary-500)"}} >*</span></label>
                             <input
                                 type="text"
                                 id="Nombres"
@@ -31,7 +32,7 @@ export default function Registro() {
                             />
                         </div>
                         <div>
-                            <label htmlFor="Apellidos" className="text-sm font-medium text-white">Apellidos*</label>
+                            <label htmlFor="Apellidos" className="text-sm font-medium text-white">Apellidos<span style={{color: "var(--global-color-primary-500)"}} >*</span></label>
                             <input type="text"
                                 id="Apellidos"
                                 name="Apellidos"
@@ -42,7 +43,7 @@ export default function Registro() {
                         </div>
 
                         <div className="col-span-2">
-                            <label htmlFor="Correo" className="text-sm font-medium text-white">Correo electrónico*</label>
+                            <label htmlFor="Correo" className="text-sm font-medium text-white">Correo electrónico<span style={{color: "var(--global-color-primary-500)"}} >*</span></label>
                             <input type="email"
                                 id="Correo"
                                 name="Correo"
@@ -52,7 +53,7 @@ export default function Registro() {
                         </div>
 
                         <div>
-                            <label htmlFor="Contraseña" className="text-sm font-medium text-white">Contraseña*</label>
+                            <label htmlFor="Contraseña" className="text-sm font-medium text-white">Contraseña<span style={{color: "var(--global-color-primary-500)"}} >*</span></label>
                             <div className="relative">
                                 <input type={mostrar ? "text" : "password"}
                                     id="Contraseña"
@@ -68,7 +69,7 @@ export default function Registro() {
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="Confirmación" className="text-sm font-medium text-white">Confirmación de contraseña*</label>
+                            <label htmlFor="Confirmación" className="text-sm font-medium text-white">Confirmación de contraseña<span style={{color: "var(--global-color-primary-500)"}} >*</span></label>
                             <div className="relative">
                                 <input type={mostrar ? "text" : "password"}
                                     id="Confirmación"
@@ -85,11 +86,11 @@ export default function Registro() {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <button type="submit" className="w-full px-6 py-2 rounded-xl text-white my-4" style={{ backgroundColor: "#6a5fff" }}>Registrarme
+                            <button type="submit" className="w-full px-6 py-2 rounded-xl text-white my-4" style={{backgroundColor: "var(--global-color-primary-500)"}}>Registrarme
                             </button>
                             <div className="text-center">
-                                <p className="text-sm">Al registrarme, acepto las Condiciones del servicio, de Trainit y su Política de privacidad.</p>
-                                <p className="text-sm mt-6">¿Ya tienes cuenta? Inicia sesión</p>
+                                <p className="text-sm">Al registrarme, acepto las <Link href="/registro"  style={{color:"var(--global-color-secondary-500)"}}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro"  style={{color:"var(--global-color-secondary-500)"}}>Política de privacidad</Link>.</p>
+                                <p className="text-sm mt-6">¿Ya tienes cuenta? <Link href="/registro"  style={{color:"var(--global-color-secondary-500)"}}>Inicia sesión</Link></p>
                             </div>
                         </div>
                     </form>
