@@ -1,6 +1,6 @@
-"use client";
+import React from "react";
 
-export const HomeCustom: React.FC = () =>{
+const Home: React.FC = () => {
 
   return (
     <section className="bg-gray-900 text-white py-16">
@@ -52,3 +52,7 @@ export const HomeCustom: React.FC = () =>{
     </section>
   );
 }
+
+export default Home;
+
+
