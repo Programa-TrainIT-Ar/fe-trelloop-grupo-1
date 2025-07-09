@@ -1,6 +1,6 @@
-import { FaGamepad, FaLinkedin, FaFacebook } from 'react-icons/fa';
+import { FaDiscord, FaLinkedin, FaFacebook } from 'react-icons/fa';
 
-const Footer = () => {
+export const Footer: React.FC = () => {
   return (
     <footer className="bg-zinc-900 text-white py-10 px-6 relative z-10">
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
@@ -29,7 +29,7 @@ const Footer = () => {
         <div>
           <h3 className="font-semibold mb-2">Redes sociales</h3>
           <div className="flex gap-3 text-xl">
-            <FaGamepad />
+            <FaDiscord />
             <FaLinkedin />
             <FaFacebook />
           </div>
@@ -42,4 +42,3 @@ const Footer = () => {
   );
 };
 
-export default Footer;
