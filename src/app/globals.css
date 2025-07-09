@@ -96,9 +96,9 @@
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--global-color-neutral-900);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, sans-serif;
+  font-family: var(--font-poppins), Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
