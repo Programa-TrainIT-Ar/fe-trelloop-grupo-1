@@ -16,8 +16,8 @@ const Login = () => {
     })
   }
 
-  async function handleLogIn() {
-
+  async function handleLogIn(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     try {
 				let response = await fetch(`https://9t5fnt98-5000.use2.devtunnels.ms/auth/login`,
 					{
@@ -81,7 +81,7 @@ const Login = () => {
               </div>
               <div className='row justify-content-center mt-3'>
                     <button 
-                    type='submit'
+                  
                     className='btn btn-primary'
                     onClick={handleLogIn}
                     >Iniciar Sesion</button>
