@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 import "./login.css"
+
 const Login = () => {
 
   const [usuario, setUsuario] = useState({
@@ -15,8 +16,28 @@ const Login = () => {
     })
   }
 
-  function handleLogIn() {
+  async function handleLogIn() {
 
+    try {
+				let response = await fetch(`https://9t5fnt98-5000.use2.devtunnels.ms/auth/login`,
+					{
+						method: 'POST',
+						headers: {
+							"Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+
+						},
+						body: JSON.stringify(usuario)
+					})
+				let data = await response.json()
+				if (response.ok) {
+					console.log(data)
+				}
+				return response.status
+				}
+				catch (error) {
+					return false
+				}
   }
   return (
     <>
@@ -31,7 +52,7 @@ const Login = () => {
           </div>
        
           <div className="col-5 loginForm">
-            <form >
+            <form onSubmit={(event) => event.preventDefault}>
               <div className="form-group">
                 <label>Correo electronico</label>
                 <input 
@@ -60,6 +81,7 @@ const Login = () => {
               </div>
               <div className='row justify-content-center mt-3'>
                     <button 
+                    type='submit'
                     className='btn btn-primary'
                     onClick={handleLogIn}
                     >Iniciar Sesion</button>
