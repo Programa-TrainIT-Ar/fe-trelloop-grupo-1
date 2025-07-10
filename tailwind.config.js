@@ -1,10 +1,10 @@
-import path from 'path';
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    path.join(__dirname, '../app/**/*.{js,ts,jsx,tsx,mdx}'),
-    path.join(__dirname, '../pages/**/*.{js,ts,jsx,tsx,mdx}'),
-    path.join(__dirname, '../components/**/*.{js,ts,jsx,tsx,mdx}'),
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/views/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {

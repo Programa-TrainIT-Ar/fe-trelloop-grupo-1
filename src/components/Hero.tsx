@@ -1,8 +1,10 @@
 import React from "react";
+import Image from "next/image";
 
-const Home: React.FC = () => {
+export const Hero: React.FC = () => {
 
   return (
+    <>
     <section className="bg-gray-900 text-white py-16">
       <div className="container mx-auto flex flex-col lg:flex-row items-start px-6 lg:px-0">
         {/* Left side: heading and call-to-action */}
@@ -41,18 +43,17 @@ const Home: React.FC = () => {
 
         {/* Right side grid: solo una imagen desde public */}
         <div className="w-full lg:w-1/2 flex justify-center items-center mt-16 lg:mt-32">
-          <img
+          <Image
             src="/img-collages.webp"
             alt="Imagen principal"
-            className="rounded-lg shadow-lg max-w-full h-auto"
+             width={600}
+            height={400}
+            className="rounded-lg max-w-full h-auto"
             loading="lazy"
           />
         </div>
       </div>
     </section>
+    </>
   );
 }
-
-export default Home;
-
-
