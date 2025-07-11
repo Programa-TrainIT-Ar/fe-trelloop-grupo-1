@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 
+
 export default function Home() {
   const [messages, setMessages] = useState<{ id: number; content: string }[]>(
     []
@@ -36,6 +37,7 @@ export default function Home() {
 
 
       <div className="flex mb-4"> 
+        
         <input
           type="text"
           value={content}
@@ -61,6 +63,7 @@ export default function Home() {
           ))}
         </ul>
       </div>
+     
     </main>
   );
 }
