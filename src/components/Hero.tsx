@@ -1,5 +1,9 @@
+"use client";
+
+import Link from "next/link";
 import React from "react";
 import Image from "next/image";
+import collage from '@/assets/img-collages.webp'; // Importing the image from assets
 
 export const Hero: React.FC = () => {
 
@@ -31,22 +35,20 @@ export const Hero: React.FC = () => {
           <p className="mb-6 text-gray-300">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit.
           </p>
-          <button
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded transition"
-            onClick={() => {
-              // TODO: logica de navigate
-            }}
+          <Link
+            href="/register"
+            className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded transition"
           >
             Crear cuenta
-          </button>
+          </Link>
         </div>
 
         {/* Right side grid: solo una imagen desde public */}
         <div className="w-full lg:w-1/2 flex justify-center items-center mt-16 lg:mt-32">
           <Image
-            src="/img-collages.webp"
+            src={collage}
             alt="Imagen principal"
-             width={600}
+            width={600}
             height={400}
             className="rounded-lg max-w-full h-auto"
             loading="lazy"

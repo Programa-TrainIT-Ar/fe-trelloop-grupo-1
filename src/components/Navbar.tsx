@@ -1,10 +1,11 @@
 "use client";
 
-import Link from 'next/link';
 import React from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import logo from '@/assets/logo-dark-trainit-horizontal.png';
+import logo from '@/assets/logo-dark-trainit-horizontal.png'; 
+
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -12,7 +13,12 @@ export const Navbar: React.FC = () => {
     <main className="bg-[#313131] text-white flex items-center justify-between px-7 py-4">
       {/* Logo */}
       <div className="flex items-center">
-        <Image src={logo} alt="Logo TrainIT" width={180} />
+        <Image 
+        src={logo} 
+        alt="Logo TrainIT" 
+        width={180}
+        style={{ height: 'auto' }}
+        loading="lazy" />
       </div>
       <ul className="flex items-center gap-10 text-lg">
         <li className="hover:text-[#736CFD] font-medium">
