@@ -75,10 +75,10 @@ const Login = () => {
   }
   return (
     <>
-      <div className="container ">
-        <div className="row d-flex justify-content-between">
-          <div className="col-5 d-flex imagenLogIn">
-            <Image
+      <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
+        <div className="flex flex-wrap justify-between">
+          <div className="w-full md:w-5/12 flex justify-center items-center">
+            <img
               src="https://www.freeiconspng.com/thumbs/gear-icon-png/white-gear-png-gear-icon-png-white-gear-icon-30.png"
               width={100}
               height={100}
@@ -86,55 +86,63 @@ const Login = () => {
             />
           </div>
 
-          <div className="col-5 loginForm">
-            <form onSubmit={(event) => event.preventDefault}>
-              {error && <div className="alert alert-danger">{error}</div>}
-              <div className="form-group">
-                <label>Correo electronico</label>
+          <div className="w-full md:w-5/12">
+            <form onSubmit={(event) => event.preventDefault()}>
+              {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
+
+              <div className="mb-4">
+                <label className="block mb-1 text-gray-700">Correo electrónico</label>
                 <input
                   type="text"
-                  className="form-control"
                   id="correo"
                   name="correo"
                   onChange={handleChange}
                   required
+                  className="w-full border border-gray-300 p-2 rounded"
                 />
               </div>
 
-              <div className="form-group mt-3">
-                <label>Contraseña</label>
+              <div className="mb-4">
+                <label className="block mb-1 text-gray-700">Contraseña</label>
                 <input
-                  className="form-control"
                   type="password"
                   id="contrasena"
                   name="contrasena"
                   onChange={handleChange}
                   required
+                  className="w-full border border-gray-300 p-2 rounded"
                 />
               </div>
 
-              <div className="form-group mt-3">
+              <div className="mb-4 flex items-center space-x-2">
                 <input type="checkbox" id="remember" name="remember" />
-                <label htmlFor="remember">Recordarme</label>
+                <label htmlFor="remember" className="text-sm text-gray-700">
+                  Recordarme
+                </label>
               </div>
-              <div className="row justify-content-center mt-3">
+
+              <div className="flex justify-center mb-4">
                 <button
                   type="submit"
-                  className="btn btn-primary"
                   onClick={handleLogIn}
                   disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded disabled:opacity-50"
                 >
-                  {loading ? "Cargando..." : "Iniciar Sesion"}
+                  {loading ? "Cargando..." : "Iniciar Sesión"}
                 </button>
               </div>
 
-              <p className="mt-3">
-                No tienes una cuenta? <a href="/register">Registrate</a>
+              <p className="text-center text-sm text-gray-600">
+                ¿No tienes una cuenta?{" "}
+                <a href="/register" className="text-blue-600 hover:underline">
+                  Regístrate
+                </a>
               </p>
             </form>
           </div>
         </div>
       </div>
+
     </>
   );
 };
