@@ -5,6 +5,8 @@ import { useState } from "react";
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
 import Link from "next/link";
+import 'sweetalert2/dist/sweetalert2.min.css';
+import '@sweetalert2/theme-dark/dark.css';
 import Swal from 'sweetalert2';
 
 
@@ -15,10 +17,12 @@ const handleSubmit = (e) =>{
 
     Swal.fire({
         icon: 'success',
-        title: '¡Registro exitoso!',
-        text: 'Tu cuenta ha sido creada correctamente.',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'Aceptar'
+        iconColor: '#8A2BE2',
+        background: '#000000',
+        title: 'Te has registrado con éxito',
+        Color: '#FFFFFF',
+        confirmButtonColor: '#8A2BE2',
+        confirmButtonText: 'Cerrar'
     })
 }
 
