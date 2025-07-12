@@ -1,0 +1,26 @@
+body {
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+input{
+  backdrop-filter: blur(4px);
+}
+
+.loginForm{
+   /* display: flex;
+  justify-content: end; */
+  width: 25rem;
+  /* position: relative;
+  left: 270px;  */
+  margin-top: 150px;
+   /* justify-content: end; */
+  /* padding-left: 400px; */
+
+}
+
+.imagenLogIn {
+  margin-top: 150px;
+
+
+}
