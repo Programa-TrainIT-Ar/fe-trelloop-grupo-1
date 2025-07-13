@@ -24,6 +24,7 @@ body {
   backdrop-filter: blur(4px);
   background-color: transparent;
   border: #797676 1px solid;
+  border-radius: 8px;
 }
 
 .divRemember{
@@ -39,7 +40,7 @@ body {
 }
 
 .loginLink{
-  color: #797676;
+  color: #FF5EA6;
   text-decoration: none;
   padding-left: 5px;
 }
