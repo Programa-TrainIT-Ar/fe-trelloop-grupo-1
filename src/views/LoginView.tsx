@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import "../app/login/login.css";
+import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
 
@@ -24,11 +24,11 @@ const LoginView = () => {
 
   async function handleLogIn(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
+    setLoading(true);
     setError("");
     
-    const loginValidation = loginController(usuario)
+    const loginValidation = await loginController(usuario)
     console.log(loginValidation)
-    setLoading(true);
     if (loginValidation.error = true) {
       setError(loginValidation.message)
       setLoading(false);

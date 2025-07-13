@@ -1,7 +1,6 @@
 import { loginService } from "@/services/loginService"
 
 export async function loginController(usuario) {
-    console.log("test")
     if (!usuario.correo || !usuario.contrasena) {
       return {error: true, message: "Por favor, completa todos los campos"}
     }

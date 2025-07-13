@@ -1,6 +1,7 @@
 body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  background-color: rgb(26, 26, 26)
 }
 
 input{
@@ -23,4 +24,46 @@ input{
   margin-top: 150px;
 
 
+}
+
+
+.loginButton:hover {
+  background-color: rgb(50, 32, 255);
+}
+
+.loginLabel{
+  color: white;
+}
+
+.inputLogin{
+  backdrop-filter: blur(4px);
+  background-color: transparent;
+  border: #797676 1px solid;
+}
+
+.divRemember{
+  color: #797676;
+  margin-left: 10px;
+  
+}
+
+.divRememberButton{
+  background-color: none;
+  border: none;
+  color: none;
+}
+
+.loginLink{
+  color: #797676;
+  text-decoration: none;
+  padding-left: 5px;
+}
+
+.textLogin{
+  display: flex;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 400;
+  font: poppins;
 }
