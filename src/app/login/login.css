@@ -4,3 +4,45 @@ body {
   background-repeat: no-repeat; 
   color: white;
 }
+
+button{
+  background-color: #6A5FFF;
+  width: 100%;
+}
+
+label{
+  color: white;
+}
+
+input{
+  backdrop-filter: blur(4px);
+  background-color: transparent;
+  border: #797676 1px solid;
+}
+
+.divRemember{
+  color: #797676;
+  margin-left: 10px;
+  
+}
+
+.divRememberButton{
+  background-color: none;
+  border: none;
+  color: none;
+}
+
+a{
+  color: #797676;
+  text-decoration: none;
+  padding-left: 5px;
+}
+
+.textLogin{
+  display: flex;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 400;
+  font: poppins;
+}
