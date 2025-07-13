@@ -27,6 +27,13 @@ input{
 }
 
 
+.loginButton {
+  background-color: #6A5FFF;
+  width: 100%;
+  border-radius: 8px;
+}
+
+
 .loginButton:hover {
   background-color: rgb(50, 32, 255);
 }
@@ -36,9 +43,10 @@ input{
 }
 
 .inputLogin{
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(3.6px);
   background-color: transparent;
-  border: #797676 1px solid;
+  border: #3C3C3CB2 1px solid;
+  border-radius: 8px;
 }
 
 .divRemember{
@@ -54,7 +62,7 @@ input{
 }
 
 .loginLink{
-  color: #797676;
+  color: #FF5EA6;
   text-decoration: none;
   padding-left: 5px;
 }
