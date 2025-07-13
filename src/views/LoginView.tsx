@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import "../styles/login.css";
+import "../app/login/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
 
@@ -57,32 +57,34 @@ const LoginView = () => {
               {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
 
               <div className="mb-4">
-                <label className="block mb-1 text-gray-700">Correo electrónico</label>
+                <label className="loginLabel">Correo electrónico</label>
                 <input
                   type="text"
                   id="correo"
                   name="correo"
+                  placeholder="Escribe tu correo electrónico..."
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 p-2 rounded"
+                  className="inputLogin w-full border border-gray-300 p-2 rounded mt-2"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block mb-1 text-gray-700">Contraseña</label>
+                <label className="loginLabel">Contraseña</label>
                 <input
                   type="password"
                   id="contrasena"
                   name="contrasena"
+                  placeholder="Escribe tu contraseña"
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 p-2 rounded"
+                  className="inputLogin w-full border border-gray-300 p-2 rounded mt-2"
                 />
               </div>
 
               <div className="mb-4 flex items-center space-x-2">
-                <input type="checkbox" id="remember" name="remember" />
-                <label htmlFor="remember" className="text-sm text-gray-700">
+                <input type="checkbox" id="remember" name="remember" className="divRememberButton"/>
+                <label htmlFor="remember" className="divRemember">
                   Recordarme
                 </label>
               </div>
@@ -92,15 +94,15 @@ const LoginView = () => {
                   type="submit"
                   onClick={handleLogIn}
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded disabled:opacity-50"
+                  className="loginButton bg-blue-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
                 >
                   {loading ? "Cargando..." : "Iniciar Sesión"}
                 </button>
               </div>
 
-              <p className="text-center text-sm text-gray-600">
+              <p className="textLogin">
                 ¿No tienes una cuenta?{" "}
-                <a href="/register" className="text-blue-600 hover:underline">
+                <a href="/register" className="loginLink text-blue-600 hover:underline">
                   Regístrate
                 </a>
               </p>
@@ -114,3 +116,5 @@ const LoginView = () => {
 };
 
 export default LoginView;
+
+
