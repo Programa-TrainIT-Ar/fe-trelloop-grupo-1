@@ -10,7 +10,7 @@ import logo from '@/assets/logo-dark-trainit-horizontal.png';
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   return (
-    <main className="bg-[#313131] text-white flex items-center justify-between px-7 py-4">
+    <main className="bg-background-height text-text-default flex items-center justify-between px-7 py-4">
       {/* Logo */}
       <div className="flex items-center">
         <Image 
@@ -21,13 +21,13 @@ export const Navbar: React.FC = () => {
         loading="lazy" />
       </div>
       <ul className="flex items-center gap-10 text-lg">
-        <li className="hover:text-[#736CFD] font-medium">
+        <li className="hover:text-state-default font-medium">
           <Link href="/">Inicio</Link>
         </li>
-        <li className="hover:text-[#736CFD] font-medium">
+        <li className="hover:text-state-default font-medium">
           <Link href="/about">Acerca de</Link>
         </li>
-        <li className="hover:text-[#736CFD] font-medium">
+        <li className="hover:text-state-default font-medium">
           <Link href="/contact">Contacto</Link>
         </li>
       </ul>
@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
         {pathname !== "/login" && (
           <Link
             href="/login"
-            className="text-[#736CFD] border border-[#736CFD] rounded-full px-6 py-2 text-sm hover:bg-[#736CFD]/10 transition"
+            className="text-state-default border border-state-default rounded-full px-6 py-2 text-sm hover:bg-background-medium transition"
           >
             LOGIN
           </Link>
@@ -44,7 +44,7 @@ export const Navbar: React.FC = () => {
         {pathname !== "/register" && (
           <Link
             href="/register"
-            className="bg-[#736CFD] text-white rounded-full px-6 py-2 text-sm hover:bg-[#5b53d8] transition"
+            className="bg-state-default text-white rounded-full px-6 py-2 text-sm hover:bg-state-hover transition"
           >
             REGISTRARSE
           </Link>

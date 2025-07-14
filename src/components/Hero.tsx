@@ -3,13 +3,12 @@
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
-import collage from '@/assets/img-collages.webp'; // Importing the image from assets
-
+import collage from '@/assets/img-collages.webp'; 
 export const Hero: React.FC = () => {
 
   return (
     <>
-    <section className="bg-gray-900 text-white py-16">
+    <section className="bg-background-height text-text-default py-16">
       <div className="container mx-auto flex flex-col lg:flex-row items-start px-6 lg:px-0">
         {/* Left side: heading and call-to-action */}
         <div className="w-full lg:w-1/2 mb-12 lg:mb-0">
