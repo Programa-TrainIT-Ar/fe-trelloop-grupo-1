@@ -79,3 +79,17 @@ input{
   font-weight: 400;
   font: poppins;
 }
+
+.elipseIzquierdo {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: -1;
+}
+
+.elipseDerecho {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+}

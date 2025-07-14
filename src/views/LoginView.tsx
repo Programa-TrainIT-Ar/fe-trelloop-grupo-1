@@ -4,6 +4,9 @@ import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
+import elipseIzquierdo from "../assets/images/Ellipse 1148.svg"
+import elipseDerecho from "../assets/images/Ellipse 1147.svg"
+import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
@@ -47,15 +50,13 @@ const LoginView = () => {
 }
   return (
     <>
+      <Image alt="elipse" src={elipseIzquierdo} className="elipseIzquierdo" width={0} height={0}/>
+      <Image alt="elipse" src={elipseDerecho} className="elipseDerecho" width={590} height={590}/>
+
       <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
         <div className="flex flex-wrap justify-between">
           <div className="w-full md:w-5/12 flex justify-center items-center">
-            <img
-              src="https://www.freeiconspng.com/thumbs/gear-icon-png/white-gear-png-gear-icon-png-white-gear-icon-30.png"
-              width={100}
-              height={100}
-              alt="Logo"
-            />
+            <Image alt="ilustración candado" src={ilustracionCandado}/>
           </div>
 
           <div className="w-full md:w-5/12">
