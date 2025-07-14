@@ -8,10 +8,9 @@ input{
   backdrop-filter: blur(4px);
 }
 
-.loginForm{
-   /* display: flex;
-  justify-content: end; */
-  width: 25rem;
+.login-form{
+
+  width: 10rem;
   /* position: relative;
   left: 270px;  */
   margin-top: 150px;
@@ -20,62 +19,62 @@ input{
 
 }
 
-.imagenLogIn {
+.imagen-login {
   margin-top: 150px;
 
 
 }
-.loginButton {
+.login-button {
   background-color: #6A5FFF;
   width: 100%;
   border-radius: 8px;
 }
 
-.loginButton {
+.login-button {
   background-color: #6A5FFF;
   width: 100%;
   border-radius: 8px;
 }
 
 
-.loginButton:hover {
+.login-button:hover {
   background-color: rgb(50, 32, 255);
 }
 
-.loginLabel{
+.login-label{
   color: white;
 }
 
-.inputLogin{
+.input-login{
   backdrop-filter: blur(3.6px);
   background-color: transparent;
   border: #3C3C3CB2 1px solid;
   border-radius: 8px;
 }
 
-.inputLogin:hover{
+.input-login:hover{
   translate: 0px -4px;
 }
 
-.divRemember{
+.div-remember{
   color: #797676;
   margin-left: 10px;
   
 }
 
-.divRememberButton{
+.div-remember-button{
   background-color: none;
   border: none;
   color: none;
 }
 
-.loginLink{
+.login-link{
   color: #FF5EA6;
   text-decoration: none;
   padding-left: 5px;
 }
 
-.textLogin{
+.text-login{
   display: flex;
   justify-content: center;
   color: #FFFFFF;
@@ -84,16 +83,20 @@ input{
   font: poppins;
 }
 
-.elipseIzquierdo {
+.elipse-izquierdo {
   position: absolute;
   top: 0;
   height: 100%;
   z-index: -1;
 }
 
-.elipseDerecho {
+.elipse-derecho {
   position: absolute;
   top: 0;
   right: 0;
   z-index: -1;
+}
+
+.tamano-form {
+  width: 22rem; 
 }

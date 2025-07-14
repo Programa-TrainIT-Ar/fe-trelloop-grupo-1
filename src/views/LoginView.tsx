@@ -50,8 +50,8 @@ const LoginView = () => {
 }
   return (
     <>
-      <Image alt="elipse" src={elipseIzquierdo} className="elipseIzquierdo" width={0} height={0}/>
-      <Image alt="elipse" src={elipseDerecho} className="elipseDerecho" width={590} height={590}/>
+      <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0}/>
+      <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590}/>
 
       <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
         <div className="flex flex-wrap justify-between">
@@ -60,11 +60,11 @@ const LoginView = () => {
           </div>
 
           <div className="w-full md:w-5/12">
-            <form onSubmit={(event) => event.preventDefault()}>
+            <form onSubmit={(event) => event.preventDefault()} className="tamano-form">
               {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
 
               <div className="mb-4">
-                <label className="loginLabel">Correo electrónico</label>
+                <label className="login-label">Correo electrónico</label>
                 <input
                   type="text"
                   id="correo"
@@ -72,12 +72,12 @@ const LoginView = () => {
                   placeholder="Escribe tu correo electrónico..."
                   onChange={handleChange}
                   required
-                  className="inputLogin w-full border border-gray-300 p-2 rounded mt-2"
+                  className="input-login w-full border border-gray-300 p-2 rounded mt-2"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="loginLabel">Contraseña</label>
+                <label className="login-label">Contraseña</label>
                 <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -86,7 +86,7 @@ const LoginView = () => {
                   placeholder="Escribe tu contraseña"
                   onChange={handleChange}
                   required
-                  className="inputLogin w-full border border-gray-300 p-2 rounded mt-2"
+                  className="input-login w-full border border-gray-300 p-2 rounded mt-2"
                 />
                 <button
                 type="button"
@@ -99,8 +99,8 @@ const LoginView = () => {
               </div>
 
               <div className="mb-4 flex items-center space-x-2">
-                <input type="checkbox" id="remember" name="remember" className="divRememberButton"/>
-                <label htmlFor="remember" className="divRemember">
+                <input type="checkbox" id="remember" name="remember" className="div-remember-button"/>
+                <label htmlFor="remember" className="div-remember">
                   Recordarme
                 </label>
               </div>
@@ -110,15 +110,15 @@ const LoginView = () => {
                   type="submit"
                   onClick={handleLogIn}
                   disabled={loading}
-                  className="loginButton bg-blue-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
+                  className="login-button bg-blue-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
                 >
                   {loading ? "Cargando..." : "Iniciar Sesión"}
                 </button>
               </div>
 
-              <p className="textLogin">
+              <p className="text-login">
                 ¿No tienes una cuenta?{" "}
-                <a href="/register" className="loginLink text-blue-600 hover:underline">
+                <a href="/register" className="login-link text-blue-600 hover:underline">
                   Regístrate
                 </a>
               </p>
