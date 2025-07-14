@@ -4,6 +4,14 @@ import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
+import elipseIzquierdo from "../assets/images/Ellipse 1148.svg"
+import elipseDerecho from "../assets/images/Ellipse 1147.svg"
+import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
+
+// Instalar fontawsome para los iconos
+// npm install @fortawesome/fontawesome-free
+
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const LoginView = () => {
   const router = useRouter();
@@ -14,6 +22,7 @@ const LoginView = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     setUsuario({
@@ -41,15 +50,13 @@ const LoginView = () => {
 }
   return (
     <>
+      <Image alt="elipse" src={elipseIzquierdo} className="elipseIzquierdo" width={0} height={0}/>
+      <Image alt="elipse" src={elipseDerecho} className="elipseDerecho" width={590} height={590}/>
+
       <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
         <div className="flex flex-wrap justify-between">
           <div className="w-full md:w-5/12 flex justify-center items-center">
-            <img
-              src="https://www.freeiconspng.com/thumbs/gear-icon-png/white-gear-png-gear-icon-png-white-gear-icon-30.png"
-              width={100}
-              height={100}
-              alt="Logo"
-            />
+            <Image alt="ilustración candado" src={ilustracionCandado}/>
           </div>
 
           <div className="w-full md:w-5/12">
@@ -71,8 +78,9 @@ const LoginView = () => {
 
               <div className="mb-4">
                 <label className="loginLabel">Contraseña</label>
+                <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="contrasena"
                   name="contrasena"
                   placeholder="Escribe tu contraseña"
@@ -80,6 +88,14 @@ const LoginView = () => {
                   required
                   className="inputLogin w-full border border-gray-300 p-2 rounded mt-2"
                 />
+                <button
+                type="button"
+                onClick={()=>setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 mt-1"
+                >
+                  {showPassword ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>}
+                </button>
+                </div>
               </div>
 
               <div className="mb-4 flex items-center space-x-2">

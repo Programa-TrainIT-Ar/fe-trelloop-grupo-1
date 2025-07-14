@@ -31,6 +31,13 @@ input{
   border-radius: 8px;
 }
 
+.loginButton {
+  background-color: #6A5FFF;
+  width: 100%;
+  border-radius: 8px;
+}
+
+
 .loginButton:hover {
   background-color: rgb(50, 32, 255);
 }
@@ -44,6 +51,10 @@ input{
   background-color: transparent;
   border: #3C3C3CB2 1px solid;
   border-radius: 8px;
+}
+
+.inputLogin:hover{
+  translate: 0px -4px;
 }
 
 .divRemember{
@@ -71,4 +82,18 @@ input{
   font-size: 14px;
   font-weight: 400;
   font: poppins;
+}
+
+.elipseIzquierdo {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: -1;
+}
+
+.elipseDerecho {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
 }

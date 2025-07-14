@@ -1,8 +1,6 @@
-require("dotenv").config()
-
 export async function loginService(usuario) {
     try {
-      const response = await fetch(process.env.BACKEND_URL || "http://localhost:5000"), {
+      const response = await fetch(process.env.BACKEND_URL || "http://localhost:5000", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
