@@ -5,7 +5,6 @@ import { useState } from "react";
 import Image from 'next/image';
 import logo from '@/assets/logo-dark-trainit-horizontal.png';
 import Link from "next/link";
-import 'sweetalert2/dist/sweetalert2.min.css';
 import '@sweetalert2/theme-dark/dark.css';
 import Swal from 'sweetalert2';
 
