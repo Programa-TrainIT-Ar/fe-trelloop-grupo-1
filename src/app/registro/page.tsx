@@ -3,62 +3,137 @@
 
 import { useState } from "react";
 import Image from 'next/image';
-import logo from '@/assets/logo-dark-trainit-horizontal.png';
+import Link from "next/link";
+import user from '@/assets/user.png';
 
 
-export default function Registro() {  
-    
+
+export default function Registro() {
+    const [formData, setFormData] = useState({
+        nombre: "",
+        apellido: "",
+        correo: "",
+        contrasena: "",
+        confirmacion:"",
+
+    });
+
     const [mostrar, setMostrar] = useState(false);
+
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!formData.nombre || !formData.apellido || !formData.correo || !formData.contrasena) {
+            alert("Todos los campos son obligatorios");
+            return;
+        }
+        if (!formData.correo.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            alert("Ingresa un correo válido");
+            return;
+        }
+        if (formData.contrasena !== formData.confirmacion) {
+            alert("las contraseñas no coinciden");
+            return;
+        }
+        console.log("datos enviados:", formData);
+
+        try {
+            const response = await fetch("http://localhost:5000/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nombre: formData.nombre,
+                    apellido: formData.apellido,
+                    correo: formData.correo,
+                    contrasena: formData.contrasena,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert("error:" + (errorData.message || "no se pudo registrar el usuario"));
+                return;
+            }
+
+            alert("Registration successful!");
+            setFormData({
+                nombre: "",
+                apellido: "",
+                correo: "",
+                contrasena: "",
+                confirmacion: "",
+            });
+
+        } catch (error) {
+            alert("Network error or server not reachable.");
+            console.error(error);
+        }
+    };
+
+
+
     return (
-        <>        
         <main className="min-h-screen flex items-start pt-16 text-white">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
 
                 <div className=" flex items-center justify-center">
-                             <Image src={logo} alt="Logo TrainIT" width={180} />
+                    <Image src={user} alt="Logo TrainIT" width={180} />
                 </div>
 
                 <div className="flex flex-col justify-center">
-                    <form className="grid grid-cols-2 gap-4">
+                    <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="Nombres" className="block text-sm font-medium text-white">Nombres*</label>
+                            <label htmlFor="nombre" className="block text-sm font-medium text-white">Nombres<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <input
                                 type="text"
-                                id="Nombres"
-                                name="Nombres"
-                                className="mt-1 p-3 bg-[#313131] block w-full  rounded-xl border border-stone-400 sm:text-sm"
+                                id="nombre"
+                                name="nombre"
+                                value={formData.nombre} onChange={handleChange}
+                                className="mt-1 p-3 bg-[#313131] block w-full  rounded-xl border border-stone-400 sm:text-sm font-light"
                                 placeholder="Escribe tus nombres"
                                 required
-                                />
+                            />
                         </div>
                         <div>
-                            <label htmlFor="Apellidos" className="text-sm font-medium text-white">Apellidos*</label>
+                            <label htmlFor="apellido" className="text-sm font-medium text-white">Apellidos<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <input type="text"
-                                id="Apellidos"
-                                name="Apellidos"
-                                className="mt-1 p-3 bg-[#313131] block w-full border border-stone-400 rounded-xl sm:text-sm"
+                                id="apellido"
+                                name="apellido"
+                                value={formData.apellido} onChange={handleChange}
+                                className="mt-1 p-3 bg-[#313131] block w-full border border-stone-400 rounded-xl sm:text-sm font-light"
                                 placeholder="Ecribe tus apellidos"
                                 required />
 
                         </div>
 
                         <div className="col-span-2">
-                            <label htmlFor="Correo" className="text-sm font-medium text-white">Correo electrónico*</label>
+                            <label htmlFor="correo" className="text-sm font-medium text-white">Correo electrónico<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <input type="email"
-                                id="Correo"
-                                name="Correo"
-                                className="mt-1 p-3 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm"
+                                id="correo"
+                                name="correo"
+                                value={formData.correo} onChange={handleChange}
+                                className="mt-1 p-3 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                 placeholder="Escribe tu correo electrónico"
                                 required />
                         </div>
 
                         <div>
-                            <label htmlFor="Contraseña" className="text-sm font-medium text-white">Contraseña*</label>
+                            <label htmlFor="contrasena" className="text-sm font-medium text-white">Contraseña<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <div className="relative">
                                 <input type={mostrar ? "text" : "password"}
-                                    id="Contraseña"
-                                    name="Contraseña"
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm"
+                                    id="contrasena"
+                                    name="contrasena"
+                                    value={formData.contrasena} onChange={handleChange}
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                     placeholder="Escribe tu contraseña"
                                     required />
                                 <button type="button" onClick={() => setMostrar(!mostrar)} className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -69,12 +144,13 @@ export default function Registro() {
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="Confirmación" className="text-sm font-medium text-white">Confirmación de contraseña*</label>
+                            <label htmlFor="confirmacion" className="text-sm font-medium text-white">Confirmación de contraseña<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <div className="relative">
                                 <input type={mostrar ? "text" : "password"}
-                                    id="Confirmación"
-                                    name="Confirmación"
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm"
+                                    id="confirmacion"
+                                    name="confirmacion"
+                                    value={formData.confirmacion} onChange={handleChange}
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                     placeholder="Escribe tu confirmación"
                                     required />
                                 <button type="button" onClick={() => setMostrar(!mostrar)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white">
@@ -86,11 +162,16 @@ export default function Registro() {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <button type="submit" className="w-full px-6 py-2 rounded-xl text-white my-4" style={{ backgroundColor: "#6a5fff" }}>Registrarme
+                            <button
+                                type="submit"
+                                className="w-full px-6 py-2 rounded-xl text-white my-4"
+                                style={{ backgroundColor: "var(--global-color-primary-500)" }}
+                            >
+                                REGISTRARME
                             </button>
                             <div className="text-center">
-                                <p className="text-sm">Al registrarme, acepto las Condiciones del servicio, de Trainit y su Política de privacidad.</p>
-                                <p className="text-sm mt-6">¿Ya tienes cuenta? Inicia sesión</p>
+                                <p className="text-sm font-light">Al registrarme, acepto las <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.</p>
+                                <p className="text-sm mt-6 font-light">¿Ya tienes cuenta? <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link></p>
                             </div>
                         </div>
                     </form>
@@ -101,6 +182,5 @@ export default function Registro() {
 
 
         </main >
-    </>
     );
 }
