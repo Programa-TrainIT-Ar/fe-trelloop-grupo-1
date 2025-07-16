@@ -1,8 +1,9 @@
+import React from "react";
 import { FaDiscord, FaLinkedin, FaFacebook } from 'react-icons/fa';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-zinc-900 text-white py-10 px-6 relative z-10">
+    <footer className="bg-background-body text-text-default py-10 px-6 relative z-10">
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div>
           <h3 className="font-semibold mb-2">Acerca de</h3>
@@ -35,7 +36,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="text-center text-xs mt-10 text-gray-400">
+      <div className="text-center text-xs mt-10 text-text-default">
         © 2025 Copyright | Programa Trainit
       </div>
     </footer>
