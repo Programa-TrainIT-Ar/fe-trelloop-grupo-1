@@ -5,6 +5,8 @@ import { useState } from "react";
 import Image from 'next/image';
 import Link from "next/link";
 import user from '@/assets/user.png';
+import '@sweetalert2/theme-dark/dark.css';
+import Swal from 'sweetalert2';
 
 
 
@@ -14,7 +16,7 @@ export default function Registro() {
         apellido: "",
         correo: "",
         contrasena: "",
-        confirmacion:"",
+        confirmacion: "",
 
     });
 
@@ -31,15 +33,15 @@ export default function Registro() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!formData.nombre || !formData.apellido || !formData.correo || !formData.contrasena) {
-            alert("Todos los campos son obligatorios");
+            Swal.fire("faltan campos", "Todos los campos son obligatorios", "warning");
             return;
         }
         if (!formData.correo.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            alert("Ingresa un correo válido");
+            Swal.fire("Correo invalido", "Ingresa un correo válido", "warning");
             return;
         }
         if (formData.contrasena !== formData.confirmacion) {
-            alert("las contraseñas no coinciden");
+            Swal.fire("Error", "Las contraseñas no coinciden");
             return;
         }
         console.log("datos enviados:", formData);
@@ -63,6 +65,16 @@ export default function Registro() {
                 alert("error:" + (errorData.message || "no se pudo registrar el usuario"));
                 return;
             }
+
+            Swal.fire({
+                icon: 'success',
+                iconColor: '#8A2BE2',
+                background: '#000000',
+                title: 'Te has registrado con éxito',
+                color: '#FFFFFF',
+                confirmButtonColor: '#8A2BE2',
+                confirmButtonText: 'Cerrar'
+            })
 
             alert("Registration successful!");
             setFormData({
@@ -90,8 +102,10 @@ export default function Registro() {
                 </div>
 
                 <div className="flex flex-col justify-center">
+
                     <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
                         <div>
+
                             <label htmlFor="nombre" className="block text-sm font-medium text-white">Nombres<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <input
                                 type="text"
@@ -104,6 +118,7 @@ export default function Registro() {
                             />
                         </div>
                         <div>
+
                             <label htmlFor="apellido" className="text-sm font-medium text-white">Apellidos<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <input type="text"
                                 id="apellido"
@@ -144,6 +159,7 @@ export default function Registro() {
                             </div>
                         </div>
                         <div>
+
                             <label htmlFor="confirmacion" className="text-sm font-medium text-white">Confirmación de contraseña<span style={{ color: "var(--global-color-primary-500)" }} >*</span></label>
                             <div className="relative">
                                 <input type={mostrar ? "text" : "password"}
@@ -162,6 +178,7 @@ export default function Registro() {
                             </div>
                         </div>
                         <div className="col-span-2">
+
                             <button
                                 type="submit"
                                 className="w-full px-6 py-2 rounded-xl text-white my-4"
@@ -170,8 +187,8 @@ export default function Registro() {
                                 REGISTRARME
                             </button>
                             <div className="text-center">
-                                <p className="text-sm font-light">Al registrarme, acepto las <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.</p>
-                                <p className="text-sm mt-6 font-light">¿Ya tienes cuenta? <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link></p>
+                                <p className="text-sm">Al registrarme, acepto las <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.</p>
+                                <p className="text-sm mt-6">¿Ya tienes cuenta? <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link></p>
                             </div>
                         </div>
                     </form>
