@@ -47,7 +47,7 @@ export const Hero: React.FC = () => {
                 className="ml-4"
               />
             </h1>
-            <div className="flex items-center text-xl italic ml-10 mt-4 text-5xl">
+            <div className="flex items-center italic ml-10 mt-4 text-5xl">
 
               <Image
                 src={progressIcon}
