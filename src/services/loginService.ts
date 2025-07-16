@@ -1,4 +1,11 @@
+import { useAuthStore } from "@/store/useAuthStore";
+
+
 export async function loginService(usuario) {
+
+  const setUser=useAuthStore.getState().setUser;
+  const setToken=useAuthStore.getState().setToken;
+
     try {
       const response = await fetch("https://9t5fnt98-5002.use2.devtunnels.ms/auth/login", {
         method: "POST",
@@ -18,6 +25,8 @@ export async function loginService(usuario) {
       }
       else if (response.ok) {
         console.log("Login exitoso:", data);
+        setToken(data.access_token);
+        setUser(data.user);
         return {error: false}
       } else {
         // Login fallido
