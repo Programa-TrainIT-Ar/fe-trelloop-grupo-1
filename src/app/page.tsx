@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import Link from "next/link";
 export default function Home() {
   const [messages, setMessages] = useState<{ id: number; content: string }[]>(
     []
@@ -60,6 +60,8 @@ export default function Home() {
             </li>
           ))}
         </ul>
+
+        
       </div>
     </main>
   );
