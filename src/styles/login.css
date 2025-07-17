@@ -1,0 +1,102 @@
+body {
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: rgb(26, 26, 26)
+}
+
+input{
+  backdrop-filter: blur(4px);
+}
+
+.login-form{
+
+  width: 10rem;
+  /* position: relative;
+  left: 270px;  */
+  margin-top: 150px;
+   /* justify-content: end; */
+  /* padding-left: 400px; */
+
+}
+
+.imagen-login {
+  margin-top: 150px;
+
+
+}
+.login-button {
+  background-color: #6A5FFF;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.login-button {
+  background-color: #6A5FFF;
+  width: 100%;
+  border-radius: 8px;
+}
+
+
+.login-button:hover {
+  background-color: rgb(50, 32, 255);
+}
+
+.login-label{
+  color: white;
+}
+
+.input-login{
+  backdrop-filter: blur(3.6px);
+  background-color: transparent;
+  border: #3C3C3CB2 1px solid;
+  border-radius: 8px;
+}
+
+.input-login:hover{
+  translate: 0px -4px;
+}
+
+.div-remember{
+  color: #797676;
+  margin-left: 10px;
+  
+}
+
+.div-remember-button{
+  background-color: none;
+  border: none;
+  color: none;
+}
+
+.login-link{
+  color: #FF5EA6;
+  text-decoration: none;
+  padding-left: 5px;
+}
+
+.text-login{
+  display: flex;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 400;
+  font: poppins;
+}
+
+.elipse-izquierdo {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: -1;
+}
+
+.elipse-derecho {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+}
+
+.tamano-form {
+  width: 22rem; 
+}
