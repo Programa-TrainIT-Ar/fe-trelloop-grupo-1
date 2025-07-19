@@ -1,14 +1,7 @@
-@import "tailwindcss";
 
-/* Variables primitivas - Globales */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  /*___ Primary ___*/
+  /* Primary */
   --global-color-primary-100: #f0efff;
   --global-color-primary-200: #cfcbff;
   --global-color-primary-300: #ada7ff;
@@ -19,18 +12,18 @@
   --global-color-primary-800: #231f53;
   --global-color-primary-900: #0b0a1a;
 
-  /*___ Secondary ___*/
+  /* Secondary */
   --global-color-secondary-100: #ffeff6;
   --global-color-secondary-200: #ffcbe2;
   --global-color-secondary-300: #ffa6ce;
   --global-color-secondary-400: #ff82ba;
   --global-color-secondary-500: #ff5ea6;
   --global-color-secondary-600: #c64981;
-  --global-color-secondary-700: #010101;
+  --global-color-secondary-700: #8c345b;
   --global-color-secondary-800: #531f36;
   --global-color-secondary-900: #1a0911;
 
-  /*___ Neutral ___*/
+  /* Neutral */
   --global-color-neutral-0: #ffffff;
   --global-color-neutral-100: #dedede;
   --global-color-neutral-200: #c4c4c4;
@@ -43,7 +36,7 @@
   --global-color-neutral-900: #121212;
   --global-color-neutral-1000: #000000;
 
-  /*___ Blue ___*/
+  /* Blue */
   --global-color-blue-100: #edeefe;
   --global-color-blue-200: #bfc5fa;
   --global-color-blue-300: #909bf7;
@@ -54,7 +47,7 @@
   --global-color-blue-800: #11174e;
   --global-color-blue-900: #050718;
 
-  /*___ Yellow ___*/
+  /* Yellow */
   --global-color-yellow-100: #fff8ea;
   --global-color-yellow-200: #ffe7b6;
   --global-color-yellow-300: #ffd582;
@@ -65,7 +58,7 @@
   --global-color-yellow-800: #533a08;
   --global-color-yellow-900: #1a1203;
 
-  /*___ Green ___*/
+  /* Green */
   --global-color-green-100: #ecf3ed;
   --global-color-green-200: #bdd6be;
   --global-color-green-300: #8db88f;
@@ -76,7 +69,7 @@
   --global-color-green-800: #0f2910;
   --global-color-green-900: #050d05;
 
-  /*___ Red ___*/
+  /* Red */
   --global-color-red-100: #fee9e9;
   --global-color-red-200: #fdb2b2;
   --global-color-red-300: #fb7a7a;
@@ -88,18 +81,4 @@
   --global-color-red-900: #190101;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
-body {
-  background-color: var(--global-color-neutral-900);
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-poppins), Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
