@@ -39,7 +39,7 @@ export const Breadcrumb: React.FC = () => {
                         />
                     </svg>
                 </Link>
-                {currentTitle}
+              <span className="breadcrumb-title"> {currentTitle}</span>
             </div>
             <hr className="border-t border-gray-600 my-2 w-full" />
         </nav>

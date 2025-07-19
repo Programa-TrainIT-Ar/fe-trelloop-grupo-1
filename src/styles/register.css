@@ -1,27 +1,25 @@
 body {
-  color: var(--foreground);
-  font-family: Poppins, Arial, Helvetica, sans-serif;
-  background-color: rgb(26, 26, 26)
+    color: var(--foreground);
+    font-family: Poppins, Arial, Helvetica, sans-serif;
+    background-color: rgb(26, 26, 26)
 }
 
 input {
     margin-top: 0.25rem;
-    padding: 0.75rem;
+    padding: 2px;
     background-color: #313131;
     display: block;
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: 10px;
     border: 1px solid #a8a29e;
     font-size: 0.875rem;
     font-weight: 300;
+    height: 41px;
+    color: #a8a29e;
 }
 
-
-.elipse{
-    position: absolute;
-    width: auto;
-    height: auto;
-    z-index: 0;
+.input-register:hover{
+  translate: 0px -4px;
 }
 
 .ellipse-right {
@@ -32,10 +30,14 @@ input {
 }
 
 .label-register {
-    display: block;
-    font-size: .875rem;
+    font-family: Poppins;
     font-weight: 500;
-    color: #a8a29e;
+    font-style: Medium;
+    font-size: 14px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    color: #ffffff;
 }
 
 .ellipse-left {
@@ -43,4 +45,18 @@ input {
     top: 0;
     height: 100%;
     z-index: -1;
+}
+.text-register {
+
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  font-style: medium;
+  gap: .5rem;
+
 }

@@ -113,7 +113,7 @@ const LoginView = () => {
                   type="submit"
                   onClick={handleLogIn}
                   disabled={loading}
-                  className="login-button bg-blue-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
+                  className="login-button --global-color-primary-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
                 >
                   {loading ? "Cargando..." : "Iniciar Sesión"}
                 </button>
@@ -121,7 +121,7 @@ const LoginView = () => {
 
               <p className="text-login">
                 ¿No tienes una cuenta?{" "}
-                <a href="/register" className="login-link text-blue-600 hover:underline">
+                <a href="/register" className="login-link  hover:underline">
                   Regístrate
                 </a>
               </p>

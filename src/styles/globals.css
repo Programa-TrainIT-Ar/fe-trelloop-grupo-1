@@ -1,4 +1,6 @@
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   /* Primary */
@@ -82,3 +84,9 @@
 }
 
 
+.breadcrumb-title {
+  color: white;
+  font-size: 20px;
+  font-style: italic;
+  margin-left: 1rem;
+}

@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import Link from "next/link";
 import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
 import elipseDerecho from "@/assets/images/ellipse-1147.svg";
 import ilustracionUsuario from "../assets/images/ilustracion-usuario.svg";
-import '@sweetalert2/theme-dark/dark.css';
+
 import Swal from 'sweetalert2';
-import { registerService } from "@/services/registerService";
+import { registerService, Usuario } from "@/services/registerService";
 import "../styles/register.css";
 import "../styles/globals.css";
 import { registerController } from "@/controllers/registerController";
 
+import { icon } from "@fortawesome/fontawesome-svg-core";
+
 export default function RegisterView() {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         nombre: "",
         apellido: "",
@@ -22,46 +26,47 @@ export default function RegisterView() {
         confirmacion: "",
     });
 
-    const [errors, setErrors] = useState({
-        nombre: "",
-        apellido: "",
-        correo: "",
-        contrasena: "",
-        confirmacion: "",
-    });
-
+    const [error, setError] = useState({ error: false, message: "", type: "" });
     const [mostrar, setMostrar] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const result = await registerController(formData);
-        if (result.error) {
-            Swal.fire("Error", result.message, "error");
-        } else {
-            Swal.fire("Éxito", "Usuario registrado correctamente", "success");
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+            const { name, value } = e.target;
+            setFormData((prev) => ({
+                ...prev, [name]: value,
+            }));
         }
-    };
+    
+
+    async function handleSubmit(e: React.FormEvent<HTMLButtonElement>) {
+        e.preventDefault();
+        const response = await registerController(formData);
+
+        if (response.error) {
+            setError({ error: true, message: response.message, type: response.type });
+            return;
+        }   else {
+            Swal.fire({
+                icon: "success",
+                title: "Registro exitoso",
+                text: "Ahora puedes iniciar sesión",
+           }).then(() => {
+                router.push("/login");
+            });
+        }
+    }    
 
     return (
         <>
-            <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0} />
-            <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590} />
+            <Image alt="elipse-izquierdo" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0} />
+            <Image alt="elipse-derecho" src={elipseDerecho} className="elipse-derecho" width={590} height={590} />
 
-            <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
+            <div className="w-full max-w-7xl mx-auto gap-4 px-8">
                 <div className="flex flex-wrap justify-between">
                     <div className=" w-full md:w-5/12 flex items-center justify-center">
                         <Image src={ilustracionUsuario} alt="ilustración de usuario" />
                     </div>
 
-                    <div className="flex flex-col justify-center">
+                    <div className="w-full md:w-5/12">
                         <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
                             <div>
                                 <label htmlFor="nombre" className="label-register">
@@ -107,7 +112,7 @@ export default function RegisterView() {
                                     placeholder="Escribe tu correo electrónico"
                                     required
                                 />
-                                {errors.correo && <p className="text-red-500 text-sm mt-1">{errors.correo}</p>}
+                                {error.type === "correo" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
                             </div>
                             <div>
                                 <label htmlFor="contrasena" className="label-register">
@@ -124,17 +129,18 @@ export default function RegisterView() {
                                         placeholder="Escribe tu contraseña"
                                         required
                                     />
-                                    {errors.contrasena && <p className="text-red-500 text-sm mt-1">{errors.contrasena}</p>}
+                                   
                                     <button
                                         type="button"
                                         onClick={() => setMostrar(!mostrar)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white"
                                     >
-                                        <svg className="size-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                                        </svg>
+                                        {
+                                            mostrar ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>
+                                        }
                                     </button>
                                 </div>
+                                {error.type === "contrasena" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
                             </div>
                             <div>
                                 <label htmlFor="confirmacion" className="label-register">
@@ -151,17 +157,18 @@ export default function RegisterView() {
                                         placeholder="Escribe tu confirmación"
                                         required
                                     />
-                                    {errors.confirmacion && <p className="text-red-500 text-sm mt-1">{errors.confirmacion}</p>}
+                                   
                                     <button
                                         type="button"
                                         onClick={() => setMostrar(!mostrar)}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-white"
                                     >
-                                        <svg className="size-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                                        </svg>
+                                        {
+                                            mostrar ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>
+                                        }
                                     </button>
                                 </div>
+                                {error.type === "contrasena" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
                             </div>
                             <div className="col-span-2">
                                 <button
@@ -171,12 +178,12 @@ export default function RegisterView() {
                                 >
                                     REGISTRARME
                                 </button>
-                                <div className="text-center">
-                                    <p className="text-sm">
-                                        Al registrarme, acepto las <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.
+                                <div className="text-register">
+                                    <p>
+                                        Al registrarme, acepto las <Link href="#" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.
                                     </p>
-                                    <p className="text-sm mt-6">
-                                        ¿Ya tienes cuenta? <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link>
+                                    <p className="text-register text-center mt-3">
+                                        ¿Ya tienes cuenta? <Link href="#" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link>
                                     </p>
                                 </div>
                             </div>
@@ -188,4 +195,3 @@ export default function RegisterView() {
     );
 }
 
-export default RegisterView;
