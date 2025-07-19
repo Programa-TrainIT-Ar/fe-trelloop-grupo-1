@@ -4,8 +4,9 @@ import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
-import elipseIzquierdo from "../assets/images/Ellipse 1148.svg"
-import elipseDerecho from "../assets/images/Ellipse 1147.svg"
+import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
+import elipseDerecho from "@/assets/images/ellipse-1148.svg";
+// Importar el controlador de login
 import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
 
 // Instalar fontawsome para los iconos
@@ -112,7 +113,7 @@ const LoginView = () => {
                   type="submit"
                   onClick={handleLogIn}
                   disabled={loading}
-                  className="login-button bg-blue-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
+                  className="login-button --global-color-primary-500 text-white py-2 px-4 focus:outline-none focus:shadow-outline"
                 >
                   {loading ? "Cargando..." : "Iniciar Sesión"}
                 </button>
@@ -120,7 +121,7 @@ const LoginView = () => {
 
               <p className="text-login">
                 ¿No tienes una cuenta?{" "}
-                <a href="/register" className="login-link text-blue-600 hover:underline">
+                <a href="/register" className="login-link  hover:underline">
                   Regístrate
                 </a>
               </p>
