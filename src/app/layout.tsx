@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "@/styles/globals.css";
-import { Navbar } from "@/components/Navbar"; 
 
+import {Poppins} from "next/font/google";
+import "@/styles/globals.css";
+
+import { Navbar } from "@/components/Navbar"; 
 import { Breadcrumb } from "@/components/Breadcrumb";
 
+import  { Footer} from "@/components/Footer";
 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  weight: ["300", "400", "500", "600"], 
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "TrainIT",
@@ -29,13 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        
+      <body className={`${poppins.variable} font-sans`}>
         <Navbar/>
+
         <Breadcrumb/>
        <main>{children}</main>
+     
       </body>
     </html>
   );

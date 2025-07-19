@@ -82,3 +82,10 @@
   --global-color-red-800: #510404;
   --global-color-red-900: #190101;
 }
+
+.breadcrumb-title {
+  color: white;
+  font-size: 20px;
+  font-style: italic;
+  margin-left: 1rem;
+}
