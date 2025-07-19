@@ -7,7 +7,7 @@ export async function loginService(usuario) {
   // const setToken=useAuthStore.getState().setToken;
 
     try {
-      const response = await fetch(process.env.BACKEND_URL || "http://localhost:5000", {
+      const response = await fetch(process.env.BACKEND_URL + "/auth/login" || "http://localhost:5000/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

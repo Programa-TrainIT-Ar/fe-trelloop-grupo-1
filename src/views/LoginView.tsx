@@ -5,7 +5,7 @@ import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
 import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
-import elipseDerecho from "@/assets/images/ellipse-1148.svg";
+import elipseDerecho from "@/assets/images/ellipse-1147.svg";
 // Importar el controlador de login
 import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
 
@@ -54,13 +54,13 @@ const LoginView = () => {
       <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0}/>
       <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590}/>
 
-      <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
-        <div className="flex flex-wrap justify-between">
-          <div className="w-full md:w-5/12 flex justify-center items-center">
+      <div className="div-tamano px-4 flex justify-center items-center py-8 mx-64">
+        <div className="w-full flex justify-between">
+          <div className="w flex justify-center items-center">
             <Image alt="ilustración candado" src={ilustracionCandado}/>
           </div>
 
-          <div className="w-full md:w-5/12">
+          <div className="">
             <form onSubmit={(event) => event.preventDefault()} className="tamano-form">
               <div className="mb-4">
                 <label className="login-label">Correo electrónico</label>
@@ -101,7 +101,7 @@ const LoginView = () => {
 
               </div>
 
-              <div className="mb-4 flex items-center space-x-2">
+              <div className="mb-4 flex items-center">
                 <input type="checkbox" id="remember" name="remember" className="div-remember-button"/>
                 <label htmlFor="remember" className="div-remember">
                   Recordarme

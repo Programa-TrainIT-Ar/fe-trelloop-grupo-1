@@ -1,28 +1,66 @@
 import "../styles/board-card.css"
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Image from "next/image";
-import Background from "@/assets/images/background-card-image.png"
 import Member from "@/assets/images/member.png"
+import Background from "@/assets/images/background-card-image.png"
 import Tag from "./Tag";
+import clsx from "clsx"
+import { fixDescriptionLength } from "@/controllers/boardCardController";
 
-export function BoardCard() {
+export function BoardCard(props) {
     return (
         <>
             <div className="board-card p-4 text-white flex flex-col justify-between">
-                <Image alt="background" src={Background} className="background-card-image"/>
+                <Image alt="background" src={Background} className="background-card-image" width={0} height={0} />
                 <div className="board-info"></div>
                 <div className="z-10">
                     <div className="flex justify-between pe-2 items-center">
-                        <p className="text-base font-medium">Título tablero</p>
+                        <p className="text-base font-medium">{props.name}</p>
                         <button className="fav-icon"><i className="fa-regular fa-heart"></i></button>
                     </div>
-                    <p className="text-sm mb-1 font-normal">Descripción breve del tablero...</p>
+                    <p className="text-sm mb-1 font-normal">
+                    {
+                        props.description.length > 27
+                        ?
+                        fixDescriptionLength(props.description) + "..."
+                        :
+                        props.description
+
+                    }
+                    </p>
                     <div className="flex relative">
-                        <Image className="member-icon member-1" src={Member} alt="miembro"/>
-                        <Image className="member-icon member-2" src={Member} alt="miembro"/>
-                        <Image className="member-icon member-3" src={Member} alt="miembro"/>
-                        <Image className="member-icon member-4" src={Member} alt="miembro"/>
-                        <div className="member-icon other-members">7</div>
+                        {
+                            props.members.length > 0 &&
+                            props.members.map((item, index) => {
+                                if (index <= 3) {
+                                    return (
+
+                                        <Image key={item.id} src={item.image} alt="miembro" className={clsx(
+                                            "member-icon",
+                                            {
+                                                "member-1": index == 0,
+                                                "member-2": index == 1,
+                                                "member-3": index == 2,
+                                                "member-4": index == 3
+                                            }
+
+                                        )}
+                                        />
+                                    )
+                                }
+                                else if (index == 4) {
+                                    return (
+                                    <div className="member-icon other-members">
+                                        {props.members.length}
+                                    </div>
+                                    )                               
+                                }
+
+                            
+                            }
+                            
+                            )
+                        }
                     </div>
 
                 </div>
@@ -34,7 +72,7 @@ export function BoardCard() {
                 </div>
             </div>
             <div className="flex">
-                <Tag/>
+                <Tag />
                 <div className="relative">
                     <div className="tags-count">0</div>
                 </div>
