@@ -1,0 +1,24 @@
+@font-face {
+    font-family: poppins;
+    src:url("../assets/fonts/Poppins-Regular.ttf")
+}
+
+.tag {
+    width: 6.25rem;
+    height: 1.5rem;
+    border: 1px solid rgba(151, 151, 151, 1);
+    border-radius: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: rgba(151, 151, 151, 1);
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+    font-weight: 500;
+    font-family: poppins;
+}
+
+.tag-icon {
+    width: 0.891rem;
+    height: 0.656rem;
+}
