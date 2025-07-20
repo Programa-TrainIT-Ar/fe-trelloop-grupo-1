@@ -1,5 +1,8 @@
-import { useAuthStore } from "@/store/useAuthStore";
+// import { useAuthStore } from "@/store/useAuthStore";
 
+import { useState } from 'react';
+import { useAuthStore } from '../store/auth/store';
+import { useRouter } from 'next/navigation';
 
 export async function loginService(usuario) {
 
@@ -19,11 +22,12 @@ export async function loginService(usuario) {
       console.log("Código de estado:", response.status);
       console.log("Headers:", Object.fromEntries(response.headers.entries()));
 
-      if (response.status == 404) {
+      if (!response.ok) {
         return {error: true, message: data.error || "Credenciales incorrectas"}
 
       }
       else if (response.ok) {
+        console.log(data.access_token)
         console.log("Login exitoso:", data);
         setToken(data.access_token);
         setUser(data.user);

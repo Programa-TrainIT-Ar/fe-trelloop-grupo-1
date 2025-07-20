@@ -3,18 +3,22 @@ import React, { useState } from "react";
 import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
-import {loginController} from "../controllers/loginController"
 import elipseIzquierdo from "../assets/images/Ellipse 1148.svg"
 import elipseDerecho from "../assets/images/Ellipse 1147.svg"
 import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
+
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useAuthStore } from "@/store/auth";
 
 const LoginView = () => {
   const router = useRouter();
+  const login = useAuthStore(state => state.login);
+  const globalError = useAuthStore(state => state.error);
+
   const [usuario, setUsuario] = useState({
     correo: "",
     contrasena: "",
@@ -36,10 +40,12 @@ const LoginView = () => {
     setLoading(true);
     setError("");
     
-    const loginValidation = await loginController(usuario)
+    const loginValidation = await login(usuario.correo, usuario.contrasena);
+
     console.log(loginValidation)
-    if (loginValidation.error = true) {
-      setError(loginValidation.message)
+    if (loginValidation == true) {
+      
+      setError(globalError || "Error al iniciar sesión")
       setLoading(false);
     }
     else {
