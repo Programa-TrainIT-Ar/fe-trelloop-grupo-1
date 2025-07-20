@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} font-sans`}>
+      <body className={`${poppins.variable} font-sans`} suppressHydrationWarning={true}>
         <Navbar />
 
         <Breadcrumb />

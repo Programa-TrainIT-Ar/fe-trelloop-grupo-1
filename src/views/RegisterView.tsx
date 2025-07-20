@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import Link from "next/link";
 import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
 import elipseDerecho from "@/assets/images/ellipse-1147.svg";
 import ilustracionUsuario from "../assets/images/ilustracion-usuario.svg";
-
 import Swal from 'sweetalert2';
-import { registerService, Usuario } from "@/services/registerService";
 import "../styles/register.css";
 import "../styles/globals.css";
 import { registerController } from "@/controllers/registerController";
@@ -17,42 +15,46 @@ import { registerController } from "@/controllers/registerController";
 
 export default function RegisterView() {
     const router = useRouter();
+ 
+
     const [formData, setFormData] = useState({
-        nombre: "",
-        apellido: "",
-        correo: "",
-        contrasena: "",
-        confirmacion: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
     });
+
 
     const [error, setError] = useState({ error: false, message: "", type: "" });
     const [mostrar, setMostrar] = useState(false);
 
-    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-            const { name, value } = e.target;
-            setFormData((prev) => ({
-                ...prev, [name]: value,
-            }));
-        }
-    
 
-    async function handleSubmit(e: React.FormEvent<HTMLButtonElement>) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev, [name]: value,
+        }));
+    }
+
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const response = await registerController(formData);
 
         if (response.error) {
-            setError({ error: true, message: response.message, type: response.type });
+            setError({ error: true, message: response.message ?? "", type: response.type ?? "" });
             return;
-        }   else {
+        } else {
             Swal.fire({
                 icon: "success",
                 title: "Registro exitoso",
                 text: "Ahora puedes iniciar sesión",
-           }).then(() => {
+            }).then(() => {
                 router.push("/login");
             });
         }
-    }    
+    }
 
     return (
         <>
@@ -62,73 +64,73 @@ export default function RegisterView() {
             <div className="w-full max-w-7xl mx-auto gap-4 px-8">
                 <div className="flex flex-wrap justify-between">
                     <div className=" w-full md:w-5/12 flex items-center justify-center">
-                        <Image src={ilustracionUsuario} alt="ilustración de usuario" />
+                        <Image src={ilustracionUsuario} alt="ilustración de usuario" width={325} height={284}/>
                     </div>
 
-                    <div className="w-full md:w-5/12">
-                        <form className="grid grid-cols-2 gap-4" onSubmit={handleSubmit}>
+                    <div className="w-full md:w-7/12 flex justify-center">
+                        <form className="grid grid-cols-2 gap-4 w-[661px]" onSubmit={handleSubmit}>
                             <div>
-                                <label htmlFor="nombre" className="label-register">
+                                <label htmlFor="firstName" className="label-register">
                                     Nombres<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="nombre"
-                                    name="nombre"
-                                    value={formData.nombre}
+                                    id="firstName"
+                                    name="firstName"
+                                    value={formData.firstName}
                                     onChange={handleChange}
-                                    className="input"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                     placeholder="Escribe tus nombres"
                                     required
                                 />
                             </div>
                             <div>
-                                <label htmlFor="apellido" className="label-register">
+                                <label htmlFor="lastName"  className="label-register">
                                     Apellidos<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="apellido"
-                                    name="apellido"
-                                    value={formData.apellido}
+                                    id="lastName" 
+                                    name="lastName" 
+                                    value={formData.lastName}
                                     onChange={handleChange}
-                                    className="input"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                     placeholder="Ecribe tus apellidos"
                                     required
                                 />
                             </div>
                             <div className="col-span-2">
-                                <label htmlFor="correo" className="label-register">
+                                <label htmlFor="email" className="label-register">
                                     Correo electrónico<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <input
                                     type="email"
-                                    id="correo"
-                                    name="correo"
-                                    value={formData.correo}
+                                    id="email"
+                                    name="email"
+                                    value={formData.email}
                                     onChange={handleChange}
-                                    className="input"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                     placeholder="Escribe tu correo electrónico"
                                     required
                                 />
-                                {error.type === "correo" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
+                                {error.type === "email" && <p className="mt-1 text-sm text-red-500">{error.message}</p>}
                             </div>
                             <div>
-                                <label htmlFor="contrasena" className="label-register">
+                                <label htmlFor="password" className="label-register">
                                     Contraseña<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <div className="relative">
                                     <input
                                         type={mostrar ? "text" : "password"}
-                                        id="contrasena"
-                                        name="contrasena"
-                                        value={formData.contrasena}
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
                                         onChange={handleChange}
-                                        className="input"
+                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                         placeholder="Escribe tu contraseña"
                                         required
                                     />
-                                   
+
                                     <button
                                         type="button"
                                         onClick={() => setMostrar(!mostrar)}
@@ -139,24 +141,24 @@ export default function RegisterView() {
                                         }
                                     </button>
                                 </div>
-                                {error.type === "contrasena" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
+                                {error.type === "password_length" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
                             </div>
                             <div>
-                                <label htmlFor="confirmacion" className="label-register">
+                                <label htmlFor="confirmPassword" className="label-register">
                                     Confirmación de contraseña<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <div className="relative">
                                     <input
                                         type={mostrar ? "text" : "password"}
-                                        id="confirmacion"
-                                        name="confirmacion"
-                                        value={formData.confirmacion}
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
                                         onChange={handleChange}
                                         className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
                                         placeholder="Escribe tu confirmación"
                                         required
                                     />
-                                   
+
                                     <button
                                         type="button"
                                         onClick={() => setMostrar(!mostrar)}
@@ -167,7 +169,7 @@ export default function RegisterView() {
                                         }
                                     </button>
                                 </div>
-                                {error.type === "contrasena" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
+                                {error.type === "password_mismatch" && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
                             </div>
                             <div className="col-span-2">
                                 <button
