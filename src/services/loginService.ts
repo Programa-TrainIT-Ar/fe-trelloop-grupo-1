@@ -1,4 +1,5 @@
 // import { useAuthStore } from "@/store/useAuthStore";
+// import { useAuthStore } from "@/store/useAuthStore";
 
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth/store';
@@ -29,18 +30,19 @@ export async function loginService(usuario) {
       else if (response.ok) {
         console.log(data.access_token)
         console.log("Login exitoso:", data);
-        setToken(data.access_token);
-        setUser(data.user);
-        return {error: false}
+        // setToken(data.access_token);
+        // setUser(data.user);
+        localStorage.setItem("token", data.access_token)
+        return {error: false, message: "", type: ""}
       } else {
         // Login fallido
         // El backend envía { error: "Mensaje de error" }
-        return {error: true, message: data.error || "Error al iniciar sesión"}
+        return {error: true, message: data.error || "Error al iniciar sesión", type: "contrasena"}
       }
 
     } catch (error) {
       console.log("Error de conexión:", error);
-        return {error: true, message: "Error al iniciar sesión, intenta de nuevo"}
+        return {error: true, message: "Error al iniciar sesión, intenta de nuevo", type: "contrasena"}
 
     }
 }

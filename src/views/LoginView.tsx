@@ -24,7 +24,7 @@ const LoginView = () => {
     contrasena: "",
   });
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState({error: false, type: "", message: "" })
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,7 +38,7 @@ const LoginView = () => {
   async function handleLogIn(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     setLoading(true);
-    setError("");
+    setError({error: false, message: "", type: ""});
     
     const loginValidation = await login(usuario.correo, usuario.contrasena);
 
@@ -67,8 +67,6 @@ const LoginView = () => {
 
           <div className="w-full md:w-5/12">
             <form onSubmit={(event) => event.preventDefault()} className="tamano-form">
-              {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
-
               <div className="mb-4">
                 <label className="login-label">Correo electrónico</label>
                 <input
@@ -80,8 +78,10 @@ const LoginView = () => {
                   required
                   className="input-login w-full border border-gray-300 p-2 rounded mt-2"
                 />
-              </div>
+              {error.type == "correo" && <div className="text-red-700 pt-1">{error.message}</div>}
 
+              </div>
+              
               <div className="mb-4">
                 <label className="login-label">Contraseña</label>
                 <div className="relative">
@@ -102,6 +102,8 @@ const LoginView = () => {
                   {showPassword ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>}
                 </button>
                 </div>
+              {error.type == "contrasena" && <div className="text-red-700 pt-1">{error.message}</div>}
+
               </div>
 
               <div className="mb-4 flex items-center space-x-2">
