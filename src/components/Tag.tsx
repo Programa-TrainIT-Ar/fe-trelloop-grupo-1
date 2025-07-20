@@ -1,6 +1,6 @@
 import "../styles/tag.css"
 import Image from "next/image"
-import TagIcon from "@/assets/images/tag.png"
+import TagIcon from "@/assets/tag.png"
 
 export default function Tag() {
     return (

@@ -1,15 +1,14 @@
 import "../styles/board-card.css"
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Image from "next/image";
-import Member from "@/assets/images/member.png"
-import Background from "@/assets/images/background-card-image.png"
+import Background from "@/assets/background-card-image.png"
 import Tag from "./Tag";
 import clsx from "clsx"
 import { fixDescriptionLength } from "@/controllers/boardCardController";
 
 export function BoardCard(props) {
     return (
-        <>
+        <div className="flex flex-col items-center mb-5">
             <div className="board-card p-4 text-white flex flex-col justify-between">
                 <Image alt="background" src={Background} className="background-card-image" width={0} height={0} />
                 <div className="board-info"></div>
@@ -71,12 +70,12 @@ export function BoardCard(props) {
                     <button className="access-card-button">Ingresar</button>
                 </div>
             </div>
-            <div className="flex">
+            <div className="flex tag-container-width">
                 <Tag />
                 <div className="relative">
                     <div className="tags-count">0</div>
                 </div>
             </div>
-        </>
+        </div>
     )
 }

@@ -26,7 +26,7 @@ const BoardListView = () => {
     }, [])
 
     return (
-        <>
+        <div className="grid grid-cols-3 md:grid-cols-4">
             {
                 boards.length > 0 &&
                 boards.map((board) => (
@@ -40,7 +40,7 @@ const BoardListView = () => {
             ))
             
             }
-        </>
+        </div>
     )
 }
 
