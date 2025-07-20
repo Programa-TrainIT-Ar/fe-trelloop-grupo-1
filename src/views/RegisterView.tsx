@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import Link from "next/link";
-import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
-import elipseDerecho from "@/assets/images/ellipse-1147.svg";
-import ilustracionUsuario from "../assets/images/ilustracion-usuario.svg";
+import elipseIzquierdo from "@/assets/ellipse-1148.svg";
+import elipseDerecho from "@/assets/ellipse-1147.svg";
+import ilustracionUsuario from "../assets/ilustracion-usuario.svg";
+
 import Swal from 'sweetalert2';
 import "../styles/register.css";
 import "../styles/globals.css";

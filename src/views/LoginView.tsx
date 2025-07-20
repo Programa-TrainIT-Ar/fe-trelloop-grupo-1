@@ -4,10 +4,10 @@ import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
-import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
-import elipseDerecho from "@/assets/images/ellipse-1148.svg";
+import elipseIzquierdo from "@/assets/ellipse-1148.svg";
+import elipseDerecho from "@/assets/ellipse-1148.svg";
 // Importar el controlador de login
-import ilustracionCandado from "../assets/images/ilustracion-candado.svg"
+import ilustracionCandado from "../assets/ilustracion-candado.svg"
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
