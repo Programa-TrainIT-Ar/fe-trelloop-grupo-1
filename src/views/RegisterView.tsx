@@ -89,7 +89,7 @@ export default function RegisterView() {
                                     name="firstName"
                                     value={formData.firstName}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500bg-[#313131] height-[41px]"
                                     placeholder="Escribe tus nombres"
                                     required
                                 />
@@ -104,7 +104,7 @@ export default function RegisterView() {
                                     name="lastName"
                                     value={formData.lastName}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500bg-[#313131] height-[41px]"
                                     placeholder="Ecribe tus apellidos"
                                     required
                                 />
@@ -119,7 +119,7 @@ export default function RegisterView() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500bg-[#313131] height-[41px]"
                                     placeholder="Escribe tu correo electrónico"
                                     required
                                 />
@@ -136,7 +136,7 @@ export default function RegisterView() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
+                                        className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500bg-[#313131] height-[41px]"
                                         placeholder="Escribe tu contraseña"
                                         required
                                     />
@@ -164,7 +164,7 @@ export default function RegisterView() {
                                         name="confirmPassword"
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
+                                        className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500bg-[#313131] height-[41px]"
                                         placeholder="Escribe tu confirmación"
                                         required
                                     />
@@ -175,7 +175,7 @@ export default function RegisterView() {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-white"
                                     >
                                         {
-                                            mostrar ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>
+                                            mostrar ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash fa-swap-opacity'></i>
                                         }
                                     </button>
                                 </div>
@@ -189,8 +189,8 @@ export default function RegisterView() {
                                 >
                                     REGISTRARME
                                 </button>
-                                <div className="text-register">
-                                    <p className="font-light text-center text-[16px]">
+                                <div className="text-register"> 
+                                    <p className="font-light text-center text-[16px] mt-3">
                                         Al registrarme, acepto las <Link href="#" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.
                                     </p>
                                     <p className="font-light text-center text-[16px] mt-3">
