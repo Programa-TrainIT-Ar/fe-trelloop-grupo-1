@@ -16,7 +16,7 @@ import { registerController } from "@/controllers/registerController";
 
 export default function RegisterView() {
     const router = useRouter();
- 
+
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -42,18 +42,27 @@ export default function RegisterView() {
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const response = await registerController(formData);
-
+        console.log("Respuesta del controlador:", response);
         if (response.error) {
             setError({ error: true, message: response.message ?? "", type: response.type ?? "" });
             return;
         } else {
             Swal.fire({
-                icon: "success",
-                title: "Registro exitoso",
-                text: "Ahora puedes iniciar sesión",
+                icon: 'success',
+                text: 'Te has registrado con éxito',
+                background: 'rgb(26, 26, 26)',
+                iconColor: '#6A5FFF',
+                color: '#FFFFFF',
+                confirmButtonColor: '#6A5FFF',
+                confirmButtonText: 'Cerrar',
+                customClass: {
+                    popup: 'swal2-dark',
+                    confirmButton: 'swal2-confirm'
+                },
             }).then(() => {
                 router.push("/login");
             });
+
         }
     }
 
@@ -65,11 +74,11 @@ export default function RegisterView() {
             <div className="w-full max-w-7xl mx-auto gap-4 px-8">
                 <div className="flex flex-wrap justify-between">
                     <div className=" w-full md:w-5/12 flex items-center justify-center">
-                        <Image src={ilustracionUsuario} alt="ilustración de usuario" width={325} height={284}/>
+                        <Image src={ilustracionUsuario} alt="ilustración de usuario" width={325} height={284} />
                     </div>
 
                     <div className="w-full md:w-7/12 flex justify-center">
-                        <form className="grid grid-cols-2 gap-4 w-[661px]" onSubmit={handleSubmit}>
+                        <form className="grid grid-cols-2 gap-4 w-[661px] mt-[80px]" onSubmit={handleSubmit}>
                             <div>
                                 <label htmlFor="firstName" className="label-register">
                                     Nombres<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
@@ -80,22 +89,22 @@ export default function RegisterView() {
                                     name="firstName"
                                     value={formData.firstName}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
                                     placeholder="Escribe tus nombres"
                                     required
                                 />
                             </div>
                             <div>
-                                <label htmlFor="lastName"  className="label-register">
+                                <label htmlFor="lastName" className="label-register">
                                     Apellidos<span style={{ color: "var(--global-color-primary-500)" }} >*</span>
                                 </label>
                                 <input
                                     type="text"
-                                    id="lastName" 
-                                    name="lastName" 
+                                    id="lastName"
+                                    name="lastName"
                                     value={formData.lastName}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
                                     placeholder="Ecribe tus apellidos"
                                     required
                                 />
@@ -110,7 +119,7 @@ export default function RegisterView() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
+                                    className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
                                     placeholder="Escribe tu correo electrónico"
                                     required
                                 />
@@ -127,7 +136,7 @@ export default function RegisterView() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
+                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
                                         placeholder="Escribe tu contraseña"
                                         required
                                     />
@@ -155,7 +164,7 @@ export default function RegisterView() {
                                         name="confirmPassword"
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 sm:text-sm font-light"
+                                        className="mt-1 p-3 pr-10 bg-[#313131] block w-full rounded-xl border border-stone-400 text-base font-light"
                                         placeholder="Escribe tu confirmación"
                                         required
                                     />
@@ -181,10 +190,10 @@ export default function RegisterView() {
                                     REGISTRARME
                                 </button>
                                 <div className="text-register">
-                                    <p>
+                                    <p className="font-light text-center text-[16px]">
                                         Al registrarme, acepto las <Link href="#" style={{ color: "var(--global-color-secondary-500)" }}>Condiciones del servicio </Link>, de Trainit y su <Link href="/registro" style={{ color: "var(--global-color-secondary-500)" }}>Política de privacidad</Link>.
                                     </p>
-                                    <p className="text-register text-center mt-3">
+                                    <p className="font-light text-center text-[16px] mt-3">
                                         ¿Ya tienes cuenta? <Link href="#" style={{ color: "var(--global-color-secondary-500)" }}>Inicia sesión</Link>
                                     </p>
                                 </div>

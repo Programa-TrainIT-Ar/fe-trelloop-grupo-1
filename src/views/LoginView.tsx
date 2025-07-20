@@ -5,7 +5,7 @@ import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
-import elipseDerecho from "@/assets/ellipse-1148.svg";
+import elipseDerecho from "@/assets/ellipse-1147.svg";
 // Importar el controlador de login
 import ilustracionCandado from "../assets/ilustracion-candado.svg"
 
