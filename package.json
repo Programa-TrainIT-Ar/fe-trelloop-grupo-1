@@ -11,6 +11,8 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "clsx": "^2.1.1",
     "next": "15.3.4",
     "react": "^19.0.0",
