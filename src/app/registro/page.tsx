@@ -7,6 +7,7 @@ import logo from '@/assets/logo-dark-trainit-horizontal.png';
 import Link from "next/link";
 import '@sweetalert2/theme-dark/dark.css';
 import Swal from 'sweetalert2';
+import BoardMenu from "@/components/BoardMenu";
 
 
 const handleSubmit = (e) =>{
@@ -30,7 +31,8 @@ export default function Registro() {
     
     const [mostrar, setMostrar] = useState(false);
     return (
-        <>        
+        <> 
+        <BoardMenu/>       
         <main className="min-h-screen flex items-start pt-16 text-white">
             <div className="w-full max-w-7xl mx-auto grid grid-cols-2 gap-4 px-8">
 
