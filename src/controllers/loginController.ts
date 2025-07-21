@@ -1,6 +1,5 @@
-import { loginService } from "@/services/loginService"
+export function loginController(usuario) {
 
-export async function loginController(usuario) {
     if (!usuario.correo || !usuario.contrasena) {
       return {error: true, message: "Por favor, completa todos los campos", type: "contrasena"}
     }
@@ -11,5 +10,5 @@ export async function loginController(usuario) {
       return {error: true, message: "La contraseña debe tener al menos 8 carácteres", type: "contrasena"}
     }
     
-    return await loginService(usuario)
+    return true;
 }

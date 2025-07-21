@@ -4,18 +4,24 @@ import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
-import elipseIzquierdo from "@/assets/images/ellipse-1148.svg";
-import elipseDerecho from "@/assets/images/ellipse-1147.svg";
+import elipseIzquierdo from "@/assets/ellipse-1148.svg";
+import elipseDerecho from "@/assets/ellipse-1147.svg";
 // Importar el controlador de login
 import ilustracionCandado from "../assets/ilustracion-candado.svg"
+
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useAuthStore } from "@/store/auth";
+import { useStore } from "zustand";
 
 const LoginView = () => {
   const router = useRouter();
+  const login = useAuthStore(state => state.login);
+  const globalError = useAuthStore(state => state.error);
+
   const [usuario, setUsuario] = useState({
     correo: "",
     contrasena: "",
@@ -36,18 +42,30 @@ const LoginView = () => {
     event.preventDefault()
     setLoading(true);
     setError({error: false, message: "", type: ""});
+
+    const parametersValidation = loginController(usuario)
+
+    if (parametersValidation.error == true) {
+      setError({error: true, type: parametersValidation.type, message: parametersValidation.message})
+      setLoading(false)
+      return
+    }
     
-    const loginValidation = await loginController(usuario)
-    console.log(loginValidation)
-    if (loginValidation.error = true) {
-      setError({error: true, message: loginValidation.message, type: loginValidation.type})
+    const loginValidation = await login(usuario.correo, usuario.contrasena);
+    const data = useStore(useAuthStore, (state) => state.accessToken)
+    console.log(data)
+
+    if (loginValidation == false) {
+      setError({error: true, type: "contrasena", message: globalError || "Error al iniciar sesión"})
       setLoading(false);
     }
-    else {
+    else if (loginValidation == true) {
+      console.log("prueba")
       router.push("/");
       setLoading(false);
       
   }
+  
 }
   return (
     <>
