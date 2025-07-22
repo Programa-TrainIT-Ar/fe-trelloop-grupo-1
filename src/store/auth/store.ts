@@ -19,17 +19,19 @@ export const useAuthStore = create<AuthStore>()(
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/auth/login`, {
+                    const response = await fetch(`${NEXT_API_BACKEND_URL}/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),
                     });
 
                     const data = await response.json();
+                    console.log(data)
                 
                     if (!response.ok) {
+                        console.log("prueba error")
                         set({ isLoading: false, error: data.error || 'Error al iniciar sesión' });
-                        return false;
+                        return {error: true, type: "contrasena", message: data.error}
                     }
 
                     set({

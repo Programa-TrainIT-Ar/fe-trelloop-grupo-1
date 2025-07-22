@@ -10,7 +10,7 @@ export function BoardCard(props) {
     return (
         <div className="flex flex-col items-center mb-5">
             <div className="board-card p-4 text-white flex flex-col justify-between">
-                <Image alt="background" src={Background} className="background-card-image" width={0} height={0} />
+                <Image alt="background" src={props.image} className="background-card-image" width={0} height={0} />
                 <div className="board-info"></div>
                 <div className="z-10">
                     <div className="flex justify-between pe-2 items-center">

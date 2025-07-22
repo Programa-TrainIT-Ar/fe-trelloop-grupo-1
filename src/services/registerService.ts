@@ -26,7 +26,7 @@ export async function registerService(usuario: Usuario) {
         return { error: false, message: "" };
     } catch (error) {
         console.error("Error:", error);
-        return { error: true, message: "Error de red o el servodor no responde" };
+        return { error: true, message: "Error de red o el servodor no responde", type: "contrasena" };
     }
 }
 

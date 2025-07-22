@@ -8,3 +8,4 @@ export function fixDescriptionLength(description) {
         })
         return fixedDescription
     }
+

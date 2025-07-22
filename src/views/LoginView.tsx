@@ -50,21 +50,31 @@ const LoginView = () => {
       setLoading(false)
       return
     }
-    
-    const loginValidation = await login(usuario.correo, usuario.contrasena);
-    const data = useStore(useAuthStore, (state) => state.accessToken)
-    console.log(data)
-
-    if (loginValidation == false) {
-      setError({error: true, type: "contrasena", message: globalError || "Error al iniciar sesión"})
-      setLoading(false);
-    }
-    else if (loginValidation == true) {
-      console.log("prueba")
-      router.push("/");
-      setLoading(false);
+    try {
+      const loginValidation = await login(usuario.correo, usuario.contrasena);
       
-  }
+      console.log(loginValidation)
+      if (loginValidation.error) {
+        console.log("errorr")
+        setError({error: true, type: "contrasena", message: loginValidation.message || "Error al iniciar sesión"})
+        setLoading(false);
+      }
+      else if (loginValidation) {
+        console.log("prueba")
+        router.push("/");
+        setLoading(false);
+        return
+      }
+
+    } catch (error) {
+      console.log(error)
+      return
+    }
+    const data = useStore(useAuthStore, (state) => state.accessToken)
+
+  
+      
+  
   
 }
   return (

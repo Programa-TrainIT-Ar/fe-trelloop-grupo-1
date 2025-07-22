@@ -1,8 +1,10 @@
 "use client"
 import { BoardCard } from "@/components/BoardCard"
 import { useState, useEffect } from "react"
-import { getBoardList } from "@/services/boardListService"
 import { StaticImageData } from "next/image"
+import { useBoardStore } from "@/store/boards/store"
+import { useAuthStore } from "@/store/auth"
+import { useRouter } from "next/navigation"
 
 interface Board {
     id: number
@@ -17,11 +19,27 @@ interface Board {
 
 const BoardListView = () => { 
 
-    const [boards, setBoards] = useState<Board[]>([])
-
+    const getBoards = useBoardStore(state => state.getBoards);
+    const token = useAuthStore.getState().accessToken
+    const boards = useBoardStore.getState().boards
+    const router = useRouter()
+    
+    
+    async function handleGetBoards() {
+        try {
+            const data = await getBoards()
+            console.log(boards)
+        } catch (error) {
+            return error
+        }
+      
+    }
     useEffect(() => {
-        const data = getBoardList()
-        setBoards(data)
+        console.log(token)
+        if (!token) {
+            router.push("/")
+        }
+        handleGetBoards()
 
     }, [])
 
