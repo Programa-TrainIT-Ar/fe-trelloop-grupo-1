@@ -16,12 +16,7 @@ input:hover{
 }
 
 
-.ellipse-right {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: -1;
-}
+
 
 .label-register {
     font-family: Poppins;
@@ -34,12 +29,7 @@ input:hover{
     color: #ffffff;
 }
 
-.ellipse-left {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    z-index: -1;
-}
+
 .text-register {
   flex-direction: column;
   align-items: center;
@@ -64,4 +54,18 @@ input:hover{
 .swal2-confirm {
   border-radius: .5rem !important;
 
+}
+
+.elipse-izquierdo {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: -1;
+}
+
+.elipse-derecho {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
 }

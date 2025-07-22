@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Poppins } from "next/font/google";
 import "@/styles/globals.css";
+import "@/styles/register.css";  
 import { Navbar } from "@/components/Navbar";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
