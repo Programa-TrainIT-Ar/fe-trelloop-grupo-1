@@ -1,7 +1,7 @@
 import "../styles/board-card.css"
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Image from "next/image";
-import Background from "@/assets/background-card-image.png"
+import Member from "@/assets/member.png"
 import Tag from "./Tag";
 import clsx from "clsx"
 import { fixDescriptionLength } from "@/controllers/boardCardController";
@@ -34,7 +34,7 @@ export function BoardCard(props) {
                                 if (index <= 3) {
                                     return (
 
-                                        <Image key={item.id} src={item.image} alt="miembro" className={clsx(
+                                        <Image key={item.id} src={Member} alt="miembro" className={clsx(
                                             "member-icon",
                                             {
                                                 "member-1": index == 0,
