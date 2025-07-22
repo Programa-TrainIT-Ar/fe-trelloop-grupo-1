@@ -20,8 +20,8 @@ export default function SearchBar() {
     return (
         <nav className="w-full mx-auto mb-8">
             <div className="relative flex h-16 items-center justify-between gap-4">
+                
                 {/* Barra de búsqueda */}
-
 
                 <div className="flex flex-1 min-w-0 items-center gap-4">
                     <form className="w-full max-w-md">
@@ -55,7 +55,9 @@ export default function SearchBar() {
 
                             </button>
                         </div>
+
                         {/* Menú desplegable del perfil (oculto por defecto) */}
+                        
                         <div
                             role="menu"
                             tabIndex={-1}
