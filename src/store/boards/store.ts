@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useAuthStore } from '../auth';
 import { projectGetSourceForAsset } from 'next/dist/build/swc/generated-native';
+import Background from "@/assets/background-card-image.png"
 
 
 const API_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
@@ -16,6 +17,8 @@ export const useBoardStore = create<any>()(
             // Acciones
             getBoards: async () => {
                 set({ isLoading: true, error: null });
+               
+              
                 try {
                     const token = useAuthStore.getState().accessToken
                     console.log(token)
@@ -45,10 +48,10 @@ export const useBoardStore = create<any>()(
                     });
                     return false;
                 }
-            },
+            }
 
 
-        }),
+        })
     )
 
 );
