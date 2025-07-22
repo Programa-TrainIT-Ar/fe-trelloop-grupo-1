@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthStore>()(
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await fetch(`${NEXT_API_BACKEND_URL}/auth/login`, {
+                    const response = await fetch(`${process.env.NEXT_API_BACKEND_URL}/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),
