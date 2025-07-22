@@ -4,7 +4,7 @@ import { useAuthStore } from '../auth';
 import { projectGetSourceForAsset } from 'next/dist/build/swc/generated-native';
 
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
 
 export const useBoardStore = create<any>()(
     
@@ -19,7 +19,7 @@ export const useBoardStore = create<any>()(
                 try {
                     const token = useAuthStore.getState().accessToken
                     console.log(token)
-                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/board/getMyBoards`, {
+                    const response = await fetch(`${API_URL}/board/getMyBoards`, {
                         method: 'GET',
                         headers: {
                             "Authorization": `Bearer ${token}`

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthStore, User } from './model';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
 
 export const useAuthStore = create<AuthStore>()(
     persist(
@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthStore>()(
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/auth/login`, {
+                    const response = await fetch(`${API_URL}/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),
