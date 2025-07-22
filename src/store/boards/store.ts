@@ -19,7 +19,7 @@ export const useBoardStore = create<any>()(
                 try {
                     const token = useAuthStore.getState().accessToken
                     console.log(token)
-                    const response = await fetch(`${process.env.NEXT_API_BAKCEND_URL}/board/getMyBoards`, {
+                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/board/getMyBoards`, {
                         method: 'GET',
                         headers: {
                             "Authorization": `Bearer ${token}`

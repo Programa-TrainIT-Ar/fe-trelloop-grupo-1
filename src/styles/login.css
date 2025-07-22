@@ -42,6 +42,7 @@ input{
   background-color: transparent;
   border: #3C3C3CB2 1px solid;
   border-radius: 8px;
+  color: white;
 }
 
 .input-login:hover{
