@@ -6,7 +6,7 @@ export default function Tag() {
     return (
         <div className="tag">
             <Image alt="background" src={TagIcon} className="tag-icon"/>
-            <p className="text-xs">Etiqueta</p>
+            <p className="tag-text text-xs">Etiqueta</p>
         </div>
     )
 }

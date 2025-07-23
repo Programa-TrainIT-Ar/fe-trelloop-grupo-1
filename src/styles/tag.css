@@ -17,3 +17,17 @@
     width: 0.891rem;
     height: 0.656rem;
 }
+
+@media (width > 1600px) {
+    .tag {
+        width:8rem !important;
+        height: 2rem !important;
+    }
+    .tag-text {
+        font-size: 1rem;
+    }
+    .tag-icon {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+}
