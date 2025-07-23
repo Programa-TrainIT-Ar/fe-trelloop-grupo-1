@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer'
 import { persist } from 'zustand/middleware';
 import { useAuthStore } from '../auth';
 import { projectGetSourceForAsset } from 'next/dist/build/swc/generated-native';
@@ -14,7 +15,7 @@ export const useBoardStore = create(
 
             // Acciones
             getBoards: () => {
-                console.log("holalalal")
+               console.log("Prueba de que si paso el null")
                 set({boards: 
                     [
                     {
@@ -28,6 +29,7 @@ export const useBoardStore = create(
                         userId: 1
                     }
                 ]
+                
             })
                 // try {
                 //     const token = useAuthStore.getState().accessToken
