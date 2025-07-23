@@ -7,7 +7,7 @@ import Link from "next/link";
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
 import elipseDerecho from "@/assets/ellipse-1147.svg";
 import ilustracionUsuario from "../assets/ilustracion-usuario.svg";
-
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import Swal from 'sweetalert2';
 import "../styles/register.css";
 import "../styles/globals.css";
@@ -95,7 +95,7 @@ export default function RegisterView() {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
+                                        className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
                                         placeholder="Escribe tus nombres"
                                         required
                                     />
@@ -110,7 +110,7 @@ export default function RegisterView() {
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
+                                        className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
                                         placeholder="Ecribe tus apellidos"
                                         required
                                     />
@@ -125,7 +125,7 @@ export default function RegisterView() {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
+                                        className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
                                         placeholder="Escribe tu correo electrónico"
                                         required
                                     />
@@ -142,7 +142,7 @@ export default function RegisterView() {
                                             name="password"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
+                                            className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
                                             placeholder="Escribe tu contraseña"
                                             required
                                         />
@@ -170,7 +170,7 @@ export default function RegisterView() {
                                             name="confirmPassword"
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className="mt-1 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
+                                            className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] height-[41px]"
                                             placeholder="Escribe tu confirmación"
                                             required
                                         />
