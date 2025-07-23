@@ -22,7 +22,7 @@ export function BoardCard(props) {
                 <div className="board-info"></div>
                 <div className="z-10">
                     <div className="flex justify-between pe-2 items-center">
-                        <p className="text-base font-medium">{props.name}</p>
+                        <span className="board-title ">{props.name}</span>
                         <button className="fav-icon"><i className="fa-regular fa-heart"></i></button>
                     </div>
                     <p className="text-sm mb-1 font-normal">
