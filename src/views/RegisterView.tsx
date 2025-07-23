@@ -193,7 +193,7 @@ export default function RegisterView() {
                                         className="w-full px-6 py-2 rounded-xl text-white my-4"
                                         style={{ backgroundColor: "var(--global-color-primary-500)" }}
                                     >
-                                        REGISTRARME
+                                        Registrate
                                     </button>
                                     <div className="text-register">
                                         <p className="font-light text-center text-[16px] mt-3">
