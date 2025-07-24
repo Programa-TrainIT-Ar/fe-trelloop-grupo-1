@@ -13,11 +13,17 @@ interface BoardMenuProps {
   boardName: string;
 }
 
-const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId, boardName, }) => {
+const BoardMenu: React.FC<BoardMenuProps> = ({
+  creatorId,
+  currentUserId,
+  boardId,
+  boardName,
+}) => {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // Detectar clics fuera del menú
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -42,7 +48,14 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
     try {
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`http://localhost:5000/deleteBoard/${boardId}`, {
+      if (!token) {
+        Swal.fire('Error', 'No hay token de autenticación', 'error');
+        return;
+      }
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+      const response = await fetch(`${baseUrl}/deleteBoard/${boardId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -97,7 +110,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        deleteBoardFromBackend(); 
+        deleteBoardFromBackend();
       }
     });
   };
