@@ -122,7 +122,7 @@ const LoginView = () => {
                 onClick={()=>setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 mt-1"
                 >
-                  {showPassword ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>}
+                  {showPassword ? <i className="fa-solid fa-eye opacity-[0.6]"></i> : <i className='fa-solid fa-eye-slash opacity-70'></i>}
                 </button>
                 </div>
               {error.type == "contrasena" && <div className="text-red-700 pt-1">{error.message}</div>}
