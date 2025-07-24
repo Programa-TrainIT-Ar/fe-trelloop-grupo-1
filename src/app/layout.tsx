@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
 import { useEffect } from "react";
-import {useAuthStore} from "@/store/auth";
-import "@/styles/globals.css"; 
+import { useAuthStore } from "@/store/auth";
+import "@/styles/globals.css";
 
 import { Poppins } from "next/font/google";
 import "@/styles/globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { LayoutProviders } from "@/components/LayoutProviders";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600"],
@@ -30,10 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} font-sans`}>
-        <Navbar />
-
-        <Breadcrumb />
-        <main>{children}</main>
+        <LayoutProviders>
+          {children}
+        </LayoutProviders>
       </body>
     </html>
   );
