@@ -1,6 +1,9 @@
 import React from "react";
 import { FaDiscord, FaLinkedin, FaFacebook } from 'react-icons/fa';
 
+// Instalar los react icons
+// npm install react-icons
+
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-background-body text-text-default py-10 px-6 relative z-10">

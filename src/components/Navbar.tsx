@@ -10,7 +10,7 @@ import logo from '@/assets/logo-dark-trainit-horizontal.png';
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   return (
-    <main className="bg-background-height text-text-default flex items-center justify-between px-7 py-4">
+    <main className="bg-background-body text-text-default flex items-center justify-between px-7 py-4">
       {/* Logo */}
       <div className="flex items-center">
         <Image 
@@ -20,33 +20,33 @@ export const Navbar: React.FC = () => {
         style={{ height: 'auto' }}
         loading="lazy" />
       </div>
-      <ul className="flex items-center gap-10 text-lg">
-        <li className="hover:text-state-default font-medium">
+      <ul className="flex items-center gap-36 text-lg">
+        <li className="hover:text-state-default">
           <Link href="/">Inicio</Link>
         </li>
-        <li className="hover:text-state-default font-medium">
+        <li className="hover:text-state-default">
           <Link href="/about">Acerca de</Link>
         </li>
-        <li className="hover:text-state-default font-medium">
+        <li className="hover:text-state-default">
           <Link href="/contact">Contacto</Link>
         </li>
       </ul>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-8">
         {pathname !== "/login" && (
           <Link
             href="/login"
-            className="text-state-default border border-state-default rounded-full px-6 py-2 text-sm hover:bg-background-medium transition"
+            className="text-state-default font-bold border border-state-default rounded-md px-16 py-2 text-sm hover:bg-background-medium transition"
           >
-            LOGIN
+            Login
           </Link>
         )}
         {pathname !== "/register" && (
           <Link
             href="/register"
-            className="bg-state-default text-white rounded-full px-6 py-2 text-sm hover:bg-state-hover transition"
+            className="bg-state-default font-bold text-white rounded-md px-16 py-2 text-sm hover:bg-state-hover transition"
           >
-            REGISTRARSE
+            Regístrate
           </Link>
         )}
       </div>

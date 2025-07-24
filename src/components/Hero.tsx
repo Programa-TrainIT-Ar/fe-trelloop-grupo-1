@@ -58,18 +58,17 @@ export const Hero: React.FC = () => {
               />
               <p className="text-gray-300 text-6xl" style={{ fontFamily: 'var(--font-geist-mono)' }}>Happen</p>
             </div>
-            <div className="ml-10 mt-6">
-              <p className="mb-6 mt-4 ml-5 text-gray-300">
+            <div className="ml-10 mt-6 ps-10">
+              <p className="mb-6 mt-4 text-gray-300">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
               </p>
-                        <Link
-            href="/register"
-            className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded transition"
-          >
-            Crear cuenta
-          </Link>
+              <Link
+                href="/register"
+                className="inline-block bg-state-default hover:bg-state-hover text-white font-semibold px-20 py-3 rounded-md transition"
+              >
+                Crear cuenta
+              </Link>
             </div>
-
           </div>
 
           {/* Right side grid: solo una imagen desde public */}
