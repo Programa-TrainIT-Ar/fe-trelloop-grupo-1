@@ -5,17 +5,23 @@ import "../styles/login.css";
 import { useRouter } from "next/navigation";
 import {loginController} from "../controllers/loginController"
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
-import elipseDerecho from "@/assets/ellipse-1148.svg";
+import elipseDerecho from "@/assets/ellipse-1147.svg";
 // Importar el controlador de login
 import ilustracionCandado from "../assets/ilustracion-candado.svg"
+
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useAuthStore } from "@/store/auth";
+import { useStore } from "zustand";
 
 const LoginView = () => {
   const router = useRouter();
+  const login = useAuthStore(state => state.login);
+  const globalError = useAuthStore(state => state.error);
+
   const [usuario, setUsuario] = useState({
     correo: "",
     contrasena: "",
@@ -36,31 +42,53 @@ const LoginView = () => {
     event.preventDefault()
     setLoading(true);
     setError({error: false, message: "", type: ""});
-    
-    const loginValidation = await loginController(usuario)
-    console.log(loginValidation)
-    if (loginValidation.error = true) {
-      setError({error: true, message: loginValidation.message, type: loginValidation.type})
-      setLoading(false);
+
+    const parametersValidation = loginController(usuario)
+
+    if (parametersValidation.error == true) {
+      setError({error: true, type: parametersValidation.type, message: parametersValidation.message})
+      setLoading(false)
+      return
     }
-    else {
-      router.push("/");
-      setLoading(false);
+    try {
+      const loginValidation = await login(usuario.correo, usuario.contrasena);
       
-  }
+      console.log(loginValidation)
+      if (loginValidation.error) {
+        console.log("errorr")
+        setError({error: true, type: "contrasena", message: loginValidation.message || "Error al iniciar sesión"})
+        setLoading(false);
+      }
+      else if (loginValidation) {
+        console.log("prueba")
+        router.push("/");
+        setLoading(false);
+        return
+      }
+
+    } catch (error) {
+      console.log(error)
+      return
+    }
+    const data = useStore(useAuthStore, (state) => state.accessToken)
+
+  
+      
+  
+  
 }
   return (
     <>
       <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0}/>
       <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590}/>
 
-      <div className="w-full max-w-6xl mx-auto px-4 py-8 mt-32">
-        <div className="flex flex-wrap justify-between">
-          <div className="w-full md:w-5/12 flex justify-center items-center">
+      <div className="div-tamano px-4 flex justify-center items-center py-8 mx-64">
+        <div className="w-full flex justify-between">
+          <div className="w flex justify-center items-center">
             <Image alt="ilustración candado" src={ilustracionCandado}/>
           </div>
 
-          <div className="w-full md:w-5/12">
+          <div className="">
             <form onSubmit={(event) => event.preventDefault()} className="tamano-form">
               <div className="mb-4">
                 <label className="login-label">Correo electrónico</label>
@@ -94,14 +122,14 @@ const LoginView = () => {
                 onClick={()=>setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 mt-1"
                 >
-                  {showPassword ? <i className="fa-solid fa-eye"></i> : <i className='fa-solid fa-eye-slash'></i>}
+                  {showPassword ? <i className="fa-solid fa-eye opacity-[0.6]"></i> : <i className='fa-solid fa-eye-slash opacity-70'></i>}
                 </button>
                 </div>
               {error.type == "contrasena" && <div className="text-red-700 pt-1">{error.message}</div>}
 
               </div>
 
-              <div className="mb-4 flex items-center space-x-2">
+              <div className="mb-4 flex items-center">
                 <input type="checkbox" id="remember" name="remember" className="div-remember-button"/>
                 <label htmlFor="remember" className="div-remember">
                   Recordarme
