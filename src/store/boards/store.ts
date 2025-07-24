@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { useAuthStore } from '../auth';
 import { projectGetSourceForAsset } from 'next/dist/build/swc/generated-native';
 import Background from "@/assets/background-card-image.png"
+import { ExpandedBoardCard } from '@/components/ExpandedBoardCard';
 
 
 const API_URL = "https://2135kz5p-5000.use2.devtunnels.ms"
@@ -12,8 +13,14 @@ export const useBoardStore = create(
         (set, get) => ({
             // Estado inicial
             boards: null,
+            expandedBoardID: null,
 
             // Acciones
+            expandBoard: (id) => {
+                console.log(id)
+                set({expandedBoardID: id})
+                console.log((state) => state.expandedBoardId)
+            },
             getBoards: () => {
                console.log("Prueba de que si paso el null")
                 set({boards: 
@@ -30,10 +37,10 @@ export const useBoardStore = create(
                         userId: 1
                     }, 
                     {
-                        name: "Tablero 1",
+                        name: "Tablero 2",
                         creationDate: "2025-07-22T23:15:53.704992",
                         description: "Prueba de descripción de tablero",
-                        id: 1,
+                        id: 2,
                         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
                         isPublic: true,
                         members: [{}, {}, {}, {}, {}, {}],
@@ -41,10 +48,10 @@ export const useBoardStore = create(
                         userId: 1
                     },
                     {
-                        name: "Tablero 1",
+                        name: "Tablero 3",
                         creationDate: "2025-07-22T23:15:53.704992",
                         description: "Prueba de descripción de tablero",
-                        id: 1,
+                        id: 3,
                         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
                         isPublic: true,
                         members: [{}, {}, {}, {}, {}, {}],
@@ -52,10 +59,10 @@ export const useBoardStore = create(
                         userId: 1
                     },
                     {
-                        name: "Tablero 1",
+                        name: "Tablero 4",
                         creationDate: "2025-07-22T23:15:53.704992",
                         description: "Prueba de descripción de tablero",
-                        id: 1,
+                        id: 4,
                         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
                         isPublic: true,
                         members: [{}, {}, {}, {}, {}, {}],
@@ -63,10 +70,10 @@ export const useBoardStore = create(
                         userId: 1
                     },
                     {
-                        name: "Tablero 1",
+                        name: "Tablero 5",
                         creationDate: "2025-07-22T23:15:53.704992",
                         description: "Prueba de descripción de tablero",
-                        id: 1,
+                        id: 5,
                         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
                         isPublic: true,
                         members: [{}, {}, {}, {}, {}, {}],

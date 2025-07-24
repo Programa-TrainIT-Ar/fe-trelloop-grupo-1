@@ -5,10 +5,22 @@ import Member from "@/assets/member.png"
 import Tag from "./Tag";
 import clsx from "clsx"
 import { fixDescriptionLength } from "@/controllers/boardCardController";
+import { ExpandedBoardCard } from "./ExpandedBoardCard";
+import { useBoardStore } from "@/store/boards";
 
 export function BoardCard(props) {
+    const expandBoard = useBoardStore((state) => state.expandBoard);
+    const expandedBoardID = useBoardStore((state) => state.expandedBoardID)
+
+
     return (
-        <div className="card-size  flex-col items-center mb-5">
+        <>
+        {
+        expandedBoardID === props.id
+        ?
+        <ExpandedBoardCard index={props.index}/>
+        :
+        <div className="card-size flex-col items-center mb-5">
             <div className="board-card p-4 text-white flex flex-col justify-between">
             
                 <Image
@@ -74,16 +86,20 @@ export function BoardCard(props) {
 
                 <div className="flex justify-between z-10">
                     <button className="card-button"><i className="fa-solid fa-ellipsis-vertical"></i></button>
-                    <button className="card-button"><i className="fa-regular fa-eye"></i></button>
+                    <button className="card-button" onClick={() => expandBoard(props.id)}>
+                        <i className="fa-regular fa-eye"></i>
+                    </button>
                     <button className="access-card-button">Ingresar</button>
                 </div>
             </div>
             <div className="flex tag-container-width">
                 <Tag />
                 <div className="relative">
-                    <div className="tags-count">0</div>
+                    <div className="tags-count">{props.tags?.length}</div>
                 </div>
             </div>
         </div>
+        }
+        </>
     )
 }

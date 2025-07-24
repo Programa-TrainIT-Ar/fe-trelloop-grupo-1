@@ -3,7 +3,7 @@
     max-width: 100%;
 
 }
-@media (width > 2500px) {
+@media (width > 2450px) {
 .board-card {
     min-height: 30rem !important;
     max-height: 30rem !important;
@@ -14,6 +14,29 @@
     object-fit: cover;
 
 }
+.card-button {
+        height: 4.5rem !important;
+        width: 4.5rem !important;
+        font-size: 1.9rem !important;
+    }
+    .access-card-button {
+        height: 4.5rem !important;
+        font-size: 1.7rem !important;
+        width: 10rem;
+    }
+    .board-title  {
+        font-size: 3rem !important;
+    }
+    .board-description {
+        font-size: 1.6rem !important;
+    }
+    .member-icon {
+        height: 4rem !important;
+        width: 4rem !important;
+        font-size: 1.8rem !important;
+    }
+
+
 }
 
 @media (width > 1600px) {

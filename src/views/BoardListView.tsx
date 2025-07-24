@@ -24,16 +24,7 @@ const BoardListView = () => {
     const boards = useBoardStore((state) => state.boards);
     const router = useRouter()
     
-    
-    async function handleGetBoards() {
-        try {
-            const data = await getBoards()
-            console.log(boards)
-        } catch (error) {
-            return error
-        }
-      
-    }
+
     useEffect(() => {
         console.log(token)
         if (!token) {
@@ -46,21 +37,28 @@ const BoardListView = () => {
     }, [])
 
     return (
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-8">
+        <>
+
+        <div className="grid grid-cols-4 grid-flow-dense gap-8">
             {
                 boards?.length > 0 &&
-                boards.map((board) => (
+                boards.map((board, index) => (
                 <BoardCard 
                 key={board.id} 
                 name={board.name} 
                 description={board.description} 
                 image={board.image}
                 members={board.members}
+                tags={board.tags}
+                id={board.id}
+                index={index}
                 />
             ))
             
             }
         </div>
+
+        </>
     )
 }
 
