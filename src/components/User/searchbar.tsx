@@ -79,18 +79,18 @@ export default function SearchBar() {
 
                         <div
                             role="menu"
-                            tabIndex={-1}
+                            tabIndex={1}
                             aria-labelledby="user-menu-button"
                             aria-orientation="vertical"
-                            className={`${isProfileOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-xl bg-[--global-color-neutral-700] flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
-                            <a id="user-menu-item-0" role="menuitem" href="#" tabIndex={-1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                            className={`${isProfileOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-[--global-color-neutral-700] flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
+                            <a id="user-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
                                 <IoPersonOutline className="size-6" />Perfil de usuario
                             </a>
-                            <a id="user-menu-item-1" role="menuitem" href="#" tabIndex={-1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                            <a id="user-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
                                 <LuKey className="size-6" />Contraseña
                             </a>
                             <div className="my-1 border-t border-gray-500 mx-3"></div>
-                            <a id="user-menu-item-2" role="menuitem" href="#" tabIndex={-1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                            <a id="user-menu-item-2" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
                                 <RxExit className="size-6" />Cerrar sesión
                             </a>
                         </div>
@@ -101,17 +101,17 @@ export default function SearchBar() {
 
             <div
                 aria-labelledby="user-filter-options"
-                className={`${isFilterOpen ? '' : 'hidden'} flex gap-14 mt-4 border-t-black border-t-[1px] py-6 text-lg items-center`}>
-                <button className="text-white flex items-center">
+                className={`${isFilterOpen ? '' : 'hidden'} flex gap-8 mt-4 border-t-black border-t-[1px] py-3 text-lg items-center`}>
+                <button className="text-white flex items-center hover:bg-[--global-color-neutral-600] rounded-xl py-2 px-6 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[--global-color-neutral-800]">
                     <MdOutlinePeopleAlt className="me-2 size-8"/>Miembros
                 </button>
-                <button className="text-white flex items-center">
+                <button className="text-white flex items-center hover:bg-[--global-color-neutral-600] rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[--global-color-neutral-800]">
                     <PiTagSimple className="me-2 size-8"/>Etiquetas
                 </button>
-                <button className="text-white flex items-center">
+                <button className="text-white flex items-center hover:bg-[--global-color-neutral-600] rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[--global-color-neutral-800]">
                     <IoCalendarClearOutline className="me-2 size-8"/>Fecha
                 </button>
-                <button className="text-[#F200FF] flex items-center">
+                <button className="text-[#F200FF] hover:text-white flex items-center hover:bg-[--global-color-neutral-600] rounded-xl py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[--global-color-neutral-800]">
                     <IoHeartOutline className="me-2 size-8"/>Solo favoritos
                 </button>
             </div>
