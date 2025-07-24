@@ -13,7 +13,7 @@ import { registerService, Usuario } from "@/services/registerService";
 import "../styles/register.css";
 import "../styles/globals.css";
 import { registerController } from "@/controllers/registerController";
-
+import BoardMenu from "@/components/BoardMenu";
 
 export default function RegisterView() {
     const router = useRouter();
@@ -56,6 +56,7 @@ export default function RegisterView() {
 
     return (
         <>
+        <BoardMenu/>
             <Image alt="elipse-izquierdo" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0} />
             <Image alt="elipse-derecho" src={elipseDerecho} className="elipse-derecho" width={590} height={590} />
 
