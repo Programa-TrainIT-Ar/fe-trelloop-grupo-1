@@ -1,59 +1,115 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ConfirmModal from './ConfirmModal';
+import Swal from 'sweetalert2';
+import { FaPen, FaTrash } from 'react-icons/fa';
+import '../styles/globals.css';
+import '../styles/delModal.css';
 
-const BoardMenu: React.FC = () => {
+
+interface BoardMenuProps {
+  creatorId: string;
+  currentUserId: string;
+}
+
+const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const router = useRouter();
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
   const handleEdit = () => {
     router.push('/editar-tablero');
   };
 
   const handleDelete = () => {
-    setShowModal(true);
+    Swal.fire({
+      html: `
+        <div class="modal-content-custom">
+          <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
+          <p class="modal-text">
+            ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
+          </p>
+        </div>
+      `,
+      background: '#222222',
+      showCancelButton: true,
+      reverseButtons: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'mi-modal',
+        confirmButton: 'btn-confirm',
+        cancelButton: 'btn-cancel',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: '¡Eliminado!',
+          icon: 'success',
+          background: '#222',
+          color: '#fff',
+          showConfirmButton: true,
+          confirmButtonText: 'Aceptar',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
+      }
+    });
   };
 
-  const confirmDelete = () => {
-    setShowModal(false);
-    console.log("Tablero eliminado");
-  };
+  
+  if (creatorId !== currentUserId) return null;
 
   return (
-    <div style={{ position: 'relative' }}>
-      <button onClick={() => setShowMenu(!showMenu)}>⋮</button>
+    <div ref={menuRef} className="relative inline-block text-left ml-4 mt-4">
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className="text-white text-lg hover:opacity-80"
+      >
+        ⋮
+      </button>
 
       {showMenu && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '100%',
-          backgroundColor: '#222',
-          color: '#fff',
-          borderRadius: '8px',
-          padding: '10px',
-          zIndex: 1
-        }}>
-          <button onClick={handleEdit} style={{ display: 'block', width: '100%' }}>
-            📝 Editar tablero
+        <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+          <button
+            onClick={handleEdit}
+            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <FaPen className="text-white text-lg" />
+            <span>Editar tablero</span>
           </button>
-          <button onClick={handleDelete} style={{ display: 'block', width: '100%', marginTop: '5px' }}>
-            🗑️ Eliminar tablero
+
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+          >
+            <FaTrash className="text-white text-lg" />
+            <span>Eliminar tablero</span>
           </button>
         </div>
-      )}
-
-      {showModal && (
-        <ConfirmModal
-          title="¿Está seguro que quiere eliminar el tablero?"
-          onConfirm={confirmDelete}
-          onCancel={() => setShowModal(false)}
-        />
       )}
     </div>
   );
 };
 
 export default BoardMenu;
+
