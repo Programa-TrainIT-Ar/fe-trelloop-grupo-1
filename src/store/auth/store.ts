@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthStore>()(
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await fetch(`${API_URL}/auth/login`, {
+                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),

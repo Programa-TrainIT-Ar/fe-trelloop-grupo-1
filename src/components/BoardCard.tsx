@@ -8,16 +8,24 @@ import { fixDescriptionLength } from "@/controllers/boardCardController";
 
 export function BoardCard(props) {
     return (
-        <div className="flex flex-col items-center mb-5">
+        <div className="card-size  flex-col items-center mb-5">
             <div className="board-card p-4 text-white flex flex-col justify-between">
-                <Image alt="background" src={props.image} className="background-card-image" width={0} height={0} />
+            
+                <Image
+                    src={props.image}
+                    className="background-card-image"
+                    alt="Imagen desde S3"
+                    layout="fill"
+                    objectFit="cover"
+                />
+
                 <div className="board-info"></div>
                 <div className="z-10">
                     <div className="flex justify-between pe-2 items-center">
-                        <p className="text-base font-medium">{props.name}</p>
-                        <button className="fav-icon"><i className="fa-regular fa-heart"></i></button>
+                        <p className="board-title ">{props.name}</p>
+                        <button className="fav-icon"><i className="fa-regular fa-heart board-description"></i></button>
                     </div>
-                    <p className="text-sm mb-1 font-normal">
+                    <p className="text-sm mb-1 font-normal board-description">
                     {
                         props.description.length > 27
                         ?

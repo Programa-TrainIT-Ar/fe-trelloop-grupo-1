@@ -1,10 +1,54 @@
+.card-size {
+    min-width: 100%;
+    max-width: 100%;
+
+}
+@media (width > 2500px) {
 .board-card {
-    height: 15rem;
-    width: 15.6rem;
+    min-height: 30rem !important;
+    max-height: 30rem !important;
+    /* width: 15.6rem; */
     position: relative;
     margin-bottom: 0.4rem;
     font-family: poppins;
+    object-fit: cover;
+
 }
+}
+
+@media (width > 1600px) {
+.board-card {
+    min-height: 20rem;
+    max-height: 20rem;
+    /* width: 15.6rem; */
+    position: relative;
+    margin-bottom: 0.4rem;
+    font-family: poppins;
+    object-fit: cover;
+
+}
+  .tags-count {
+        width:2rem !important;
+        height: 2rem !important;
+        font-size: 1rem !important;
+    }
+}
+
+@media (width < 1600px) {
+    .board-card {
+        min-height: 15rem;
+        max-height: 15rem;
+        /* width: 15.6rem; */
+        position: relative;
+        margin-bottom: 0.4rem;
+        font-family: poppins;
+        object-fit: cover;
+
+    }
+  
+}
+
+
 
 .background-card-image {
     position: absolute;
@@ -23,9 +67,62 @@
     border-radius: 1rem;
 }
 
+@media (width < 1700px) {
+    .card-button {
+        height: 2rem;
+        width: 2rem;
+    }
+    .access-card-button {
+        height: 2rem;
+        font-size: 1rem;
+        width: 7.18rem;
+    }
+  
+}
+@media (width > 1700px) {
+       .card-button {
+        height: 3rem;
+        width: 3rem;
+        font-size: 1.7rem;
+    }
+    .access-card-button {
+        height: 3rem;
+        font-size: 1.3rem;
+        width: 10rem;
+    }
+    .board-title  {
+        font-size: 1.7rem;
+    }
+    .board-description {
+        font-size: 1.1rem;
+    }
+    .member-icon {
+        height: 2.2rem !important;
+        width: 2.2rem !important;
+        font-size: 1.3rem !important;
+    }
+
+    .member-2 {
+        position: absolute;
+        left: 1.3rem !important;
+    }
+    .member-3 { 
+        position: absolute;
+        left: 2.6rem !important;
+    }
+    .member-4 {
+        position: absolute;
+        left: 3.9rem !important;
+    }
+    .other-members {
+        left: 5.5rem !important;
+    }
+
+}
+
 .card-button {
-    height: 2rem;
-    width: 2rem;
+
+
     background-color: rgb(22, 22, 22);
     border-radius: 100px;
     display: flex;
@@ -33,9 +130,14 @@
     align-items: center;
 }
 
+.board-title {
+    width: 100%;
+    height: 100%;
+
+}
+
 .access-card-button {
-    height: 2rem;
-    width: 7.18rem;
+  
     background-color: rgb(22, 22, 22);
     border-radius: 100px;
 }

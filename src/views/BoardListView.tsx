@@ -19,9 +19,9 @@ interface Board {
 
 const BoardListView = () => { 
 
-    const getBoards = useBoardStore(state => state.getBoards);
+    const getBoards = useBoardStore((state) => state.getBoards);
     const token = useAuthStore.getState().accessToken
-    const boards = useBoardStore.getState().boards
+    const boards = useBoardStore((state) => state.boards);
     const router = useRouter()
     
     
@@ -39,12 +39,14 @@ const BoardListView = () => {
         if (!token) {
             router.push("/")
         }
-        handleGetBoards()
+        getBoards()
+
+        console.log(boards, "rerender")
 
     }, [])
 
     return (
-        <div className="grid grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-8">
             {
                 boards?.length > 0 &&
                 boards.map((board) => (
