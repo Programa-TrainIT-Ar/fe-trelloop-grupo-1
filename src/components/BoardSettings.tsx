@@ -1,66 +1,101 @@
 "use client";
 import { ChangeEvent, useState } from 'react';
-import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch, FaCamera } from "react-icons/fa";
+import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser } from "react-icons/fa";
 
 export const BoardSettings = () => {
-    const [tags, setTags] = useState<string[]>(["etiqueta"]);
-    const [newTag, setNewTag] = useState("");
-    const [visibility, setVisibility] = useState<"private" | "public">("private");
+  const [tags, setTags] = useState<string[]>(["etiqueta"]);
+  const [newTag, setNewTag] = useState("");
+  const [visibility, setVisibility] = useState<"private" | "public">("private");
 
-    const [boardName, setBoardName] = useState("");
-    const [description, setDescription] = useState("");
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [boardName, setBoardName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-    const handleAddTag = () => {
-        if (newTag.trim() !== "" && !tags.includes(newTag.trim())) {
-            setTags([...tags, newTag.trim()]);
-            setNewTag("");
-        }
-    };
+  const [members, setMembers] = useState<string[]>([]);
+  const [newMember, setNewMember] = useState("");
 
-    const isFormValid =
-        boardName.trim() !== "" &&
-        description.trim() !== "" &&
-        imageFile !== null;
+  const handleAddTag = () => {
+    if (newTag.trim() !== "" && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
 
-    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0] ?? null;
-        setImageFile(file);
-        if (file) {
-            setImagePreview(URL.createObjectURL(file));
-        } else {
-            setImagePreview(null);
-        }
-    };
+  const handleAddMember = () => {
+    if (newMember.trim() !== "" && !members.includes(newMember.trim())) {
+      setMembers([...members, newMember.trim()]);
+      setNewMember("");
+    }
+  };
 
-    const handleCreateBoard = async () => {
-        if (!isFormValid) return;
-        const formData = new FormData();
-        formData.append("boardName", boardName);
-        formData.append("description", description);
-        formData.append("visibility", visibility);
-        if (imageFile) {
-            formData.append("image", imageFile);
-        }
-        tags.forEach((tag, i) => {
-            formData.append(`tags[${i}]`, tag);
-        });
+  const isFormValid =
+    boardName.trim() !== "" &&
+    description.trim() !== "" &&
+    imageFile !== null;
 
-        try {
-            //poner la ruta corecta
-            const res = await fetch("/api/boards", {
-                method: "POST",
-                body: formData,
-            });
-            if (!res.ok) throw new Error("Error al crear el tablero");
-            // manejar respuesta, limpiar formulario, etc.
-        } catch (error) {
-            console.error(error);
-        }
-    };
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  };
 
-   return (
+  const handleCreateBoard = async () => {
+  if (!isFormValid) return;
+
+  const token = sessionStorage.getItem("token");
+  console.log("🔐 Token JWT:", token);
+
+  if (!token) {
+    alert("No hay token disponible. Inicia sesión primero.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", boardName);
+  formData.append("description", description);
+  formData.append("isPublic", visibility === "public" ? "true" : "false");
+  if (imageFile) formData.append("image", imageFile);
+
+  // aun no tags
+
+  /*
+  tags.forEach(tag => {
+    formData.append("tag_ids", tag); // debe ser un ID, no nombre
+  });
+
+  members.forEach(email => {
+    formData.append("member_ids", email); // debe ser un ID o lo buscamos por correo
+  });
+  */
+
+  try {
+    const res = await fetch("http://localhost:5000/board/createBoard", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!res.ok) throw new Error("Error al crear el tablero");
+
+    const data = await res.json();
+    console.log("Tablero creado:", data);
+    alert("✅ Tablero creado exitosamente");
+  } catch (err) {
+    console.error("❌ Error al crear el tablero:", err);
+    alert("❌ Error al crear el tablero");
+  }
+};
+
+
+
+  return (
     <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
 
@@ -118,15 +153,35 @@ export const BoardSettings = () => {
           <div className="relative">
             <input
               id="miembros"
-              type="text"
-              placeholder="Buscar por nombre o @usuario..."
+              type="email"
+              placeholder="Correo del miembro..."
+              value={newMember}
+              onChange={(e) => setNewMember(e.target.value)}
               className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700 pr-10"
             />
-            <button type="button" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <FaSearch />
+            <button
+              type="button"
+              onClick={handleAddMember}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <FaPlus />
             </button>
           </div>
+          {members.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {members.map((email, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
+                >
+                  <FaUser className="text-gray-400" />
+                  {email}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
+
 
         {/* Etiquetas */}
         <div>
