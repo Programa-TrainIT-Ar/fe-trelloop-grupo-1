@@ -1,5 +1,6 @@
 "use client";
 import { ChangeEvent, useState } from 'react';
+import Image from "next/image";
 import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser } from "react-icons/fa";
 
 export const BoardSettings = () => {
@@ -104,7 +105,13 @@ export const BoardSettings = () => {
           <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
           <div className="relative w-32 h-32 bg-neutral-800 rounded flex items-center justify-center cursor-pointer overflow-hidden">
             {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
+              <Image
+                src={imagePreview}
+                alt="Preview"
+                fill
+                className="object-cover"
+                style={{ objectFit: "cover" }}
+              />
             ) : (
               <FaCamera className="text-gray-500 text-2xl" />
             )}
