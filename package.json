@@ -20,6 +20,7 @@
     "react-icons": "^5.5.0",
     "sharp": "^0.34.3",
     "sweetalert2": "^11.22.2",
+    "sweetalert2-react-content": "^5.1.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
