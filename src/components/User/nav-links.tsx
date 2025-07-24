@@ -16,7 +16,7 @@ export default function NavLinks() {
     const pathname = usePathname();
 
     return (
-        <div className="bg-[--global-color-neutral-900] px-5">
+        <div className="bg-[--global-color-neutral-800] px-5">
             {links.map(link => {
                 const LinkIcon = link.icon;
                 return (

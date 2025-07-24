@@ -1,0 +1,62 @@
+.mi-modal {
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  line-height: 180%;
+}
+
+.modal-content-custom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  text-align: center;
+}
+
+.modal-icon {
+  width: 75px;
+  height: 75px;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.btn-cancel,
+.btn-confirm {
+  display: flex;
+  align-items: center;    
+  justify-content: center; 
+  width: 180px;
+  height: 32px;
+  padding: 0;              
+  border-radius: 8px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  line-height: 1;          
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid #6a5fff;
+  color: #6a5fff;
+}
+
+.btn-cancel:hover {
+  background-color: #302e55;
+}
+
+.btn-confirm {
+  background-color: #fb7a7a;
+  color: white;
+  border: none;
+}
+
+.btn-confirm:hover {
+  background-color: #e25b5b;
+}
