@@ -7,7 +7,8 @@ import Background from "@/assets/background-card-image.png"
 import { ExpandedBoardCard } from '@/components/ExpandedBoardCard';
 
 
-const API_URL = "https://2135kz5p-5000.use2.devtunnels.ms"
+const API_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
+
 
 export const useBoardStore = create(
         (set, get) => ({

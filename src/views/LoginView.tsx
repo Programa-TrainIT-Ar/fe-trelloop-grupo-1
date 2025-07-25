@@ -17,9 +17,9 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { useAuthStore } from "@/store/auth";
 import { useStore } from "zustand";
 
-const LoginView = () => {
+export default function LoginView() {
   const router = useRouter();
-  const login = useAuthStore(state => state.login);
+  const login = useAuthStore((state) => state.login);
   const globalError = useAuthStore(state => state.error);
 
   const [usuario, setUsuario] = useState({
@@ -51,27 +51,27 @@ const LoginView = () => {
       return
     }
     try {
+
+
       const loginValidation = await login(usuario.correo, usuario.contrasena);
       
       console.log(loginValidation)
       if (loginValidation.error) {
-        console.log("errorr")
+      
         setError({error: true, type: "contrasena", message: loginValidation.message || "Error al iniciar sesión"})
         setLoading(false);
       }
       else if (loginValidation) {
-        console.log("prueba")
+  
         router.push("/");
         setLoading(false);
         return
       }
 
     } catch (error) {
-      console.log(error)
+       setError({error: true, type: "contrasena", message: error.data || "Error al iniciar sesión"})
       return
     }
-    const data = useStore(useAuthStore, (state) => state.accessToken)
-
   
       
   
@@ -162,6 +162,5 @@ const LoginView = () => {
   );
 };
 
-export default LoginView;
 
 

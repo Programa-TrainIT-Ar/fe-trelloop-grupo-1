@@ -33,13 +33,13 @@ const BoardListView = () => {
         getBoards()
 
         console.log(boards, "rerender")
-
+        
     }, [])
 
     return (
         <>
 
-        <div className="grid grid-cols-4 grid-flow-dense gap-8">
+        <div className="grid grid-cols-4  gap-8">
             {
                 boards?.length > 0 &&
                 boards.map((board, index) => (
