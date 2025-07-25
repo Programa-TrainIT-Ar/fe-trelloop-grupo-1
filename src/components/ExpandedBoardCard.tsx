@@ -41,14 +41,16 @@ export function ExpandedBoardCard(props) {
                 <div className="h-1/4 my-3 mx-3 text-white">
                     <p className="board-description">{props.description}</p>
                 </div>
-                <div className="h-1/4 border flex flex-col mx-3 tags-section">
-                    {/* <div className="flex gap-3">
+                <div className="h-1/4 mx-3 tags-section">
+                    <div className="flex gap-3 mb-3">
                     {
                         props.tags?.length > 0 &&
                         props.tags?.map((tag, index) => {
-                            if (index <= 4) {
+                            if (index <= 3) {
                                 return (
-                                    <Tag/>
+                                    <div key={index}>
+                                        <Tag name={tag.name} key={index} />
+                                    </div>
                                 )
                             }
                         }
@@ -56,23 +58,23 @@ export function ExpandedBoardCard(props) {
                     
                         }
                     </div>
-                       <div className="flex gap-3">
+                       <div className="flex gap-3 w">
                     {
                         props.tags?.length > 0 &&
                         props.tags?.map((tag, index) => {
                             if (index >= 4 && index <= 8) {
                                 return (
-                                    <Tag/>
+                                    <Tag name={tag.name} key={index}/>
                                 )
                             }
                         }
                         )
                     
                         }
-                    </div> */}
+                    </div>
                 </div>
             </div>
-            <div className="members-section">
+            <div className="members-section border">
 
             </div>
         </div>

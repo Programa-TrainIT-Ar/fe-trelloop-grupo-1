@@ -126,7 +126,7 @@ export function BoardCard(props) {
               </div>
             </div>
             <div className="flex tag-container-width">
-              <Tag />
+              <Tag name="Etiqueta"/>
               <div className="relative">
                 <div className="tags-count">0</div>
               </div>
