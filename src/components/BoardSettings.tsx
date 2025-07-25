@@ -1,11 +1,15 @@
 "use client";
 import { ChangeEvent, useState } from 'react';
+import { useRouter } from "next/navigation";
 import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser } from "react-icons/fa";
+import {useAuthStore} from "@/store/auth";
+
 
 export const BoardSettings = () => {
   const [tags, setTags] = useState<string[]>(["etiqueta"]);
   const [newTag, setNewTag] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("private");
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const [boardName, setBoardName] = useState("");
   const [description, setDescription] = useState("");
@@ -14,6 +18,8 @@ export const BoardSettings = () => {
 
   const [members, setMembers] = useState<string[]>([]);
   const [newMember, setNewMember] = useState("");
+  const router = useRouter();
+
 
   const handleAddTag = () => {
     if (newTag.trim() !== "" && !tags.includes(newTag.trim())) {
@@ -47,10 +53,10 @@ export const BoardSettings = () => {
   const handleCreateBoard = async () => {
   if (!isFormValid) return;
 
-  const token = sessionStorage.getItem("token");
-  console.log("🔐 Token JWT:", token);
+  const accessToken = sessionStorage.getItem("token");
+  console.log("🔐 Token JWT:", accessToken);
 
-  if (!token) {
+  if (!accessToken) {
     alert("No hay token disponible. Inicia sesión primero.");
     return;
   }
@@ -77,20 +83,21 @@ export const BoardSettings = () => {
     const res = await fetch("http://localhost:5000/board/createBoard", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${accessToken}`
       },
       body: formData
     });
 
-    if (!res.ok) throw new Error("Error al crear el tablero");
+   if (!res.ok) throw new Error("Error al crear el tablero");
 
-    const data = await res.json();
-    console.log("Tablero creado:", data);
-    alert("✅ Tablero creado exitosamente");
-  } catch (err) {
-    console.error("❌ Error al crear el tablero:", err);
-    alert("❌ Error al crear el tablero");
-  }
+      const data = await res.json();
+      console.log("Tablero creado:", data);
+      alert("✅ Tablero creado exitosamente");
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("❌ Error al crear el tablero:", err);
+      alert("❌ Error al crear el tablero");
+    }
 };
 
 
@@ -263,6 +270,7 @@ export const BoardSettings = () => {
         <div className="flex justify-end gap-4 pt-6">
           <button
             type="button"
+            onClick={() => router.push("/dashboard")}
             className="bg-[#1f1f1f] border border-gray-500 text-white px-6 py-2 rounded text-sm hover:bg-[#2a2a2a]"
           >
             Cancelar creación
