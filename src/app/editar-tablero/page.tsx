@@ -1,35 +1,141 @@
 'use client';
-import { useState } from 'react';
-import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch, FaTimes } from "react-icons/fa";
-import '@fortawesome/fontawesome-free'
+'use client';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch, FaTimes, FaCamera } from "react-icons/fa";
+import Swal from "sweetalert2";
 import React from 'react';
+import { useSearchParams } from 'next/dist/client/components/navigation';
 
 const EditBoardPage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const boardId = searchParams?.get("id");
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>(["etiqueta"]);
   const [newTag, setNewTag] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("private");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!boardId) return;
+
+    const fetchBoard = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:5000/getBoard/${boardId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setTitle(data.name || "");
+          setDescription(data.description || "");
+          setVisibility(data.is_public ? "public" : "private");
+          setTags(data.tags || []);
+          if (data.image_url) {
+            setImagePreview(data.image_url);
+          }
+        } else {
+          Swal.fire("Error", data.error || "No se pudo cargar el tablero", "error");
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Error al conectar con el servidor", "error");
+      }
+    };
+
+    fetchBoard();
+  }, [boardId]);
+
+
+  const updateBoard = async () => {
+    const formData = new FormData();
+    formData.append("name", title);
+    formData.append("description", description);
+    formData.append("isPublic", visibility === "public" ? "true" : "false");
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+   formData.append("tags", JSON.stringify(tags));
+
+   try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/updateBoard/${boardId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire("Éxito", "Tablero actualizado correctamente", "success");
+      } else {
+        Swal.fire("Error", data.error || "No se pudo actualizar el tablero", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Ocurrió un error al actualizar", "error");
+    }
+  };
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   const handleAddTag = () => {
-    if (newTag.trim() !== "" && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
+    const tag = newTag.trim();
+    if (tag && !tags.includes(tag)) {
+      setTags([...tags, tag]);
       setNewTag("");
     }
   };
 
-  const handleRemoveTag =(indexToRemove: number) =>{
-    setTags (prev => prev.filter ((_, i) => i !== indexToRemove));
-  }
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
 
   return (
 
     <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <div>
-          <label htmlFor="tablero" className="block font-medium mb-2 text-sm">
+          <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
+          <div className="relative w-32 h-32 bg-neutral-800 rounded flex items-center justify-center cursor-pointer overflow-hidden">
+            {imagePreview ? (
+              <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
+            ) : (
+              <FaCamera className="text-gray-500 text-2xl" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="boardName" className="block font-medium mb-2 text-sm">
             Nombre de tablero
           </label>
           <input
-            id="description"
+            id="boardName"
             type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
             placeholder="Escribe aquí"
             required
@@ -39,7 +145,7 @@ const EditBoardPage: React.FC = () => {
 
 
         <div>
-          <label htmlFor="descripcion" className="block font-medium mb-2 text-sm">
+          <label htmlFor="description" className="block font-medium mb-2 text-sm">
             Descripción
           </label>
           <textarea
@@ -52,13 +158,13 @@ const EditBoardPage: React.FC = () => {
         </div>
         {/* Miembros */}
         <div>
-          <label htmlFor="miembros" className="block font-medium mb-2 text-sm">
+          <label htmlFor="members" className="block font-medium mb-2 text-sm">
             Miembros{' '}
 
           </label>
           <div className="relative">
             <input
-              id="miembros"
+              id="members"
               type="text"
               placeholder="Buscar por nombre o @usuario..."
               className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
@@ -74,13 +180,13 @@ const EditBoardPage: React.FC = () => {
 
         {/* Etiquetas */}
         <div>
-          <label htmlFor="etiquetas" className="block font-medium mb-2 text-sm">
+          <label htmlFor="tags" className="block font-medium mb-2 text-sm">
             Etiquetas{' '}
 
           </label>
           <div className="relative">
             <input
-              id="etiquetas"
+              id="tags"
               type="text"
               className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
               placeholder="Escribe un nombre de etiqueta para crearla..."
@@ -93,7 +199,7 @@ const EditBoardPage: React.FC = () => {
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
             >
               <FaPlus style={{ fontSize: "20px" }} />
-             
+
             </button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
@@ -105,7 +211,7 @@ const EditBoardPage: React.FC = () => {
                 <FaTag className="text-gray-400" />
                 {tag}
                 <FaTimes className="cursor-pointer' hover:text-red-400 transition"
-                onClick={()=>handleRemoveTag(i)}/>
+                  onClick={() => handleRemoveTag(i)} />
               </span>
             ))}
           </div>

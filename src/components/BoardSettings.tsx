@@ -73,25 +73,32 @@ export const BoardSettings = () => {
   });
   */
 
-  try {
-    const res = await fetch("http://localhost:5000/board/createBoard", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    if (!res.ok) throw new Error("Error al crear el tablero");
-
-    const data = await res.json();
-    console.log("Tablero creado:", data);
-    alert("✅ Tablero creado exitosamente");
-  } catch (err) {
-    console.error("❌ Error al crear el tablero:", err);
-    alert("❌ Error al crear el tablero");
-  }
+const body = {
+  name: boardName,
+  description,
+  isPublic: visibility === "public",
+  // image: imageUrl, // si tienes la URL de la imagen, agrégala aquí
 };
+
+try {
+  const res = await fetch("http://localhost:5000/board/createBoard", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error("Error al crear el tablero");
+
+  const data = await res.json();
+  console.log("Tablero creado:", data);
+  alert("✅ Tablero creado exitosamente");
+} catch (err) {
+  console.error("❌ Error al crear el tablero:", err);
+  alert("❌ Error al crear el tablero");
+}
 
 
 
