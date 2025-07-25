@@ -63,7 +63,7 @@ export default function LoginView() {
       }
       else if (loginValidation) {
   
-        router.push("/");
+        router.push("/dashboard");
         setLoading(false);
         return
       }
