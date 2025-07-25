@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {useAuthStore} from "@/store/auth";
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash } from 'react-icons/fa';
 import '../styles/globals.css';
@@ -22,7 +23,8 @@ const BoardMenu: React.FC<BoardMenuProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
-
+  const accessToken = useAuthStore((state) => state.accessToken);
+  
   // Detectar clics fuera del menú
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -46,9 +48,10 @@ const BoardMenu: React.FC<BoardMenuProps> = ({
 
   const deleteBoardFromBackend = async () => {
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
+      
 
-      if (!token) {
+      if (!accessToken) {
         Swal.fire('Error', 'No hay token de autenticación', 'error');
         return;
       }
@@ -58,7 +61,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({
       const response = await fetch(`${baseUrl}/deleteBoard/${boardId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
