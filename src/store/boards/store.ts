@@ -22,7 +22,7 @@ export const useBoardStore = create(
                 set({expandedBoardID: id})
                 console.log((state) => state.expandedBoardId)
             },
-            getBoards: () => {
+            getBoards: async () => {
                console.log("Prueba de que si paso el null")
             //     set({boards: 
             //         [
