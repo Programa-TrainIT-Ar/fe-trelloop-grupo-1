@@ -1,11 +1,35 @@
 "use client";
 import { useState } from 'react';
-import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch } from "react-icons/fa";
+import { useRef, useEffect } from 'react';
 
+import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch, FaUser } from "react-icons/fa";
+type UserType = {
+    id: number;
+    fullName: string;
+    username: string;
+    avatarUrl: string;
+};
+
+const mockUsers: UserType[] = [
+    {
+        id: 1,
+        fullName: "Carlos Pérez",
+        username: "carlosp",
+        avatarUrl: "",
+    },
+    {
+        id: 2,
+        fullName: "Laura Gómez",
+        username: "laurag",
+        avatarUrl: "https://i.pravatar.cc/150?img=3",
+    },
+];
 export const BoardSettings = () => {
-    const [tags, setTags] = useState<string[]>(["etiqueta"]);
+    const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState("");
     const [visibility, setVisibility] = useState<"private" | "public">("private");
+
+
 
     const handleAddTag = () => {
         if (newTag.trim() !== "" && !tags.includes(newTag.trim())) {
@@ -13,6 +37,51 @@ export const BoardSettings = () => {
             setNewTag("");
         }
     };
+
+    const [search, setSearch] = useState("");
+    const [suggestedUsers, setSuggestedUsers] = useState<UserType[]>([]);
+    const [selectedUsers, setSelectedUsers] = useState<UserType[]>([]);
+
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+
+        if (value.trim() === "") {
+            setSuggestedUsers([]);
+            return;
+        }
+
+        const results = mockUsers.filter(
+            (user) =>
+                user.fullName.toLowerCase().includes(value.toLowerCase()) ||
+                user.username.toLowerCase().includes(value.toLowerCase())
+        );
+        setSuggestedUsers(results);
+    };
+
+    const handleSelectUser = (user: typeof mockUsers[0]) => {
+        if (!selectedUsers.find((u) => u.id === user.id)) {
+            setSelectedUsers([...selectedUsers, user]);
+        }
+        setSearch("");
+        setSuggestedUsers([]);
+    };
+
+    
+
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setSuggestedUsers([]);
+        
+        };
+         if (suggestedUsers.length > 0) {
+
+            document.addEventListener('click', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('clcik', handleClickOutside);
+        };
+    }, [suggestedUsers]);
+
 
     return (
         <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
@@ -28,6 +97,8 @@ export const BoardSettings = () => {
                             id="miembros"
                             type="text"
                             placeholder="Buscar por nombre o @usuario..."
+                            value={search}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700 pr-10"
                         />
                         <button
@@ -37,10 +108,63 @@ export const BoardSettings = () => {
                             <FaSearch />
                         </button>
                     </div>
+                    {suggestedUsers.length > 0 && (
+                        <div className='bg-neutral-800 mt-2 rounded border border-gray-600'>
+                            {suggestedUsers.map((user) => (
+                                <button
+                                    key={user.id}
+                                    onClick={() => handleSelectUser(user)}
+                                    className="flex items-center gap-3 p-2 w-full hover:bg-neutral-700 text-left"
+                                >
+                                    {user.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.fullName}
+                                            className="w-8 h-8 rounded-full"
+                                        />
+                                    ) : (
+                                        <div className='w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white'>
+                                            <FaUser />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className='text-sm'>{user.fullName}</p>
+                                        <p className='text-xs text-gray-400'>@{user.username}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Miembros seleccionados */}
+                    <div className='flex flex-wrap gap-3 mt-4'>
+                        {selectedUsers.map((user) => (
+                            <div
+                                key={user.id}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-600"
+                            >
+                                {user.avatarUrl ? (
+                                    <img
+                                        src={user.avatarUrl}
+                                        alt={user.fullName}
+                                        className="w-8 h-8 rounded-full"
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white">
+                                        <FaUser />
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="text-sm">{user.fullName}</p>
+                                    <p className="text-xs text-gray-400">@{user.username}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Etiquetas */}
-                <div>
+                <div className='mt-6'>
                     <label htmlFor="etiquetas" className="block font-medium mb-2 text-sm">
                         Etiquetas{' '}
 
@@ -62,17 +186,19 @@ export const BoardSettings = () => {
                             <FaPlus />
                         </button>
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                        {tags.map((tag, i) => (
-                            <span
-                                key={i}
-                                className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
-                            >
-                                <FaTag className="text-gray-400" />
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
+                    {tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {tags.map((tag, i) => (
+                                <span
+                                    key={i}
+                                    className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
+                                >
+                                    <FaTag className="text-gray-400" />
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Visibilidad */}
@@ -127,7 +253,9 @@ export const BoardSettings = () => {
                 <div className='pt-6'>
                     <button
                         type='button'
-                        className='bg-[#1f1f1f] border border-gray-500 text-white px-6 py-2 rounded text-sm hover:bg-[#2a2a2a]'>
+                        className='px-10 py-2 border rounded-md text-sm font-medium
+             text-[#6A5FFF] border-[#706FE5] bg-[#1a1a1a]
+             hover:bg-[#6A5FFF] hover:text-white transition'>
                         Cancelar creación
                     </button>
                 </div>
