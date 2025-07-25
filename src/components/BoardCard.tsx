@@ -33,7 +33,13 @@ export function BoardCard(props) {
       {
         expandedBoardID === props.id
           ?
-          <ExpandedBoardCard index={props.index} />
+          <ExpandedBoardCard 
+            image={props.image} 
+            name={props.name} 
+            description={props.description} 
+            tags={props.tags}
+            members={props.members}
+          />
           :
           <div className="card-size flex-col items-center mb-5">
             <div className="board-card p-4 text-white flex flex-col justify-between">
@@ -41,7 +47,7 @@ export function BoardCard(props) {
               <Image
                 src={props.image}
                 className="background-card-image"
-                alt="Imagen desde S3"
+                alt="Imagen de tablero"
                 layout="fill"
                 objectFit="cover"
               />
@@ -64,12 +70,12 @@ export function BoardCard(props) {
                 </p>
                 <div className="flex relative">
                   {
-                    props.members.length > 0 &&
-                    props.members.map((item, index) => {
+                    props.members?.length > 0 &&
+                    props.members?.map((item, index) => {
                       if (index <= 3) {
                         return (
 
-                          <Image key={item.id} src={Member} alt="miembro" className={clsx(
+                          <Image key={index} src={Member} alt="miembro" className={clsx(
                             "member-icon",
                             {
                               "member-1": index == 0,
@@ -84,7 +90,7 @@ export function BoardCard(props) {
                       }
                       else if (index == 4) {
                         return (
-                          <div className="member-icon other-members">
+                          <div key={index} className="member-icon other-members">
                             {props.members.length}
                           </div>
                         )
@@ -104,15 +110,16 @@ export function BoardCard(props) {
 
 
               <div className="flex justify-between z-10">
-                <button className="card-button">
+                <div className="card-button">
+
                   <BoardMenu
                     creatorId={props.creatorId}
                     currentUserId={props.currentUserId}
                     boardId={props.id}
                     boardName={props.name}
                   />
-                </button>
-                <button className="card-button">
+                </div>
+                <button className="card-button" onClick={() => expandBoard(props.id)}>
                   <i className="fa-regular fa-eye"></i>
                 </button>
                 <button className="access-card-button">Ingresar</button>

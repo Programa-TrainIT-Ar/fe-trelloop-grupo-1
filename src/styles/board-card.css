@@ -222,3 +222,20 @@
     min-width: 15.6rem;
     max-width: 15.6rem;
 }
+
+.expanded-board-card {
+    border-radius: 1rem;
+    background: rgba(34, 34, 34, 1);
+}
+
+.members-section {
+    width: 20%;
+}
+.expanded-board-info {
+    width: 80%;
+
+}
+
+.tags-section {
+    width: 80%;
+}

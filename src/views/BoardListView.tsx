@@ -26,13 +26,11 @@ const BoardListView = () => {
     
 
     useEffect(() => {
-        console.log(token)
+ 
         if (!token) {
             router.push("/")
         }
         getBoards()
-
-        console.log(boards, "rerender")
         
     }, [])
 
