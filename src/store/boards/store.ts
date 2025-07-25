@@ -22,66 +22,66 @@ export const useBoardStore = create(
                 set({expandedBoardID: id})
                 console.log((state) => state.expandedBoardId)
             },
-            getBoards: async () => {
+            getBoards: () => {
                console.log("Prueba de que si paso el null")
-                // set({boards: 
-                //     [
-                //     {
-                //         name: "Tablero 1",
-                //         creationDate: "2025-07-22T23:15:53.704992",
-                //         description: "Prueba de descripción de tablero",
-                //         id: 1,
-                //         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
-                //         isPublic: true,
-                //         members: [{}, {}, {}, {}, {}, {}],
-                //         tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
-                //         userId: 1
-                //     }, 
-                //     {
-                //         name: "Tablero 2",
-                //         creationDate: "2025-07-22T23:15:53.704992",
-                //         description: "Prueba de descripción de tablero",
-                //         id: 2,
-                //         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
-                //         isPublic: true,
-                //         members: [{}, {}, {}, {}, {}, {}],
-                //         tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
-                //         userId: 1
-                //     },
-                //     {
-                //         name: "Tablero 3",
-                //         creationDate: "2025-07-22T23:15:53.704992",
-                //         description: "Prueba de descripción de tablero",
-                //         id: 3,
-                //         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
-                //         isPublic: true,
-                //         members: [{}, {}, {}, {}, {}, {}],
-                //         tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
-                //         userId: 1
-                //     },
-                //     {
-                //         name: "Tablero 4",
-                //         creationDate: "2025-07-22T23:15:53.704992",
-                //         description: "Prueba de descripción de tablero",
-                //         id: 4,
-                //         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
-                //         isPublic: true,
-                //         members: [{}, {}, {}, {}, {}, {}],
-                //         tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
-                //         userId: 1
-                //     },
-                //     {
-                //         name: "Tablero 5",
-                //         creationDate: "2025-07-22T23:15:53.704992",
-                //         description: "Prueba de descripción de tablero",
-                //         id: 5,
-                //         image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
-                //         isPublic: true,
-                //         members: [{}, {}, {}, {}, {}, {}],
-                //         tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
-                //         userId: 1
-                //     },
-                // ]
+            //     set({boards: 
+            //         [
+            //         {
+            //             name: "Tablero 1",
+            //             creationDate: "2025-07-22T23:15:53.704992",
+            //             description: "Prueba de descripción de tablero",
+            //             id: 1,
+            //             image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
+            //             isPublic: true,
+            //             members: [{}, {}, {}, {}, {}, {}],
+            //             tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
+            //             userId: 1
+            //         }, 
+            //         {
+            //             name: "Tablero 2",
+            //             creationDate: "2025-07-22T23:15:53.704992",
+            //             description: "Prueba de descripción de tablero",
+            //             id: 2,
+            //             image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
+            //             isPublic: true,
+            //             members: [{}, {}, {}, {}, {}, {}],
+            //             tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
+            //             userId: 1
+            //         },
+            //         {
+            //             name: "Tablero 3",
+            //             creationDate: "2025-07-22T23:15:53.704992",
+            //             description: "Prueba de descripción de tablero",
+            //             id: 3,
+            //             image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
+            //             isPublic: true,
+            //             members: [{}, {}, {}, {}, {}, {}],
+            //             tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
+            //             userId: 1
+            //         },
+            //         {
+            //             name: "Tablero 4",
+            //             creationDate: "2025-07-22T23:15:53.704992",
+            //             description: "Prueba de descripción de tablero",
+            //             id: 4,
+            //             image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
+            //             isPublic: true,
+            //             members: [{}, {}, {}, {}, {}, {}],
+            //             tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
+            //             userId: 1
+            //         },
+            //         {
+            //             name: "Tablero 5",
+            //             creationDate: "2025-07-22T23:15:53.704992",
+            //             description: "Prueba de descripción de tablero",
+            //             id: 5,
+            //             image: "https://trainit404.s3.amazonaws.com/boards/8a3a19c3cb2543ed8efac56f90ab96b3.png",
+            //             isPublic: true,
+            //             members: [{}, {}, {}, {}, {}, {}],
+            //             tags: [ {id: 1, name: "General"}, {id: 1, name: "General"}, {id: 2, name: "General"},{id: 3, name: "General"},{id: 4, name: "General"},{id: 5, name: "General"}],
+            //             userId: 1
+            //         },
+            //     ]
                 
             // })
                 try {

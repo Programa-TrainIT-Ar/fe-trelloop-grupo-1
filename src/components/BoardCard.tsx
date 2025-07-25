@@ -90,11 +90,7 @@ export function BoardCard(props) {
                       }
                       else if (index == 4) {
                         return (
-<<<<<<< HEAD
                           <div key={index} className="member-icon other-members">
-=======
-                          <div key="other-members" className="member-icon other-members">
->>>>>>> a0e7138810c91ffccad0f0ce96ac5d21b1a2f32f
                             {props.members.length}
                           </div>
                         )
