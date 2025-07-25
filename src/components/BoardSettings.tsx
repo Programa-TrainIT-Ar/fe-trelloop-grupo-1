@@ -1,6 +1,6 @@
 "use client";
-import { useState } from 'react';
-import { useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+
 
 import { FaLock, FaGlobe, FaPlus, FaTag, FaSearch, FaUser } from "react-icons/fa";
 type UserType = {
@@ -10,25 +10,14 @@ type UserType = {
     avatarUrl: string;
 };
 
-const mockUsers: UserType[] = [
-    {
-        id: 1,
-        fullName: "Carlos Pérez",
-        username: "carlosp",
-        avatarUrl: "",
-    },
-    {
-        id: 2,
-        fullName: "Laura Gómez",
-        username: "laurag",
-        avatarUrl: "https://i.pravatar.cc/150?img=3",
-    },
-];
+
 export const BoardSettings = () => {
     const [tags, setTags] = useState<string[]>([]);
     const [newTag, setNewTag] = useState("");
     const [visibility, setVisibility] = useState<"private" | "public">("private");
-
+    const [allUsers, setAllUsers] = useState<UserType[]>([]);
+        
+    
 
 
     const handleAddTag = () => {
@@ -50,22 +39,24 @@ export const BoardSettings = () => {
             return;
         }
 
-        const results = mockUsers.filter(
-            (user) =>
-                user.fullName.toLowerCase().includes(value.toLowerCase()) ||
-                user.username.toLowerCase().includes(value.toLowerCase())
-        );
-        setSuggestedUsers(results);
+        
     };
 
-    const handleSelectUser = (user: typeof mockUsers[0]) => {
-        if (!selectedUsers.find((u) => u.id === user.id)) {
+    const handleSelectUser = (user: UserType) => {
+        if (!selectedUsers.some((u) => u.id === user.id)) {
             setSelectedUsers([...selectedUsers, user]);
+            setSearch("");
+            setSuggestedUsers([]);
         }
-        setSearch("");
-        setSuggestedUsers([]);
     };
 
+    const results = allUsers.filter((user) =>
+        user.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        user.username.toLowerCase().includes(search.toLowerCase())
+    );
+        setSuggestedUsers(results.slice(0, 5));
+    
+        
     
 
     useEffect(() => {
@@ -78,11 +69,11 @@ export const BoardSettings = () => {
             document.addEventListener('click', handleClickOutside);
         }
         return () => {
-            document.removeEventListener('clcik', handleClickOutside);
+            document.removeEventListener('click', handleClickOutside);
         };
     }, [suggestedUsers]);
 
-
+    
     return (
         <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
             <div className="max-w-3xl mx-auto space-y-8">

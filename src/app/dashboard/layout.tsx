@@ -1,4 +1,5 @@
 import SideNav from "@/components/User/sidenav";
+import SearchBar from "@/components/User/searchbar";
 
 export default function Layout({children}: {children: React.ReactNode}) {
     return (
@@ -7,6 +8,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
                 <SideNav />
             </div>
             <div className="bg-[--global-color-neutral-800] flex-grow p-6 md:overflow-y-auto md:p-12">
+                <SearchBar />
                 {children}
             </div>
         </div>

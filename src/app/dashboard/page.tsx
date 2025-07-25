@@ -1,5 +1,11 @@
+import BoardListView from "@/views/BoardListView"
+import CreateBoardBar from "@/components/User/createBoardBar"
+
 export default function Page() {
     return (
-        <h1 className="text-white text-2xl">Dashboard</h1>
+        <>
+            <CreateBoardBar />
+            <BoardListView />
+        </>
     )
 }

@@ -1,27 +1,56 @@
 import { registerService } from "@/services/registerService";
 
-export async function registerController(usuario) {
-    const { nombre, apellido, correo, contrasena, confirmacion } = usuario;
+interface UsuarioConConfirmacion {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
 
-    if (!nombre || !apellido || !correo || !contrasena || !confirmacion ) {
+}
+
+interface RegisterServiceResponse {
+    error: boolean;
+    message: any;
+    type?: string;
+}
+
+export async function registerController(usuario: UsuarioConConfirmacion) {
+    const {firstName, lastName, email,  password, confirmPassword } = usuario;
+     
+
+    if (!firstName || !lastName || !email || !password || !confirmPassword ) {
         return { error: true, message: "Por favor, completa todos los campos", type: "form" };
     }
-    if (!correo.includes("@")) {
-        return { error: true, message: "Por favor ingresa un correo válido", type: "correo" };
+    if (!email.includes("@")) {
+     
+        return { error: true, message: "Por favor ingresa un correo válido", type: "email" };
     }
-    if (contrasena.length < 8) {
-        return { error: true, message: "La contraseña debe tener al menos 8 carácteres", type: "contrasena" };
+    if (password.length < 8) {
+        
+        return { error: true, message: "La contraseña debe tener al menos 8 caracteres", type: "password_length" };
     }
-    if (contrasena !== confirmacion) {
-        return { error: true, message: "Las contraseñas no coinciden", type: "contrasena" };
-    }   
-
-    return await registerService({
-        nombre,
-        apellido,
-        correo,
-        contrasena
+    if (password !== confirmPassword) {
+     
+    return { error: true, message: "Las contraseñas no coinciden", type: "password_mismatch" };
+}
+    console.log("Datos enviados:", {
+        firstName,
+        lastName,
+        email,
+        password
     });
 
 
+    const response: RegisterServiceResponse = await registerService({
+        firstName,
+        lastName,
+        email,
+        password,
+    });
+
+    if (response.error && !response.type) {
+        return { ...response, type: "" };
+    }
+    return response;
 }
