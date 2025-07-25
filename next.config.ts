@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       'www.freeiconspng.com',
-      
-    ],
+      'picsum.photos'
+    ],    
     remotePatterns: [
       {
         protocol: "https",
