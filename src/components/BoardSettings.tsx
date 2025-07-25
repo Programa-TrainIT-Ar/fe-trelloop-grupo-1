@@ -53,7 +53,7 @@ export const BoardSettings = () => {
   const handleCreateBoard = async () => {
   if (!isFormValid) return;
 
-  const accessToken = sessionStorage.getItem("token");
+  
   console.log("🔐 Token JWT:", accessToken);
 
   if (!accessToken) {
