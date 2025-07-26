@@ -1,3 +1,9 @@
+@media (width > 1100px) {
+    .tag-text {
+        font-size: 0.7rem !important;
+    }
+}
+
 .tag {
     width: 6.25rem;
     height: 1.5rem;

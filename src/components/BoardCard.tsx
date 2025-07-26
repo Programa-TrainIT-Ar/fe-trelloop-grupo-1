@@ -20,80 +20,124 @@ interface BoardCardProps {
   creatorId: string;
   currentUserId: string;
 }
+import { ExpandedBoardCard } from "./ExpandedBoardCard";
+import { useBoardStore } from "@/store/boards";
 
-export function BoardCard(props: BoardCardProps) {
+export function BoardCard(props) {
+  const expandBoard = useBoardStore((state) => state.expandBoard);
+  const expandedBoardID = useBoardStore((state) => state.expandedBoardID)
+
+
   return (
-    <div className="flex flex-col items-center mb-5">
-      <div className="board-card p-4 text-white flex flex-col justify-between">
-        <Image
-          alt="background"
-          src={props.image}
-          className="background-card-image"
-          width={0}
-          height={0}
-        />
-        <div className="board-info"></div>
-        <div className="z-10">
-          <div className="flex justify-between pe-2 items-center">
-            <p className="text-base font-medium">{props.name}</p>
-            <button className="fav-icon">
-              <i className="fa-regular fa-heart"></i>
-            </button>
-          </div>
-          <p className="text-sm mb-1 font-normal">
-            {props.description.length > 27
-              ? fixDescriptionLength(props.description) + "..."
-              : props.description}
-          </p>
-          <div className="flex relative">
-            {props.members.length > 0 &&
-              props.members.map((item, index) => {
-                if (index <= 3) {
-                  return (
-                    <Image
-                      key={item.id}
-                      src={Member}
-                      alt="miembro"
-                      className={clsx("member-icon", {
-                        "member-1": index == 0,
-                        "member-2": index == 1,
-                        "member-3": index == 2,
-                        "member-4": index == 3,
-                      })}
-                    />
-                  );
-                } else if (index == 4) {
-                  return (
-                    <div key="more-members" className="member-icon other-members">
-                      {props.members.length}
-                    </div>
-                  );
-                }
-              })}
-          </div>
-        </div>
+    <>
+      {
+        expandedBoardID === props.id
+          ?
+          <ExpandedBoardCard 
+            image={props.image} 
+            name={props.name} 
+            description={props.description} 
+            tags={props.tags}
+            members={props.members}
+          />
+          :
+          <div className="card-size flex-col items-center mb-5">
+            <div className="board-card p-4 text-white flex flex-col justify-between">
 
-        <div className="flex justify-between z-10">
-          <button className="card-button">
-            <BoardMenu
-              creatorId={props.creatorId}
-              currentUserId={props.currentUserId}
-              boardId={props.id}
-              boardName={props.name}
-            />
-          </button>
-          <button className="card-button">
-            <i className="fa-regular fa-eye"></i>
-          </button>
-          <button className="access-card-button">Ingresar</button>
-        </div>
-      </div>
-      <div className="flex tag-container-width">
-        <Tag />
-        <div className="relative">
-          <div className="tags-count">0</div>
-        </div>
-      </div>
-    </div>
+              <Image
+                src={props.image}
+                className="background-card-image"
+                alt="Imagen de tablero"
+                layout="fill"
+                objectFit="cover"
+              />
+
+              <div className="board-info"></div>
+              <div className="z-10">
+                <div className="flex justify-between pe-2 items-center">
+                  <p className="board-title ">{props.name}</p>
+                  <button className="fav-icon"><i className="fa-regular fa-heart board-description"></i></button>
+                </div>
+                <p className="text-sm mb-1 font-normal board-description">
+                  {
+                    props.description.length > 27
+                      ?
+                      fixDescriptionLength(props.description) + "..."
+                      :
+                      props.description
+
+                  }
+                </p>
+                <div className="flex relative">
+                  {
+                    props.members?.length > 0 &&
+                    props.members?.map((item, index) => {
+                      if (index <= 3) {
+                        return (
+
+                          <Image key={index} src={Member} alt="miembro" className={clsx(
+                            "member-icon",
+                            {
+                              "member-1": index == 0,
+                              "member-2": index == 1,
+                              "member-3": index == 2,
+                              "member-4": index == 3
+                            }
+
+                          )}
+                          />
+                        )
+                      }
+                      else if (index == 4) {
+                        return (
+                          <div key={index} className="member-icon other-members">
+                            {props.members.length}
+                          </div>
+                        )
+                      }
+
+
+
+                    }
+
+                    )
+                  }
+                </div>
+
+
+
+              </div>
+
+
+
+              <div className="flex justify-between z-10">
+                <div className="card-button">
+
+                  <BoardMenu
+                    creatorId={props.creatorId}
+                    currentUserId={props.currentUserId}
+                    boardId={props.id}
+                    boardName={props.name}
+                  />
+                </div>
+                <button className="card-button" onClick={() => expandBoard(props.id)}>
+                  <i className="fa-regular fa-eye"></i>
+                </button>
+                <button className="access-card-button">Ingresar</button>
+              </div>
+            </div>
+            <div className="flex tag-container-width">
+              <Tag name="Etiqueta"/>
+              <div className="relative">
+                <div className="tags-count">0</div>
+              </div>
+            </div>
+
+
+          </div>
+
+      }
+    </>
+
   );
 }

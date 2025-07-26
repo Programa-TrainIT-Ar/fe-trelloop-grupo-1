@@ -73,9 +73,9 @@ export default function RegisterView() {
 
     return (
         <>
-
-            <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0} />
-            <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590} />
+        <BoardMenu/>
+            <Image alt="elipse-izquierdo" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0} />
+            <Image alt="elipse-derecho" src={elipseDerecho} className="elipse-derecho" width={590} height={590} />
 
             <div className="w-full max-w-7xl mx-auto gap-4 px-8">
                 <div className="flex flex-wrap justify-between">

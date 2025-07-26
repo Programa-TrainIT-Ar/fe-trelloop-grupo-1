@@ -18,19 +18,20 @@ export const useAuthStore = create<AuthStore>()(
             // Acciones
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
+                set({accessToken: "some toke"})
                 try {
-                    const response = await fetch(`https://2135kz5p-5000.use2.devtunnels.ms/auth/login`, {
+                    const response = await fetch(`${API_URL}/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),
                     });
 
                     const data = await response.json();
-                    console.log(data)
+                    
                 
                     if (!response.ok) {
                         console.log("prueba error")
-                        set({ isLoading: false, error: data.error || 'Error al iniciar sesión' });
+                        set({ isLoading: false, error: 'Error al iniciar sesión' });
                         return {error: true, type: "contrasena", message: data.error}
                     }
 
@@ -42,7 +43,7 @@ export const useAuthStore = create<AuthStore>()(
                         isLoading: false,
                         error: null,
                     });
-                    console.log(data.usuario)
+                  
               
                     return true;
                 } catch (error) {
@@ -50,7 +51,7 @@ export const useAuthStore = create<AuthStore>()(
                         isLoading: false,
                         error: 'Error de conexión con el servidor'
                     });
-                    return false;
+                    return {error: true, type: "contrasena", message: "Se produjo un error al iniciar sesión"};
                 }
             },
 
