@@ -290,3 +290,5 @@ try {
     </div>
   );
 };
+}
+export default BoardSettings;
