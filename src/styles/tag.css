@@ -1,6 +1,6 @@
 @media (width > 1100px) {
-    .tag-text {
-        font-size: 0.7rem !important;
+   .tag-text {
+        font-size: 0.7rem;
     }
 }
 
@@ -30,10 +30,11 @@
         height: 2rem !important;
     }
     .tag-text {
-        font-size: 1rem;
+        font-size: 1rem !important;
     }
     .tag-icon {
         width: 1rem !important;
         height: 1rem !important;
     }
+    
 }

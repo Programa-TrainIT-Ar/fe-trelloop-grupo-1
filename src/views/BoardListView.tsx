@@ -36,7 +36,10 @@ const BoardListView = () => {
 
     return (
         <>
-
+        <div className="flex justify-between items-center mb-5">
+            <p className="text-white text-2xl w-64 me-5">Tableros Creados</p>
+            <div className="w-full border-b-[1px] border-b-[--global-color-neutral-700]"></div>
+        </div>
         <div className="grid grid-cols-4  gap-8">
             {
                 boards?.length > 0 &&

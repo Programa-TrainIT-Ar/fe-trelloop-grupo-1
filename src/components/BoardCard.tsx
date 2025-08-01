@@ -42,7 +42,7 @@ export function BoardCard(props) {
           />
           :
           <div className="card-size flex-col items-center mb-5">
-            <div className="board-card p-4 text-white flex flex-col justify-between">
+            <div className="board-card p-5 text-white flex flex-col justify-between">
 
               <Image
                 src={props.image}
@@ -56,7 +56,7 @@ export function BoardCard(props) {
               <div className="z-10">
                 <div className="flex justify-between pe-2 items-center">
                   <p className="board-title ">{props.name}</p>
-                  <button className="fav-icon"><i className="fa-regular fa-heart board-description"></i></button>
+                  <button className="bg-transparent"><i className=" fav-icon fa-regular fa-heart board-description"></i></button>
                 </div>
                 <p className="text-sm mb-1 font-normal board-description">
                   {
@@ -129,7 +129,7 @@ export function BoardCard(props) {
             <div className="flex tag-container-width">
               <Tag name="Etiqueta"/>
               <div className="relative">
-                <div className="tags-count">0</div>
+                <div className="tags-count">{props.tags?.length || "0"}</div>
               </div>
             </div>
 

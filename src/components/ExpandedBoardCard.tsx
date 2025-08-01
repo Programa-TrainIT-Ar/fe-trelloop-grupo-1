@@ -2,9 +2,14 @@ import "@/styles/board-card.css"
 import Image from "next/image"
 import BoardMenu from "./BoardMenu"
 import Tag from "./Tag"
+import Member from "@/assets/member.png"
+import { useBoardStore } from "@/store/boards"
+import { PiEyeClosedBold } from "react-icons/pi"
 
 export function ExpandedBoardCard(props) {
     
+    const expandBoard = useBoardStore((state) => state.expandBoard);
+
     return (
         
         <div className=" w-full board-card expanded-board-card col-span-3 flex justify-between">
@@ -32,13 +37,13 @@ export function ExpandedBoardCard(props) {
                                 />
                             </div>
                             <button className="card-button">
-                                <i className="fa-regular fa-eye"></i>
+                                <PiEyeClosedBold onClick={() => expandBoard(null)} />
                             </button>
                             <button className="access-card-button">Ingresar</button>
                         </div>
                     </div>
                 </div>
-                <div className="h-1/4 my-3 mx-3 text-white">
+                <div className="h-1/4 my-4 mx-3 text-white">
                     <p className="board-description">{props.description}</p>
                 </div>
                 <div className="h-1/4 mx-3 tags-section">
@@ -74,8 +79,17 @@ export function ExpandedBoardCard(props) {
                     </div>
                 </div>
             </div>
-            <div className="members-section border">
-
+            <div className="flex members-section-size p-3">
+                <div className="members-section w-full">
+                    {
+                        props.members?.map((member) => (
+                            <div className="flex items-center text-white gap-2 h-16">
+                                <Image className="member-icon-expanded" src={Member} alt="miembro" width={5} height={5}/>
+                                <p className="member-name">{member.firstName} {member.lastName}</p>
+                            </div>
+                        ))
+                    }
+                </div>
             </div>
         </div>
 

@@ -80,12 +80,12 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
   if (creatorId !== currentUserId) return null;
 
   return (
-    <div ref={menuRef} className="relative inline-block text-left ml-4 mt-4">
+    <div ref={menuRef} className="relative inline-block text-left">
       <button
         onClick={() => setShowMenu(!showMenu)}
         className="text-white text-lg hover:opacity-80"
       >
-        ⋮
+      <i className="fa-solid fa-ellipsis-vertical"></i>
       </button>
 
       {showMenu && (

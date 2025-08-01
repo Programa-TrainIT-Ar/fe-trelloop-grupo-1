@@ -36,10 +36,15 @@
         font-size: 1.8rem !important;
     }
 
-
+    .member-name {
+        font-size: 4rem !important;
+    }
 }
 
 @media (width > 1600px) {
+    .fav-icon {
+        font-size: 2.5em !important;
+    }
 .board-card {
     min-height: 20rem;
     max-height: 20rem;
@@ -55,6 +60,9 @@
         height: 2rem !important;
         font-size: 1rem !important;
     }
+    .member-name {
+    font-size: 1.3rem !important;
+}
 }
 
 @media (width < 1600px) {
@@ -201,6 +209,7 @@
 
 .fav-icon {
     font-size: 1.5rem;
+
 }
 
 .tags-count {
@@ -227,15 +236,40 @@
     border-radius: 1rem;
     background: rgba(34, 34, 34, 1);
 }
-
+.members-section-size {
+    width: 25%;
+   
+}
 .members-section {
-    width: 20%;
+    overflow: auto;
+}
+.members-section::-webkit-scrollbar {
+    background-color: transparent;
+    width: 0.4rem;
+}
+.members-section::-webkit-scrollbar-thumb {
+    background-color: gray;
+    border-radius: 0.7rem;
 }
 .expanded-board-info {
-    width: 80%;
+    width: 75%;
 
 }
 
 .tags-section {
     width: 80%;
+}
+
+.member-icon-expanded {
+    min-height: 2rem;
+    max-height: 2rem;
+
+    min-width: 2rem;
+    max-width: 2rem;
+
+ 
+}
+
+.member-name {
+    font-size: 1rem;
 }
