@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { BoardSettings } from "@/components/BoardSettings";
+import { BoardSettings } from "@/components/board/BoardSettings";
 
 export default function CreateBoardPage() {
   return (

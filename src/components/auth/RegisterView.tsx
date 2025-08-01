@@ -12,7 +12,7 @@ import Swal from "sweetalert2";
 import "../styles/register.css";
 import "../styles/globals.css";
 import { registerController } from "@/lib/registerController";
-import BoardMenu from "@/components/BoardMenu";
+import BoardMenu from "@/components/board/BoardMenu";
 
 export default function RegisterView() {
   const router = useRouter();

@@ -5,7 +5,7 @@ import Member from "@/assets/member.png";
 import Tag from "./Tag";
 import clsx from "clsx";
 import { fixDescriptionLength } from "@/lib/boardCardController";
-import BoardMenu from "./BoardMenu";
+import BoardMenu from "@/components/board/BoardMenu";
 
 interface MemberType {
   id: string;
