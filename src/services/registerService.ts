@@ -15,7 +15,7 @@ export async function registerService(usuario: Usuario) {
             password: usuario.password,
         };
 
-        const response = await fetch(process.env.BACKEND_URL || "http://localhost:5000/auth/register", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}auth/register` || "http://localhost:5000/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

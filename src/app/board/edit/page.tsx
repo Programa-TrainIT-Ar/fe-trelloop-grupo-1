@@ -25,7 +25,7 @@ const EditBoardPage: React.FC = () => {
     const fetchBoard = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5000/getBoard/${boardId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API}getBoard/${boardId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
