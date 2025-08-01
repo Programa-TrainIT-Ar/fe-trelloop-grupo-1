@@ -6,11 +6,11 @@ import Image from "next/image";
 import Link from "next/link";
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
 import elipseDerecho from "@/assets/ellipse-1147.svg";
-import ilustracionUsuario from "../assets/ilustracion-usuario.svg";
+import ilustracionUsuario from "../../assets/ilustracion-usuario.svg";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import Swal from "sweetalert2";
-import "../styles/register.css";
-import "../styles/globals.css";
+import "../../styles/register.css";
+import "../../styles/globals.css";
 import { registerController } from "@/lib/registerController";
 import BoardMenu from "@/components/board/BoardMenu";
 
