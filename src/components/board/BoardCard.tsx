@@ -4,7 +4,7 @@ import Image from "next/image";
 import Member from "@/assets/member.png";
 import Tag from "./Tag";
 import clsx from "clsx";
-import { fixDescriptionLength } from "@/controllers/boardCardController";
+import { fixDescriptionLength } from "@/lib/boardCardController";
 import BoardMenu from "./BoardMenu";
 
 interface MemberType {
