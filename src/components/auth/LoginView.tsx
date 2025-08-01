@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import "../styles/login.css";
+import "../../styles/login.css";
 import { useRouter } from "next/navigation";
 import { loginController } from "../../lib/loginController";
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
 import elipseDerecho from "@/assets/ellipse-1147.svg";
 // Importar el controlador de login
-import ilustracionCandado from "../assets/ilustracion-candado.svg";
+import ilustracionCandado from "../../assets/ilustracion-candado.svg";
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
