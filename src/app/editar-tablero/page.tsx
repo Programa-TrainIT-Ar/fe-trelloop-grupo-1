@@ -45,7 +45,7 @@ const EditBoardPage: React.FC = () => {
       } catch (err) {
         console.error(err);
         Swal.fire("Error", "Error al conectar con el servidor", "error");
-      }
+      } 
     };
 
     fetchBoard();

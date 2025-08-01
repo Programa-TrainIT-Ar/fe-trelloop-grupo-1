@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
+const isAnalyze = process.env.ANALYZE === "true";
 
+const withBundle = withBundleAnalyzer({
+  enabled: isAnalyze,
+});
 
 const nextConfig: NextConfig = {
-  /* config options here */
-
   images: {
     domains: [
       'www.freeiconspng.com',
@@ -21,4 +24,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundle(nextConfig);

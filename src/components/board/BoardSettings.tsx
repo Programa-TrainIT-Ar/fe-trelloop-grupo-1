@@ -291,5 +291,5 @@ export const BoardSettings = () => {
     </div>
   );
 };
-}
+
 export default BoardSettings;
