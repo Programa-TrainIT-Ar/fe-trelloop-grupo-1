@@ -3,31 +3,30 @@ import React, { useState } from "react";
 import Image from "next/image";
 import "../styles/login.css";
 import { useRouter } from "next/navigation";
-import {loginController} from "../controllers/loginController"
+import { loginController } from "../../lib/loginController";
 import elipseIzquierdo from "@/assets/ellipse-1148.svg";
 import elipseDerecho from "@/assets/ellipse-1147.svg";
 // Importar el controlador de login
-import ilustracionCandado from "../assets/ilustracion-candado.svg"
-
+import ilustracionCandado from "../assets/ilustracion-candado.svg";
 
 // Instalar fontawsome para los iconos
 // npm install @fortawesome/fontawesome-free
 
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import { useAuthStore } from "@/store/auth";
 import { useStore } from "zustand";
 
 export default function LoginView() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
-  const globalError = useAuthStore(state => state.error);
+  const globalError = useAuthStore((state) => state.error);
 
   const [usuario, setUsuario] = useState({
     correo: "",
     contrasena: "",
   });
 
-  const [error, setError] = useState({error: false, type: "", message: "" })
+  const [error, setError] = useState({ error: false, type: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -39,53 +38,67 @@ export default function LoginView() {
   }
 
   async function handleLogIn(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
+    event.preventDefault();
     setLoading(true);
-    setError({error: false, message: "", type: ""});
+    setError({ error: false, message: "", type: "" });
 
-    const parametersValidation = loginController(usuario)
+    const parametersValidation = loginController(usuario);
 
     if (parametersValidation.error == true) {
-      setError({error: true, type: parametersValidation.type, message: parametersValidation.message})
-      setLoading(false)
-      return
+      setError({
+        error: true,
+        type: parametersValidation.type,
+        message: parametersValidation.message,
+      });
+      setLoading(false);
+      return;
     }
     try {
-
-
       const loginValidation = await login(usuario.correo, usuario.contrasena);
-      
-      console.log(loginValidation)
+
+      console.log(loginValidation);
       if (loginValidation.error) {
-      
-        setError({error: true, type: "contrasena", message: loginValidation.message || "Error al iniciar sesión"})
+        setError({
+          error: true,
+          type: "contrasena",
+          message: loginValidation.message || "Error al iniciar sesión",
+        });
         setLoading(false);
-      }
-      else if (loginValidation) {
-  
+      } else if (loginValidation) {
         router.push("/dashboard");
         setLoading(false);
-        return
+        return;
       }
-
     } catch (error) {
-       setError({error: true, type: "contrasena", message: error.data || "Error al iniciar sesión"})
-      return
+      setError({
+        error: true,
+        type: "contrasena",
+        message: error.data || "Error al iniciar sesión",
+      });
+      return;
     }
-  
-      
-  
-  
-}
+  }
   return (
     <>
-      <Image alt="elipse" src={elipseIzquierdo} className="elipse-izquierdo" width={0} height={0}/>
-      <Image alt="elipse" src={elipseDerecho} className="elipse-derecho" width={590} height={590}/>
+      <Image
+        alt="elipse"
+        src={elipseIzquierdo}
+        className="elipse-izquierdo"
+        width={0}
+        height={0}
+      />
+      <Image
+        alt="elipse"
+        src={elipseDerecho}
+        className="elipse-derecho"
+        width={590}
+        height={590}
+      />
 
       <div className="div-tamano px-4 flex justify-center items-center py-8 mx-64">
         <div className="w-full flex justify-between">
           <div className="w flex justify-center items-center">
-            <Image alt="ilustración candado" src={ilustracionCandado}/>
+            <Image alt="ilustración candado" src={ilustracionCandado} />
           </div>
 
           <div className="">
@@ -101,36 +114,47 @@ export default function LoginView() {
                   required
                   className="input-login w-full border border-gray-300 p-2 rounded mt-2"
                 />
-              {error.type == "correo" && <div className="text-red-700 pt-1">{error.message}</div>}
-
+                {error.type == "correo" && (
+                  <div className="text-red-700 pt-1">{error.message}</div>
+                )}
               </div>
-              
+
               <div className="mb-4">
                 <label className="login-label">Contraseña</label>
                 <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="contrasena"
-                  name="contrasena"
-                  placeholder="Escribe tu contraseña"
-                  onChange={handleChange}
-                  required
-                  className="input-login w-full border border-gray-300 p-2 rounded mt-2"
-                />
-                <button
-                type="button"
-                onClick={()=>setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 mt-1"
-                >
-                  {showPassword ? <i className="fa-solid fa-eye opacity-[0.6]"></i> : <i className='fa-solid fa-eye-slash opacity-70'></i>}
-                </button>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="contrasena"
+                    name="contrasena"
+                    placeholder="Escribe tu contraseña"
+                    onChange={handleChange}
+                    required
+                    className="input-login w-full border border-gray-300 p-2 rounded mt-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 mt-1"
+                  >
+                    {showPassword ? (
+                      <i className="fa-solid fa-eye opacity-[0.6]"></i>
+                    ) : (
+                      <i className="fa-solid fa-eye-slash opacity-70"></i>
+                    )}
+                  </button>
                 </div>
-              {error.type == "contrasena" && <div className="text-red-700 pt-1">{error.message}</div>}
-
+                {error.type == "contrasena" && (
+                  <div className="text-red-700 pt-1">{error.message}</div>
+                )}
               </div>
 
               <div className="mb-4 flex items-center">
-                <input type="checkbox" id="remember" name="remember" className="div-remember-button"/>
+                <input
+                  type="checkbox"
+                  id="remember"
+                  name="remember"
+                  className="div-remember-button"
+                />
                 <label htmlFor="remember" className="div-remember">
                   Recordarme
                 </label>
@@ -157,10 +181,6 @@ export default function LoginView() {
           </div>
         </div>
       </div>
-
     </>
   );
-};
-
-
-
+}
