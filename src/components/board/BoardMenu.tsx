@@ -1,11 +1,10 @@
-'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Swal from 'sweetalert2';
-import { FaPen, FaTrash } from 'react-icons/fa';
-import '../styles/globals.css';
-import '../styles/delModal.css';
-
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
+import { FaPen, FaTrash } from "react-icons/fa";
+import "../../styles/globals.css";
+import "../../styles/delModal.css";
 
 interface BoardMenuProps {
   creatorId: string;
@@ -17,7 +16,6 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -26,16 +24,16 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
     };
 
     if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showMenu]);
 
   const handleEdit = () => {
-    router.push('/editar-tablero');
+    router.push("/editar-tablero");
   };
 
   const handleDelete = () => {
@@ -48,35 +46,34 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
           </p>
         </div>
       `,
-      background: '#222222',
+      background: "#222222",
       showCancelButton: true,
       reverseButtons: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
       customClass: {
-        popup: 'mi-modal',
-        confirmButton: 'btn-confirm',
-        cancelButton: 'btn-cancel',
+        popup: "mi-modal",
+        confirmButton: "btn-confirm",
+        cancelButton: "btn-cancel",
       },
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: '¡Eliminado!',
-          icon: 'success',
-          background: '#222',
-          color: '#fff',
+          title: "¡Eliminado!",
+          icon: "success",
+          background: "#222",
+          color: "#fff",
           showConfirmButton: true,
-          confirmButtonText: 'Aceptar',
+          confirmButtonText: "Aceptar",
           customClass: {
-            confirmButton: 'btn-cancel',
-            popup: 'mi-modal',
+            confirmButton: "btn-cancel",
+            popup: "mi-modal",
           },
         });
       }
     });
   };
 
-  
   if (creatorId !== currentUserId) return null;
 
   return (
@@ -85,7 +82,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
         onClick={() => setShowMenu(!showMenu)}
         className="text-white text-lg hover:opacity-80"
       >
-      <i className="fa-solid fa-ellipsis-vertical"></i>
+        <i className="fa-solid fa-ellipsis-vertical"></i>
       </button>
 
       {showMenu && (
@@ -112,4 +109,3 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
 };
 
 export default BoardMenu;
-
