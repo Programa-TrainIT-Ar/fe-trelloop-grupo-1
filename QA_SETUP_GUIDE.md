@@ -30,9 +30,8 @@ git --version
 
 ### Paso 1: Clonar el repositorio
 ```bash
-git clone [URL_DEL_REPOSITORIO]
-cd fe-trelloop-grupo-1
-```
+git clone https://github.com/Programa-TrainIT-Ar/fe-trelloop-grupo-1
+cd fe-grupo1
 
 ### Paso 2: Instalar dependencias
 ```bash
