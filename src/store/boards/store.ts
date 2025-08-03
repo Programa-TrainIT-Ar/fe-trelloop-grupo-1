@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 import { useAuthStore } from '../auth';
 import { projectGetSourceForAsset } from 'next/dist/build/swc/generated-native';
 import Background from "@/assets/background-card-image.png"
-import { ExpandedBoardCard } from '@/components/ExpandedBoardCard';
+import { ExpandedBoardCard } from '@/components/board/ExpandedBoardCard';
 import Member from "@/assets/member.png"
 
 

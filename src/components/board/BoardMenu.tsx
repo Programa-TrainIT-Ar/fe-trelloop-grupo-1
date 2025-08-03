@@ -3,16 +3,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import '../styles/globals.css';
-import '../styles/delModal.css';
+import { deleteBoardById } from '@/services/boardService';
+import '../../styles/globals.css';
+import '../../styles/delModal.css'
 
 
 interface BoardMenuProps {
   creatorId: string;
   currentUserId: string;
+  boardId: string;  
 }
 
-const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
+const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId }) => {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -35,11 +37,11 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
   }, [showMenu]);
 
   const handleEdit = () => {
-    router.push('/editar-tablero');
+       router.push(`/board/edit?id=${boardId}`);
   };
 
-  const handleDelete = () => {
-    Swal.fire({
+  const handleDelete = async () => {
+    const result = await Swal.fire({
       html: `
         <div class="modal-content-custom">
           <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
@@ -58,10 +60,29 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
         confirmButton: 'btn-confirm',
         cancelButton: 'btn-cancel',
       },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Obtener token
+        const authStorage = localStorage.getItem('auth-storage');
+        if (!authStorage) {
+          throw new Error('No se encontró token de autenticación');
+        }
+        
+        const authData = JSON.parse(authStorage);
+        const token = authData?.state?.accessToken;
+        
+        if (!token) {
+          throw new Error('Token no válido');
+        }
+
+        // Eliminar tablero
+        await deleteBoardById(boardId, token);
+        
+        await Swal.fire({
           title: '¡Eliminado!',
+          text: 'El tablero ha sido eliminado correctamente',
           icon: 'success',
           background: '#222',
           color: '#fff',
@@ -72,8 +93,25 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId }) => {
             popup: 'mi-modal',
           },
         });
+        
+        // Redirigir a la lista de tableros
+        router.push('/board');
+        
+      } catch (error: any) {
+        await Swal.fire({
+          title: 'Error',
+          text: error.message || 'No se pudo eliminar el tablero',
+          icon: 'error',
+          background: '#222',
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
       }
-    });
+    }
   };
 
   

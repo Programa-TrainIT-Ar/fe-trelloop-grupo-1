@@ -1,5 +1,5 @@
 "use client"
-import { BoardCard } from "@/components/BoardCard"
+import { BoardCard } from "@/components/board/BoardCard"
 import { useState, useEffect } from "react"
 import { StaticImageData } from "next/image"
 import { useBoardStore } from "@/store/boards/store"

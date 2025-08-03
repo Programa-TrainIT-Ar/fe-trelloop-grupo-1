@@ -1,7 +1,7 @@
 import "@/styles/board-card.css"
 import Image from "next/image"
 import BoardMenu from "./BoardMenu"
-import Tag from "./Tag"
+import Tag from "@/components/common/Tag"
 import Member from "@/assets/member.png"
 import { useBoardStore } from "@/store/boards"
 import { PiEyeClosedBold } from "react-icons/pi"

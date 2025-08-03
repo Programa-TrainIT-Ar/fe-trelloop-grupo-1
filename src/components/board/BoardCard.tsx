@@ -1,8 +1,8 @@
-import "../styles/board-card.css"
+import "../../styles/board-card.css"
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Image from "next/image";
 import Member from "@/assets/member.png";
-import Tag from "./Tag";
+import Tag from "@/components/common/Tag";
 import clsx from "clsx";
 import { fixDescriptionLength } from "@/lib/boardCardController";
 import BoardMenu from "@/components/board/BoardMenu";

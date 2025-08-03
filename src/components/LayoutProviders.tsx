@@ -7,11 +7,12 @@ import { Breadcrumb } from "@/components/common/Breadcrumb";
 export function LayoutProviders({children}: {children: React.ReactNode}) {
     const pathname = usePathname();
     const isDashboardRoute = pathname?.startsWith('/dashboard');
+    const isEditRoute = pathname?.startsWith('/board/edit');
 
     return (
         <>
             {!isDashboardRoute && <Navbar />}
-            {!isDashboardRoute && <Breadcrumb />}
+            {!isDashboardRoute && !isEditRoute && <Breadcrumb />}
             <main>{children}</main>
         </>
     )

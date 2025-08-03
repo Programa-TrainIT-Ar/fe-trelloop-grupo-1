@@ -1,4 +1,4 @@
-import "../styles/tag.css"
+import "../../styles/tag.css"
 import Image from "next/image"
 import TagIcon from "@/assets/tag.png"
 

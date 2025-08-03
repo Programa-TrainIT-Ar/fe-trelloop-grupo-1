@@ -15,13 +15,15 @@ export async function registerService(usuario: Usuario) {
             password: usuario.password,
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}auth/register` || "http://localhost:5000/auth/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-        });
+       const API = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
+
+const response = await fetch(`${API}/auth/register`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload),
+});
 
         const data = await response.json();
 

@@ -80,7 +80,7 @@ export const BoardSettings = () => {
   */
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}board/createBoard`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/createBoard`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`
