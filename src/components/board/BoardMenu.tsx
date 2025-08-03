@@ -19,7 +19,6 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -28,11 +27,11 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
     };
 
     if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showMenu]);
 
@@ -50,15 +49,15 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
           </p>
         </div>
       `,
-      background: '#222222',
+      background: "#222222",
       showCancelButton: true,
       reverseButtons: true,
-      confirmButtonText: 'Eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
       customClass: {
-        popup: 'mi-modal',
-        confirmButton: 'btn-confirm',
-        cancelButton: 'btn-cancel',
+        popup: "mi-modal",
+        confirmButton: "btn-confirm",
+        cancelButton: "btn-cancel",
       },
     });
 
@@ -114,7 +113,6 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
     }
   };
 
-  
   if (creatorId !== currentUserId) return null;
 
   return (
@@ -123,7 +121,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
         onClick={() => setShowMenu(!showMenu)}
         className="text-white text-lg hover:opacity-80"
       >
-      <i className="fa-solid fa-ellipsis-vertical"></i>
+        <i className="fa-solid fa-ellipsis-vertical"></i>
       </button>
 
       {showMenu && (
@@ -150,4 +148,3 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
 };
 
 export default BoardMenu;
-
