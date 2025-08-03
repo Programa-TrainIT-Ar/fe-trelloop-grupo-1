@@ -1,4 +1,4 @@
-import "../styles/board-card.css";
+import "../../styles/board-card.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import Image from "next/image";
 import Member from "@/assets/member.png";

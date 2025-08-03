@@ -106,7 +106,7 @@ function EditBoardPage() {
     try {
       await updateBoardById(boardId, data, token);
       alert('✅ Tablero actualizado');
-      router.push('/board');
+      router.push('/dashboard');
     } catch (err: any) {
       alert('❌ Error al actualizar: ' + err.message);
     }

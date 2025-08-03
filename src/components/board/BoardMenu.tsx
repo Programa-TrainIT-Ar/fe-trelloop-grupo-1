@@ -36,7 +36,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
   }, [showMenu]);
 
   const handleEdit = () => {
-       router.push(`/board/edit?id=${boardId}`);
+       router.push(`/dashboard/board/edit?id=${boardId}`);
   };
 
   const handleDelete = async () => {
@@ -93,8 +93,8 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
           },
         });
         
-        // Redirigir a la lista de tableros
-        router.push('/board');
+        // Redirigir al dashboard
+        router.push('/dashboard');
         
       } catch (error: any) {
         await Swal.fire({
