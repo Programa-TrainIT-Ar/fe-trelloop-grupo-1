@@ -1,0 +1,40 @@
+@media (width > 1100px) {
+   .tag-text {
+        font-size: 0.7rem;
+    }
+}
+
+.tag {
+    width: 6.25rem;
+    height: 1.5rem;
+    border: 1px solid rgba(151, 151, 151, 1);
+    border-radius: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: rgba(151, 151, 151, 1);
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+    font-weight: 500;
+    font-family: poppins;
+}
+
+.tag-icon {
+    width: 0.891rem;
+    height: 0.656rem;
+}
+
+@media (width > 1600px) {
+    .tag {
+        width:8rem !important;
+        height: 2rem !important;
+    }
+    .tag-text {
+        font-size: 1rem !important;
+    }
+    .tag-icon {
+        width: 1rem !important;
+        height: 1rem !important;
+    }
+    
+}

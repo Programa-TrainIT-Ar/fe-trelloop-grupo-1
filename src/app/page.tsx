@@ -1,6 +1,6 @@
 "use client";
-import {Hero} from "@/components/Hero";
-import {Footer} from "@/components/Footer";
+import {Hero} from "@/components/ui/Hero";
+import {Footer} from "@/components/common/Footer";
 
 export default function Home() {
  
