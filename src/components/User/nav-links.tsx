@@ -10,7 +10,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 const links = [
     { name: 'Tableros', href: '/dashboard', icon: <RxDashboard className="size-8"/> },
     { name: 'Miembros', href: '/dashboard/members', icon: <MdOutlinePeopleAlt className="size-8"/> },
-    { name: 'Configuración', href: '/dashboard/configuration', icon: <IoSettingsOutline className="size-8"/> },
+    { name: 'Configuración', href: '/dashboard/settings', icon: <IoSettingsOutline className="size-8"/> },
 ];
 
 export default function NavLinks() {
