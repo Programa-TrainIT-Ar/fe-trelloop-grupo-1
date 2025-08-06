@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
+import Calendar from '@/components/ui/Calendar';
 
 function CreateCardPage() {
   const searchParams = useSearchParams();
@@ -17,6 +18,8 @@ function CreateCardPage() {
   const [lead, setLead] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  const[startDate, setStartDate] = useState <Date | null>(null);
+  const [endDate, setEndDate] = useState <Date | null>(null);
 
 
   const [priorityInput, setPriorityInput] = useState('');
@@ -102,7 +105,11 @@ function CreateCardPage() {
           <h1 className="text-2xl text-left font-bold text-white">Crear Nueva Tarjeta</h1>
           <p className="text-gray-400">Tablero ID: {boardId}</p>
         </div>
-
+        <Calendar
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate} />
         <div>
           <label htmlFor="title" className="block font-medium mb-2 text-sm">
             Título de la tarjeta *
