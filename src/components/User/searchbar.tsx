@@ -14,14 +14,28 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import { IoHeartOutline } from "react-icons/io5";
 import Image from "next/image";
 import FilterDropdownButton from "./filterDropdownButtons";
+import { useAuthStore } from "@/store/auth";
+import { useRouter } from "next/navigation";
+
 
 export default function SearchBar() {
+    const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const filterOptions = useRef<HTMLDivElement>(null);
+
+    const user = useAuthStore(state => state.user);
+    const storeLogout = useAuthStore(state => state.logout);
+
+    const userFullName = user ? `${user.firstName} ${user.lastName}`: 'Usuario';    
+
+    const handleLogout = () => {
+        storeLogout()
+        router.push('/')
+    }
 
     const toggleProfileMenu = () => {
         setIsProfileOpen(!isProfileOpen);
@@ -140,15 +154,15 @@ export default function SearchBar() {
                             className={`${isProfileOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl bg-[--global-color-neutral-700] flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
                             <div className="flex gap-3 items-center">
                                 <Image
-                                    src='https://picsum.photos/200/200?random=1'
+                                    src={user?.profilePicture || 'https://picsum.photos/200/200?random=1'}
                                     alt="User profile photo"
                                     width={60}
                                     height={60}
                                     className="object-cover rounded-full ms-4"
                                 />
                                 <div className="text-white flex-col">
-                                    <h4 className="text-lg text-">Arturo Belano</h4>
-                                    <h5>Administrador</h5>
+                                    <h4 className="text-lg text-">{userFullName}</h4>
+                                    <h5>Miembro</h5>
                                 </div>
                             </div>
                             <a id="user-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
@@ -158,7 +172,7 @@ export default function SearchBar() {
                                 <LuKey className="size-6" />Contraseña
                             </a>
                             <div className="my-1 border-t border-gray-500 mx-3"></div>
-                            <a id="user-menu-item-2" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                            <a onClick={handleLogout} id="user-menu-item-2" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
                                 <RxExit className="size-6" />Cerrar sesión
                             </a>
                         </div>
