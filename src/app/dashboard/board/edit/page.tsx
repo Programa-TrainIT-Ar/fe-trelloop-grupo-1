@@ -26,6 +26,7 @@ function EditBoardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [loading, setLoading] = useState(true);
+  const [canEdit, setCanEdit] = useState(true);
 
   useEffect(() => {
     // Obtener token desde auth-storage
@@ -65,10 +66,17 @@ function EditBoardPage() {
         setTags(data?.tags || []);
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
+        
+        // Verificar si el usuario puede editar (opcional, el backend ya lo valida)
+        // setCanEdit(data?.canEdit !== false);
+        
         setLoading(false);
       })
       .catch((err) => {
         console.error('Error al cargar el tablero:', err);
+        if (err.message.includes('403') || err.message.includes('Forbidden')) {
+          setCanEdit(false);
+        }
         setLoading(false);
       });
   }, [boardId, router]);
@@ -127,6 +135,23 @@ function EditBoardPage() {
   
   if (!boardId) {
     return <p className="p-4">Error: ID del tablero no encontrado</p>;
+  }
+  
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Acceso Denegado</h1>
+          <p className="text-gray-300">No tienes permisos para editar este tablero. Solo el creador puede editarlo.</p>
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
