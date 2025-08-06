@@ -12,12 +12,13 @@ interface User {
   email: string;
 }
 
+
 export const BoardSettings = () => {
   const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
   const [newTag, setNewTag] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("private");
   const accessToken = useAuthStore((state) => state.accessToken);
-  const userEmail = useAuthStore((state) => state.user?.email); // 👈 Correo usuario autenticado
+  const userEmail = useAuthStore((state) => state.user?.email); 
 
   const [boardName, setBoardName] = useState("");
   const [description, setDescription] = useState("");
