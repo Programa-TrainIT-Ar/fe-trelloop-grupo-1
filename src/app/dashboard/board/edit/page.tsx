@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
 import { getBoardById, updateBoardById } from '@/services/boardService';
+import Swal from 'sweetalert2';
 
 interface Member {
   id: number;
@@ -26,6 +27,7 @@ function EditBoardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [loading, setLoading] = useState(true);
+  const [canEdit, setCanEdit] = useState(true);
 
   useEffect(() => {
     // Obtener token desde auth-storage
@@ -65,10 +67,17 @@ function EditBoardPage() {
         setTags(data?.tags || []);
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
+        
+        // Verificar si el usuario puede editar (opcional, el backend ya lo valida)
+        // setCanEdit(data?.canEdit !== false);
+        
         setLoading(false);
       })
       .catch((err) => {
         console.error('Error al cargar el tablero:', err);
+        if (err.message.includes('403') || err.message.includes('Forbidden')) {
+          setCanEdit(false);
+        }
         setLoading(false);
       });
   }, [boardId, router]);
@@ -103,9 +112,24 @@ function EditBoardPage() {
       tags
     };
 
+    
+
+
     try {
       await updateBoardById(boardId, data, token);
-      alert('✅ Tablero actualizado');
+      Swal.fire({
+            icon: "success",
+            text: "Tablero actualizado con éxito",
+            background: "rgb(26, 26, 26)",
+            iconColor: "#6A5FFF",
+            color: "#FFFFFF",
+            confirmButtonColor: "#6A5FFF",
+            confirmButtonText: "Cerrar",
+            customClass: {
+              popup: "swal2-dark",
+              confirmButton: "swal2-confirm",
+                  }
+      });
       router.push('/dashboard');
     } catch (err: any) {
       alert('❌ Error al actualizar: ' + err.message);
@@ -127,6 +151,23 @@ function EditBoardPage() {
   
   if (!boardId) {
     return <p className="p-4">Error: ID del tablero no encontrado</p>;
+  }
+  
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Acceso Denegado</h1>
+          <p className="text-gray-300">No tienes permisos para editar este tablero. Solo el creador puede editarlo.</p>
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
