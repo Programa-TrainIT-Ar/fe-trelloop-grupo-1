@@ -6,6 +6,7 @@ import Tag from "@/components/common/Tag";
 import clsx from "clsx";
 import { fixDescriptionLength } from "@/lib/boardCardController";
 import BoardMenu from "@/components/board/BoardMenu";
+import { useRouter } from "next/navigation";
 
 interface MemberType {
   id: string;
@@ -26,6 +27,11 @@ import { useBoardStore } from "@/store/boards";
 export function BoardCard(props) {
   const expandBoard = useBoardStore((state) => state.expandBoard);
   const expandedBoardID = useBoardStore((state) => state.expandedBoardID);
+  const router = useRouter();
+
+  const handleViewBoard = () => {
+    router.push(`/dashboard/boards/${props.id}`);
+  };
 
   return (
     <>
@@ -101,7 +107,9 @@ export function BoardCard(props) {
               <button className="card-button" onClick={() => expandBoard(props.id)}>
                 <i className="fa-regular fa-eye"></i>
               </button>
-              <button className="access-card-button">Ingresar</button>
+              <button
+               onClick={handleViewBoard}
+               className="access-card-button">Ingresar</button>
             </div>
           </div>
           <div className="flex tag-container-width">

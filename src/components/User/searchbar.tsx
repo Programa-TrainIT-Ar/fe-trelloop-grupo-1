@@ -67,60 +67,60 @@ export default function SearchBar() {
         { id: 'hide-fav', label: 'Ocultar favoritos' },
     ];
 
-    useEffect(() => {        
+    useEffect(() => {
         if (!accessToken) return;        
-        if (!boards) {
+        if (!boards || boards.length === 0) {
             getBoards();
-        } else {            
-            if (Array.isArray(boards)) {
-                // Lógica para extraer etiquetas 
-                const allTags = boards.flatMap(board => board.tags).filter(tag => tag !== null);
-                const uniqueTagsMap = new Map();
-                allTags.forEach(tag => {
-                    if (tag && !uniqueTagsMap.has(tag.id)) {
-                        uniqueTagsMap.set(tag.id, {
-                            id: `tag-${tag.id}`,
-                            label: tag.name
-                        });
-                    }
-                });
-                setDynamicTags(Array.from(uniqueTagsMap.values()));
-
-                // Lógica para extraer miembros 
-                const allMembers = boards.flatMap(board => board.members).filter(member => member !== null);
-                const uniqueMembersMap = new Map();
-                allMembers.forEach(member => {
-                    if (member && !uniqueMembersMap.has(member.id)) {
-                        uniqueMembersMap.set(member.id, {
-                            id: `member-${member.id}`,
-                            label: `${member.firstName} ${member.lastName}`
-                        });
-                    }
-                });
-                setDynamicMembers(Array.from(uniqueMembersMap.values()));
-
-                // Lógica para extraer opciones de fecha
-                const today = new Date();
-                const thisWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
-                const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-                const dynamicDates: { id: string; label: string; }[] = [];
-                const hasTodayBoard = boards.some(board => new Date(board.creationDate).toDateString() === today.toDateString());
-                const hasThisWeekBoard = boards.some(board => new Date(board.creationDate) >= thisWeek);
-                const hasThisMonthBoard = boards.some(board => new Date(board.creationDate) >= thisMonth);
-
-                if (hasTodayBoard) {
-                    dynamicDates.push({ id: 'today', label: 'Hoy' });
+        }
+        
+        if (Array.isArray(boards) && boards.length > 0) {
+            // Lógica para extraer etiquetas
+            const allTags = boards.flatMap(board => board.tags).filter(tag => tag !== null);
+            const uniqueTagsMap = new Map();
+            allTags.forEach(tag => {
+                if (tag && !uniqueTagsMap.has(tag.id)) {
+                    uniqueTagsMap.set(tag.id, {
+                        id: `tag-${tag.id}`,
+                        label: tag.name
+                    });
                 }
-                if (hasThisWeekBoard) {
-                    dynamicDates.push({ id: 'this-week', label: 'Esta semana' });
-                }
-                if (hasThisMonthBoard) {
-                    dynamicDates.push({ id: 'this-month', label: 'Este mes' });
-                }
+            });
+            setDynamicTags(Array.from(uniqueTagsMap.values()));
 
-                setDynamicDateOptions(dynamicDates);
+            // Lógica para extraer miembros
+            const allMembers = boards.flatMap(board => board.members).filter(member => member !== null);
+            const uniqueMembersMap = new Map();
+            allMembers.forEach(member => {
+                if (member && !uniqueMembersMap.has(member.id)) {
+                    uniqueMembersMap.set(member.id, {
+                        id: `member-${member.id}`,                        
+                        label: `${member.firstName} ${member.lastName}`
+                    });
+                }
+            });
+            setDynamicMembers(Array.from(uniqueMembersMap.values()));
+
+            // Lógica para extraer opciones de fecha
+            const today = new Date();
+            const thisWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+            const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            const dynamicDates: { id: string; label: string; }[] = [];            
+            const hasTodayBoard = boards.some(board => new Date(board.creationDate).toDateString() === today.toDateString());
+            const hasThisWeekBoard = boards.some(board => new Date(board.creationDate) >= thisWeek);
+            const hasThisMonthBoard = boards.some(board => new Date(board.creationDate) >= thisMonth);
+
+            if (hasTodayBoard) {
+                dynamicDates.push({ id: 'today', label: 'Hoy' });
             }
+            if (hasThisWeekBoard) {
+                dynamicDates.push({ id: 'this-week', label: 'Esta semana' });
+            }
+            if (hasThisMonthBoard) {
+                dynamicDates.push({ id: 'this-month', label: 'Este mes' });
+            }
+            
+            setDynamicDateOptions(dynamicDates);
         }
     }, [boards, getBoards, accessToken]);
 
