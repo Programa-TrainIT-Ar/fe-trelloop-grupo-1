@@ -21,7 +21,9 @@ type Props = {
 const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDate }) => {
   const [selecting, setSelecting] = useState<"start" | "end" | null>(null);
 
-  const handleDateChange = (date: Date) => {
+  const handleDateChange = (date: Date | null) => {
+    if (!date) return;
+    
     if (selecting === "start") {
       setStartDate(date);
       setSelecting(null);
@@ -62,7 +64,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
           </button>
         </div>
         <div className=" text-sm text-left self-start mt-2 ml-3">Crear recordatorio </div>
-        <select id="reminder" name="reminder"  className="mt-2 py-2 px-3 pr-8 bg-[#272727] block w-full rounded-xl text-sm font-light text-white focus:outline-none focus:border-purple-500 h-[41px">
+        <select id="reminder" name="reminder"  className="mt-2 py-2 px-3 pr-8 bg-[#272727] block w-full rounded-xl text-sm font-light text-white focus:outline-none focus:border-purple-500 h-[41px]">
           <option>test</option>
           <option>test2</option>
           <option>test3</option>
