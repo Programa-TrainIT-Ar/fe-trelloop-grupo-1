@@ -1,8 +1,11 @@
-"use client";
+ "use client";
 import { ChangeEvent, useState } from 'react';
+
 import { useRouter } from "next/navigation";
 import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser } from "react-icons/fa";
+import { FaMagnifyingGlass } from "react-icons/fa6";
 import {useAuthStore} from "@/store/auth";
+
 
 
 export const BoardSettings = () => {
@@ -19,6 +22,7 @@ export const BoardSettings = () => {
   const [members, setMembers] = useState<string[]>([]);
   const [newMember, setNewMember] = useState("");
   const router = useRouter();
+
 
 
   const handleAddTag = () => {
@@ -103,13 +107,13 @@ export const BoardSettings = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+    <div className="min-h-screen bg-gradient-to-b  text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
 
         {/* Imagen del tablero */}
         <div>
           <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
-          <div className="relative w-32 h-32 bg-neutral-800 rounded flex items-center justify-center cursor-pointer overflow-hidden">
+          <div className="relative w-32 h-32 bg-zinc-800 rounded flex items-center justify-center cursor-pointer overflow-hidden">
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
             ) : (
@@ -160,10 +164,21 @@ export const BoardSettings = () => {
           <div className="relative">
             <input
               id="miembros"
-              type="email"
-              placeholder="Correo del miembro..."
+              type="text"
+              placeholder="Buscar por nombre o @usuario..."
               value={newMember}
-              onChange={(e) => setNewMember(e.target.value)}
+              onChange={(e) => {const value = e.target.value;
+              setNewMember(value);
+              
+              }}
+
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddMember();
+                }
+              }}
+              
               className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700 pr-10"
             />
             <button
@@ -171,7 +186,7 @@ export const BoardSettings = () => {
               onClick={handleAddMember}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
             >
-              <FaPlus />
+              <FaMagnifyingGlass />
             </button>
           </div>
           {members.length > 0 && (
@@ -201,6 +216,12 @@ export const BoardSettings = () => {
               placeholder="Escribe un nombre de etiqueta para crearla..."
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddTag();
+                }
+              }}  
             />
             <button
               type="button"
@@ -267,11 +288,11 @@ export const BoardSettings = () => {
         </div>
 
         {/* Botones de acción */}
-        <div className="flex justify-end gap-4 pt-6">
+        <div className="grid grid-cols-2 gap-4 pt-6">
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
-            className="bg-[#1f1f1f] border border-gray-500 text-white px-6 py-2 rounded text-sm hover:bg-[#2a2a2a]"
+            className="w-full text-state-default font-light border border-state-default rounded-lg py-3 text-sm hover:bg-background-medium transition"
           >
             Cancelar creación
           </button>
@@ -280,8 +301,8 @@ export const BoardSettings = () => {
             disabled={!isFormValid}
             onClick={handleCreateBoard}
             className={`
-              bg-purple-600 text-white px-6 py-2 rounded text-sm
-              ${!isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700"}
+              w-full bg-state-default font-light text-white rounded-lg py-3 text-sm hover:bg-state-hover transition
+              ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}
             `}
           >
             Crear tablero
