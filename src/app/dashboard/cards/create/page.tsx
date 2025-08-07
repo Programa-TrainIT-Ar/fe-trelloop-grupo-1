@@ -168,7 +168,7 @@ function CreateCardPage() {
 
 
           <div>
-            <label htmlFor="tags" className="block font-medium mb-2 mt-5 text-sm">
+            <label htmlFor="tags" className="block font-medium mb-2 mt-2 text-sm">
               Etiquetas
             </label>
             <div className="relative">
@@ -177,7 +177,7 @@ function CreateCardPage() {
                 type="text"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                className="mt-2 p-3 pr-10 bg-[#313131] block w-full rounded-xl border-2 border-[#3C3C3CB2] text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500"
+                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
                 placeholder="Agregar etiqueta..."
               />
               <button
