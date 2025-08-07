@@ -3,9 +3,11 @@
   flex-direction: column;
   color: white;
   background-color: #272727;
-  padding: 1rem;
+  padding: 10px;
   width: 280px;
   height: 380px;
+  font-weight: 100;
+  border-radius: 8px;
 }
 
 .calendar h4 {
@@ -25,6 +27,8 @@
   font-family: Poppins;
   transform: scale(1)
 }
+
+
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
@@ -57,7 +61,7 @@
 .calendar-buttons {
   display: flex;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: 2px;
   
 }
 

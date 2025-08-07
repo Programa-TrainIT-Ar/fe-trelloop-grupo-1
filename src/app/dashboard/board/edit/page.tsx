@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
 import { getBoardById, updateBoardById } from '@/services/boardService';
+import Swal from 'sweetalert2';
 
 interface Member {
   id: number;
@@ -111,9 +112,24 @@ function EditBoardPage() {
       tags
     };
 
+    
+
+
     try {
       await updateBoardById(boardId, data, token);
-      alert('✅ Tablero actualizado');
+      Swal.fire({
+            icon: "success",
+            text: "Tablero actualizado con éxito",
+            background: "rgb(26, 26, 26)",
+            iconColor: "#6A5FFF",
+            color: "#FFFFFF",
+            confirmButtonColor: "#6A5FFF",
+            confirmButtonText: "Cerrar",
+            customClass: {
+              popup: "swal2-dark",
+              confirmButton: "swal2-confirm",
+                  }
+      });
       router.push('/dashboard');
     } catch (err: any) {
       alert('❌ Error al actualizar: ' + err.message);

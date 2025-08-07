@@ -6,6 +6,9 @@ import { FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
 import Calendar from '@/components/ui/Calendar';
+import Swal from 'sweetalert2';
+import StateBadge from '@/components/card/StateBadge';
+import StateSelector from '@/components/card/StateSelector';
 
 function CreateCardPage() {
   const searchParams = useSearchParams();
@@ -21,10 +24,10 @@ function CreateCardPage() {
   const[startDate, setStartDate] = useState <Date | null>(null);
   const [endDate, setEndDate] = useState <Date | null>(null);
 
-
-  const [priorityInput, setPriorityInput] = useState('');
+  const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('TODO')
+  
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  
 
 
   useEffect(() => {
@@ -66,13 +69,18 @@ function CreateCardPage() {
     const cardData = {
       title,
       description,
-      tags,
-      priority,
-      boardId
+      boardId: parseInt(boardId),
+      beginDate: startDate?.toISOString(),
+      dueDate: endDate?.toISOString(),
+      state: "TODO"
     };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/createCard`, {
+      console.log('Intentando URL:', `${process.env.NEXT_PUBLIC_API}/card/cards`);
+      console.log('Datos a enviar:', cardData);
+      console.log('Token:', token?.substring(0, 20) + '...');
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/cards`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -81,11 +89,32 @@ function CreateCardPage() {
         body: JSON.stringify(cardData),
       });
 
-      if (!res.ok) throw new Error('Error al crear la tarjeta');
+      console.log('Status de respuesta:', res.status);
+      console.log('Headers de respuesta:', res.headers);
+      
+      const responseText = await res.text();
+      console.log('Respuesta del servidor:', responseText);
+      
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${responseText}`);
+      }
 
-      alert('✅ Tarjeta creada exitosamente');
+       Swal.fire({
+                  icon: "success",
+                  text: "Tarjeta creada exitosamente",
+                  background: "rgb(26, 26, 26)",
+                  iconColor: "#6A5FFF",
+                  color: "#FFFFFF",
+                  confirmButtonColor: "#6A5FFF",
+                  confirmButtonText: "Cerrar",
+                  customClass: {
+                    popup: "swal2-dark",
+                    confirmButton: "swal2-confirm",
+                        }
+            });
       router.push('/dashboard');
     } catch (err: any) {
+      console.error('Error completo:', err);
       alert('❌ Error al crear tarjeta: ' + err.message);
     }
   };
@@ -100,16 +129,21 @@ function CreateCardPage() {
 
   return (
     <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl text-left font-bold text-white">Crear Nueva Tarjeta</h1>
+          <h1 className="text-2xl text-left text-white">Crear Tarjeta</h1>
           <p className="text-gray-400">Tablero ID: {boardId}</p>
         </div>
-        <Calendar
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate} />
+        <h4>Fecha de tarjeta</h4>
+        <div className="flex gap-8">
+          <div className="w-1/3">
+            <Calendar
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate} />
+          </div>
+          <div className="w-2/3 space-y-6">
         <div>
           <label htmlFor="title" className="block font-medium mb-2 text-sm">
             Título de la tarjeta *
@@ -166,7 +200,11 @@ function CreateCardPage() {
             {priority && <PriorityBadge label={priority} />}
           </div>
 
-
+            <div>
+            <label className="block font-medium mb-2 text-sm">Estado</label>
+            <StateSelector value={state} onChange={setState} />
+            {state && <StateBadge label={state} />}
+          </div>
           <div>
             <label htmlFor="tags" className="block font-medium mb-2 mt-2 text-sm">
               Etiquetas
@@ -219,6 +257,8 @@ function CreateCardPage() {
             >
               Crear Tarjeta
             </button>
+          </div>
+        </div>
           </div>
         </div>
       </div>
