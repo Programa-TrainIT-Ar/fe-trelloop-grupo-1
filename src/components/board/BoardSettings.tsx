@@ -1,10 +1,9 @@
- "use client";
-import { ChangeEvent, useState } from 'react';
-
+"use client";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser,FaTimes } from "react-icons/fa";
+import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser, FaTimes } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
-import {useAuthStore} from "@/store/auth";
+import { useAuthStore } from "@/store/auth";
 
 interface User {
   id: number;
@@ -18,23 +17,16 @@ export const BoardSettings = () => {
   const [newTag, setNewTag] = useState("");
   const [visibility, setVisibility] = useState<"private" | "public">("private");
   const accessToken = useAuthStore((state) => state.accessToken);
-  const userEmail = useAuthStore((state) => state.user?.email); 
+  const userEmail = useAuthStore((state) => state.user?.email);
 
   const [boardName, setBoardName] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-
   const [members, setMembers] = useState<User[]>([]);
   const [newMember, setNewMember] = useState("");
   const router = useRouter();
-
-
-
- 
-
- 
 
   const isFormValid =
     boardName.trim() !== "" &&
@@ -50,7 +42,7 @@ export const BoardSettings = () => {
   const handleAddMember = async () => {
     if (!newMember.trim()) return;
 
-  
+    // esto evita agregarse a sí mismo
     if (userEmail && newMember.trim().toLowerCase() === userEmail.toLowerCase()) {
       alert("⚠️ No puedes agregarte a ti mismo como miembro");
       return;
@@ -62,9 +54,7 @@ export const BoardSettings = () => {
     }
 
     try {
-      const url = `${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(
-        newMember
-      )}`;
+      const url = `${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(newMember)}`;
       console.log("🔍 URL de búsqueda:", url);
 
       const res = await fetch(url, {
@@ -74,16 +64,14 @@ export const BoardSettings = () => {
       if (!res.ok) throw new Error(`Error buscando usuario (status ${res.status})`);
 
       const data = await res.json();
-      console.log("📩 Respuesta del backend:", data);
 
       if (data.count === 0) {
         alert("❌ No se encontró usuario con ese correo");
         return;
       }
 
-      const user = data.users.find(
-        (u: User) =>
-          u.email.toLowerCase() === newMember.trim().toLowerCase()
+      const user: User | undefined = data.users.find(
+        (u: User) => u.email.toLowerCase() === newMember.trim().toLowerCase()
       );
 
       if (!user) {
@@ -104,26 +92,31 @@ export const BoardSettings = () => {
     }
   };
 
-
   const handleRemoveMember = (id: number) => {
     setMembers((prev) => prev.filter((m) => m.id !== id));
   };
 
   const handleAddTag = async () => {
     if (!newTag.trim()) return;
+    if (!accessToken) {
+      alert("No estás autenticado. Inicia sesión para continuar.");
+      return;
+    }
 
     try {
-   
-      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/tag/by-name/${encodeURIComponent(newTag)}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      // 1) buscar si existe por nombre
+      const searchRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/tag/by-name/${encodeURIComponent(newTag)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
 
-      let tagData = null;
+      let tagData: { id: number; name: string } | null = null;
 
       if (searchRes.ok) {
         const resJson = await searchRes.json();
         tagData = resJson.tag;
       } else {
+        // 2) si no existe, crearla
         const createRes = await fetch(`${process.env.NEXT_PUBLIC_API}/tag`, {
           method: "POST",
           headers: {
@@ -138,12 +131,14 @@ export const BoardSettings = () => {
         tagData = resJson.tag;
       }
 
-      if (tags.some((t) => t.id === tagData.id)) {
+      if (!tagData) return;
+
+      if (tags.some((t) => t.id === tagData!.id)) {
         alert("⚠️ Esta etiqueta ya está agregada");
         return;
       }
 
-      setTags((prev) => [...prev, tagData]);
+      setTags((prev) => [...prev, tagData!]);
       setNewTag("");
     } catch (err) {
       console.error("❌ Error en etiquetas:", err);
@@ -154,7 +149,6 @@ export const BoardSettings = () => {
   const handleRemoveTag = (id: number) => {
     setTags((prev) => prev.filter((tag) => tag.id !== id));
   };
-
 
   const handleCreateBoard = async () => {
     if (!isFormValid) return;
@@ -174,14 +168,11 @@ export const BoardSettings = () => {
     tags.forEach((t) => formData.append("tag_ids", t.id.toString()));
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/board/createBoard`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}` },
-          body: formData,
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/createBoard`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      });
 
       if (!res.ok) throw new Error("Error al crear el tablero");
 
@@ -196,18 +187,14 @@ export const BoardSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b  text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Imagen */}
         <div>
           <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
-          <div className="relative w-32 h-32 bg-zinc-800 rounded flex items-center justify-center cursor-pointer overflow-hidden">
+          <div className="relative w-32 h-32 bg-neutral-800 rounded flex items-center justify-center cursor-pointer overflow-hidden border border-white/10">
             {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="object-cover w-full h-full"
-              />
+              <img src={imagePreview} alt="Preview" className="object-cover w-full h-full" />
             ) : (
               <FaCamera className="text-gray-500 text-2xl" />
             )}
@@ -222,29 +209,25 @@ export const BoardSettings = () => {
 
         {/* Nombre */}
         <div>
-          <label className="block font-medium mb-2 text-sm">
-            Nombre de tablero
-          </label>
+          <label className="block font-medium mb-2 text-sm">Nombre de tablero</label>
           <input
             type="text"
             placeholder="Escribe aquí..."
             value={boardName}
             onChange={(e) => setBoardName(e.target.value)}
-            className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700"
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm placeholder-white/40 outline-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
           />
         </div>
 
         {/* Descripción */}
         <div>
-          <label className="block font-medium mb-2 text-sm">
-            Descripción
-          </label>
+          <label className="block font-medium mb-2 text-sm">Descripción</label>
           <textarea
             rows={4}
             placeholder="Escribe aquí..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700 resize-none"
+            className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm placeholder-white/40 outline-none resize-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
           />
         </div>
 
@@ -253,45 +236,51 @@ export const BoardSettings = () => {
           <label className="block font-medium mb-2 text-sm">Miembros</label>
           <div className="relative">
             <input
-              id="miembros"
-              type="text"
-              placeholder="Buscar por nombre o @usuario..."
+              type="email"
+              placeholder="Buscar por correo..."
               value={newMember}
-              onChange={(e) => {const value = e.target.value;
-              setNewMember(value);
-              
-              }}
-
+              onChange={(e) => setNewMember(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddMember();
                 }
               }}
-              
-              className="bg-neutral-800 px-4 py-2 rounded w-full text-sm border border-gray-700 pr-10"
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 pr-11 text-sm placeholder-white/40 outline-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
             />
             <button
               type="button"
               onClick={handleAddMember}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg px-2 py-1 text-white/60 hover:text-white/90 hover:bg-white/5 transition"
+              title="Agregar miembro"
             >
-              <FaMagnifyingGlass />
+              <FaMagnifyingGlass className="h-5 w-5" />
             </button>
           </div>
+
           {members.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {members.map((member) => (
                 <span
                   key={member.id}
-                  className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-2 bg-[#2a2a2a]"
+                  className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
                 >
-                  <FaUser className="text-gray-400" />
-                  {member.first_name} {member.last_name}
-                  <FaTimes
-                    className="cursor-pointer text-red-400 hover:text-red-500"
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
+                    <FaUser className="text-white/70 text-sm" />
+                  </span>
+
+                  <span className="leading-tight">
+                    <span className="block text-sm">{member.first_name} {member.last_name}</span>
+                    <span className="block text-[11px] text-white/50">{member.email}</span>
+                  </span>
+
+                  <button
+                    className="ml-1 inline-flex items-center justify-center rounded-full p-1 text-red-400 hover:bg-red-400/10 hover:text-red-300 transition"
                     onClick={() => handleRemoveMember(member.id)}
-                  />
+                    title="Quitar"
+                  >
+                    <FaTimes />
+                  </button>
                 </span>
               ))}
             </div>
@@ -312,35 +301,37 @@ export const BoardSettings = () => {
                   e.preventDefault();
                   handleAddTag();
                 }
-              }}  
+              }}
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 pr-11 text-sm placeholder-white/40 outline-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
             />
             <button
               type="button"
               onClick={handleAddTag}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-lg px-2 py-1 text-white/60 hover:text-white/90 hover:bg-white/5 transition"
+              title="Agregar etiqueta"
             >
-              <FaPlus />
+              <FaPlus className="h-4 w-4" />
             </button>
           </div>
+
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {tags.map((t) => (
                 <span
                   key={t.id}
-                  className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-2"
+                  className="px-3 py-1 rounded-full border border-white/10 bg-white/5 text-sm inline-flex items-center gap-2"
                 >
-                  <FaTag className="text-gray-400" />
+                  <FaTag className="text-white/60" />
                   {t.name}
                   <button
                     onClick={() => handleRemoveTag(t.id)}
-                    className="text-red-400 hover:text-red-600 text-xs"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-full px-1 text-xs"
                     title="Eliminar etiqueta"
                   >
                     ✖
                   </button>
                 </span>
               ))}
-
             </div>
           )}
         </div>
@@ -386,12 +377,12 @@ export const BoardSettings = () => {
           </label>
         </div>
 
-        {/* Botones de acción */}
+        {/* Botones */}
         <div className="grid grid-cols-2 gap-4 pt-6">
           <button
             type="button"
             onClick={() => router.push("/dashboard")}
-            className="w-full text-state-default font-light border border-state-default rounded-lg py-3 text-sm hover:bg-background-medium transition"
+            className="w-full text-white/80 font-light border border-white/15 rounded-lg py-3 text-sm hover:bg-white/5 transition"
           >
             Cancelar creación
           </button>
@@ -399,10 +390,9 @@ export const BoardSettings = () => {
             type="button"
             disabled={!isFormValid}
             onClick={handleCreateBoard}
-            className={`
-              w-full bg-state-default font-light text-white rounded-lg py-3 text-sm hover:bg-state-hover transition
-              ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}
-            `}
+            className={`w-full bg-purple-600 font-light text-white rounded-lg py-3 text-sm hover:bg-purple-700 transition ${
+              !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             Crear tablero
           </button>
