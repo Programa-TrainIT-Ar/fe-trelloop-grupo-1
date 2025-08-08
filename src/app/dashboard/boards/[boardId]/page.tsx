@@ -67,7 +67,6 @@ export default function BoardPage({ params }: BoardPageProps) {
 
         const fetchCards = async () => {
             try {
-                console.log('Fetching cards with token:', accessToken.substring(0, 20) + '...');
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/getCards/${boardId}`, {
                     method: 'GET',
                     headers: {
@@ -76,20 +75,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                     },
                 });
 
-                console.log('Response status:', res.status);
                 if (res.ok) {
                     const data = await res.json();
-                    console.log('Cards received:', data.length);
-                    console.log('Raw data:', data);
-                    
-                    // Primero intentemos sin calcular prioridad
-                    setCards(prevCards => {
-                        console.log('Previous cards:', prevCards.length);
-                        console.log('Setting new cards:', data.length);
-                        return data;
-                    });
-                } else {
-                    console.error('Failed to fetch cards:', res.status);
+                    setCards(data);
                 }
             } catch (error) {
                 console.error('Error fetching cards:', error);
@@ -100,10 +88,7 @@ export default function BoardPage({ params }: BoardPageProps) {
         fetchCards();
     }, [boardId, accessToken]);
 
-    // Monitor cards state changes
-    useEffect(() => {
-        console.log('Cards state changed:', cards.length, cards);
-    }, [cards]);
+
 
     if (!boardData) {
         return <div className='text-white'>Cargando...</div>;
@@ -180,15 +165,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                 <h6>Fecha</h6>
                 <h6>Acciones</h6>
             </div>
-            <p className='text-white mb-4'>Total tarjetas: {cards.length}</p>
-            
-            {/* Prueba simple */}
-            {cards.length > 0 && (
-                <div className='text-white mb-4'>
-                    <p>PRUEBA: Hay {cards.length} tarjetas</p>
-                    <p>Primera tarjeta: {cards[0]?.title}</p>
-                </div>
-            )}
+
             
             {cards.map(card => (
                 <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center justify-around gap-3 px-4 py-3 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl mb-6 text-start'>
