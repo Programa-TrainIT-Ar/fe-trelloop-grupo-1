@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
 import { getBoardById, updateBoardById } from '@/services/boardService';
+import CreateBoardBar from '@/components/User/createBoardBar';
 import Swal from 'sweetalert2';
 
 interface Member {
@@ -41,13 +42,13 @@ function EditBoardPage() {
     } catch (error) {
       console.error('Error al parsear auth-storage:', error);
     }
-    
+
     // Si no hay token, redirigir al login
     if (!storedToken) {
       router.push('/login');
       return;
     }
-    
+
     // Si no hay boardId, detener la carga
     if (!boardId) {
       setLoading(false);
@@ -60,17 +61,17 @@ function EditBoardPage() {
     getBoardById(boardId, storedToken)
       .then((data) => {
         console.log("Datos del tablero recibidos:", data);
-        
+
         // Asignar valores usando los nombres correctos de los campos
         setName(data?.name || '');
         setDescription(data?.description || '');
         setTags(data?.tags || []);
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
-        
+
         // Verificar si el usuario puede editar (opcional, el backend ya lo valida)
         // setCanEdit(data?.canEdit !== false);
-        
+
         setLoading(false);
       })
       .catch((err) => {
@@ -112,34 +113,45 @@ function EditBoardPage() {
       tags
     };
 
-    
+
 
 
     try {
       await updateBoardById(boardId, data, token);
       Swal.fire({
-            icon: "success",
-            text: "Tablero actualizado con éxito",
-            background: "rgb(26, 26, 26)",
-            iconColor: "#6A5FFF",
-            color: "#FFFFFF",
-            confirmButtonColor: "#6A5FFF",
-            confirmButtonText: "Cerrar",
-            customClass: {
-              popup: "swal2-dark",
-              confirmButton: "swal2-confirm",
-                  }
+        icon: "success",
+        text: "Tablero actualizado con éxito",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
       });
       router.push('/dashboard');
     } catch (err: any) {
-      alert('❌ Error al actualizar: ' + err.message);
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'No se pudo actualizar el tablero',
+        icon: 'error',
+        background: '#222',
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
     }
   };
 
   if (loading) {
     return <p className="p-4">Cargando...</p>;
   }
-  
+
   if (!token) {
     return (
       <div className="p-4">
@@ -148,18 +160,18 @@ function EditBoardPage() {
       </div>
     );
   }
-  
+
   if (!boardId) {
     return <p className="p-4">Error: ID del tablero no encontrado</p>;
   }
-  
+
   if (!canEdit) {
     return (
       <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-white mb-4">Acceso Denegado</h1>
           <p className="text-gray-300">No tienes permisos para editar este tablero. Solo el creador puede editarlo.</p>
-          <button 
+          <button
             onClick={() => router.push('/dashboard')}
             className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
           >
@@ -170,14 +182,13 @@ function EditBoardPage() {
     );
   }
   return (
-    <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        {/* Título de la página */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">
-            Edición de tablero | {name || 'Cargando...'}
-          </h1>
+        <div className="mb-12">
+          <h1 className="text-white text-3xl">Edición de tablero: {name || 'Cargando...'}</h1>
+          <p className="text-gray-400 text-sm">ID: {boardId}</p>
         </div>
+
         {/* Imagen del tablero */}
         <div>
           <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
@@ -278,9 +289,9 @@ function EditBoardPage() {
               >
                 <FaTag className="text-gray-400" />
                 {tag}
-                <FaTimes 
+                <FaTimes
                   className="cursor-pointer hover:text-red-400 transition"
-                  onClick={() => handleRemoveTag(i)} 
+                  onClick={() => handleRemoveTag(i)}
                 />
               </span>
             ))}

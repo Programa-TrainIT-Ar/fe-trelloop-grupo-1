@@ -74,7 +74,7 @@ export default function RegisterView() {
 
   return (
     <>
-      <BoardMenu />
+      
       <Image
         alt="elipse-izquierdo"
         src={elipseIzquierdo}
