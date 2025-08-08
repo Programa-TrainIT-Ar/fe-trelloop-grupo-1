@@ -8,8 +8,23 @@ import { LuPencilLine } from "react-icons/lu";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Image from 'next/image';
 import clsx from 'clsx';
+import PriorityBadge from '@/components/card/PriorityBagde';
+import StateBadge from '@/components/card/StateBadge';
+import EmptyBadge from '@/components/ui/EmptyBadge';
 
 //const user = useAuthStore(state => state.user);
+
+interface Card {
+    id: number;
+    title: string;
+    description?: string;
+    assignee?: string;
+    priority?: 'Baja' | 'Media' | 'Alta';
+    state: string;
+    dueDate?: string;
+    beginDate?: string;
+    members?: any[];
+}
 
 interface BoardPageProps {
     params: {
@@ -20,6 +35,7 @@ interface BoardPageProps {
 export default function BoardPage({ params }: BoardPageProps) {
     const { boardId } = params;
     const [boardData, setBoardData] = useState(null);
+    const [cards, setCards] = useState<Card[]>([]);
     const { accessToken } = useAuthStore();
     const [activeButton, setActiveButton] = useState('backlog');
 
@@ -49,8 +65,45 @@ export default function BoardPage({ params }: BoardPageProps) {
             }
         };
 
+        const fetchCards = async () => {
+            try {
+                console.log('Fetching cards with token:', accessToken.substring(0, 20) + '...');
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/getCards/${boardId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                console.log('Response status:', res.status);
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('Cards received:', data.length);
+                    console.log('Raw data:', data);
+                    
+                    // Primero intentemos sin calcular prioridad
+                    setCards(prevCards => {
+                        console.log('Previous cards:', prevCards.length);
+                        console.log('Setting new cards:', data.length);
+                        return data;
+                    });
+                } else {
+                    console.error('Failed to fetch cards:', res.status);
+                }
+            } catch (error) {
+                console.error('Error fetching cards:', error);
+            }
+        };
+
         fetchBoardData();
+        fetchCards();
     }, [boardId, accessToken]);
+
+    // Monitor cards state changes
+    useEffect(() => {
+        console.log('Cards state changed:', cards.length, cards);
+    }, [cards]);
 
     if (!boardData) {
         return <div className='text-white'>Cargando...</div>;
@@ -60,48 +113,23 @@ export default function BoardPage({ params }: BoardPageProps) {
         setActiveButton(buttonName);
     }
 
-    const priorityTags = {
-        'Alta': 'bg-[#A70000]',
-        'Media': 'bg-[#DF8200]',
-        'Baja': 'bg-[#667085]'
-    }
+    const calculatePriority = (dueDate: string | null): 'Baja' | 'Media' | 'Alta' | null => {
+        if (!dueDate) return null;
+        
+        const today = new Date();
+        const due = new Date(dueDate);
+        const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) return 'Alta'; // Vencida
+        if (diffDays <= 3) return 'Alta'; // 3 días o menos
+        if (diffDays <= 7) return 'Media'; // 7 días o menos
+        return 'Baja'; // Más de 7 días
+    };
 
-    const statusTags = {
-        'Hecho': 'bg-[#12B76A]',
-        'En progreso': 'bg-[#2E90FA]',
-        'Por hacer': 'bg-[#60584E]'
-    }
 
 
-    const tasks = [
-        {
-            id: 1,
-            description: "Crear el componente de navegación",
-            assignee: "Iván Andrade",
-            priority: "Media",
-            status: "Hecho",
-            members: [],
-            date: "Julio 15 de 2025"
-        },
-        {
-            id: 2,
-            description: "Configurar el servidor de autenticación",
-            assignee: "Sofía Pérez",
-            priority: "Alta",
-            status: "En progreso",
-            members: ['Andres López', 'Enrique Guilbert'],
-            date: "Julio 20 de 2025"
-        },
-        {
-            id: 3,
-            description: "Diseñar la interfaz de usuario",
-            assignee: "Carlos Ruiz",
-            priority: "Baja",
-            status: "Por hacer",
-            members: [],
-            date: "Julio 25 de 2025"
-        }
-    ];
+
+
 
     return (
         <>
@@ -152,29 +180,29 @@ export default function BoardPage({ params }: BoardPageProps) {
                 <h6>Fecha</h6>
                 <h6>Acciones</h6>
             </div>
-            {tasks.map(task => (
-                <div key={task.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center justify-around gap-3 px-4 py-3 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl mb-6 text-start'>
+            <p className='text-white mb-4'>Total tarjetas: {cards.length}</p>
+            
+            {/* Prueba simple */}
+            {cards.length > 0 && (
+                <div className='text-white mb-4'>
+                    <p>PRUEBA: Hay {cards.length} tarjetas</p>
+                    <p>Primera tarjeta: {cards[0]?.title}</p>
+                </div>
+            )}
+            
+            {cards.map(card => (
+                <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center justify-around gap-3 px-4 py-3 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl mb-6 text-start'>
                     <input id="default-checkbox" type="checkbox" value="" className="w-4 h-4 bg-transparent rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                    <p className='text-white'>{task.description}</p>
-                    <p>{task.assignee}</p>
+                    <p className='text-white'>{card.title}</p>
+                    <p>{card.assignee || 'Sin asignar'}</p>
                     <div className='flex justify-center'>
-                        <span className={clsx(
-                            'px-4 py-1 rounded-lg',
-                            priorityTags[task.priority]
-                        )}>
-                            {task.priority}
-                        </span>
+                        {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
                     </div>
                     <div className='flex justify-center'>
-                        <span className={clsx(
-                            'px-4 py-1 rounded-lg text-center',
-                            statusTags[task.status]
-                        )}>
-                            {task.status}
-                        </span>
+                        <StateBadge label={card.state === 'To Do' ? 'TODO' : card.state === 'In Progress' ? 'IN_PROGRESS' : card.state === 'Done' ? 'DONE' : card.state} />
                     </div>
-                    <p>{task.members.length > 0 ? task.members.join(', ') : 'N/A'}</p>
-                    <p>{task.date}</p>
+                    <p>N/A</p>
+                    <p>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
                     <div className='flex items-center gap-3'>
                         <button><LuPencilLine /></button>
                         <button><FaRegTrashAlt /></button>
@@ -183,7 +211,12 @@ export default function BoardPage({ params }: BoardPageProps) {
             ))
             }
             <div className='fixed bottom-8 right-10 z-50'>
-                <button className='flex justify-center items-center rounded-full bg-[--global-color-primary-500] h-20 w-20 text-center text-white '><FaPlus className='h-10 w-10'/></button>
+                <button 
+                    onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}`}
+                    className='flex justify-center items-center rounded-full bg-[--global-color-primary-500] h-20 w-20 text-center text-white '
+                >
+                    <FaPlus className='h-10 w-10'/>
+                </button>
             </div>
         </>
     );

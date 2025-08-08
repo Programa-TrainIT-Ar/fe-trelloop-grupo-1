@@ -80,7 +80,7 @@ function CreateCardPage() {
       console.log('Datos a enviar:', cardData);
       console.log('Token:', token?.substring(0, 20) + '...');
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/cards`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,10 +112,21 @@ function CreateCardPage() {
                     confirmButton: "swal2-confirm",
                         }
             });
-      router.push('/dashboard');
+      router.push(`/dashboard/boards/${boardId}`);
     } catch (err: any) {
       console.error('Error completo:', err);
-      alert('❌ Error al crear tarjeta: ' + err.message);
+      await Swal.fire({
+                title: 'Error',
+                text: err.message || 'Error al crear tarjeta',
+                icon: 'error',
+                background: '#222',
+                color: '#fff',
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                  confirmButton: 'btn-cancel',
+                  popup: 'mi-modal',
+                },
+              });
     }
   };
 
@@ -245,7 +256,7 @@ function CreateCardPage() {
 
           <div className="flex justify-end gap-4 pt-6">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(`/dashboard/boards/${boardId}`)}
               className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
             >
               Cancelar edición
