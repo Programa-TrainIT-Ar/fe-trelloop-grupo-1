@@ -139,7 +139,7 @@ function CreateCardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl text-left text-white">Crear Tarjeta</h1>
