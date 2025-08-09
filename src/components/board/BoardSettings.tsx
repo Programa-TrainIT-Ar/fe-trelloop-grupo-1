@@ -17,10 +17,15 @@ const alertError = async (msg: string) =>
   Swal.fire({
     icon: "error",
     text: msg,
-    background: "#1a1a1a",
-    color: "#fff",
+    background: "rgb(26, 26, 26)",
+    iconColor: "#6A5FFF",
+    color: "#FFFFFF",
     confirmButtonColor: "#6A5FFF",
     confirmButtonText: "Cerrar",
+    customClass: {
+      popup: "swal2-dark",
+      confirmButton: "swal2-confirm",
+    },
   });
 
 export const BoardSettings = () => {
@@ -190,10 +195,15 @@ export const BoardSettings = () => {
       await Swal.fire({
         icon: "success",
         text: "Tablero creado con éxito",
-        background: "#1e1e1e", 
-        color: "#fff", 
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
         confirmButtonColor: "#6A5FFF",
         confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        },
       });
 
       router.push("/dashboard");

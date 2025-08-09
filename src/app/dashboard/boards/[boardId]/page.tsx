@@ -33,7 +33,7 @@ interface BoardPageProps {
 }
 
 export default function BoardPage({ params }: BoardPageProps) {
-    const { boardId } = params;
+    const { boardId } = params || {};
     const [boardData, setBoardData] = useState(null);
     const [cards, setCards] = useState<Card[]>([]);
     const { accessToken } = useAuthStore();
@@ -89,6 +89,10 @@ export default function BoardPage({ params }: BoardPageProps) {
     }, [boardId, accessToken]);
 
 
+
+    if (!boardId) {
+        return <div className='text-white'>Error: ID del tablero no encontrado</div>;
+    }
 
     if (!boardData) {
         return <div className='text-white'>Cargando...</div>;
