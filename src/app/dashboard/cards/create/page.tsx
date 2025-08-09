@@ -24,7 +24,7 @@ function CreateCardPage() {
   const[startDate, setStartDate] = useState <Date | null>(null);
   const [endDate, setEndDate] = useState <Date | null>(null);
 
-  const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('TODO')
+  const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('')
   
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
   
@@ -72,7 +72,7 @@ function CreateCardPage() {
       boardId: parseInt(boardId),
       beginDate: startDate?.toISOString(),
       dueDate: endDate?.toISOString(),
-      state: "TODO"
+      state: state || "TODO"
     };
 
     try {
@@ -131,7 +131,7 @@ function CreateCardPage() {
   };
 
   if (!token) {
-    return <p className="p-4">Cargando...</p>;
+    return <p className="p-4 text-white">Cargando...</p>;
   }
 
   if (!boardId) {
@@ -139,7 +139,7 @@ function CreateCardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+    <div className="min-h-screen text-white p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl text-left text-white">Crear Tarjeta</h1>
@@ -212,12 +212,12 @@ function CreateCardPage() {
           </div>
 
             <div>
-            <label className="block font-medium mb-2 text-sm">Estado</label>
+            <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
             <StateSelector value={state} onChange={setState} />
             {state && <StateBadge label={state} />}
           </div>
           <div>
-            <label htmlFor="tags" className="block font-medium mb-2 mt-2 text-sm">
+            <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
               Etiquetas
             </label>
             <div className="relative">

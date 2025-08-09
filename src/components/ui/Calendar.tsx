@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import { registerLocale, setDefaultLocale } from "react-datepicker";
-import es from "date-fns/locale/es";
+import { es } from "date-fns/locale";
+
 import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/calendar.css";
 
@@ -44,6 +45,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
           monthsShown={1}
           minDate={new Date("2020-01-01")}
           maxDate={new Date("2030-12-31")}
+          locale="es"
           calendarClassName="custom-datepicker"
           renderCustomHeader={({ date, decreaseMonth, increaseMonth, decreaseYear, increaseYear }) => (
             <div className="custom-header">
@@ -56,11 +58,21 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
           )}
         />
         <div className="calendar-buttons">
-          <button onClick={() => setSelecting("start")} >
-            Desde: {startDate ? startDate.toLocaleDateString() : ""}
+          <button 
+            onClick={() => setSelecting("start")} 
+            className={`${
+              selecting === "start" ? "selecting" : ""
+            } ${startDate ? "has-date" : ""}`}
+          >
+            Desde: {startDate ? startDate.toLocaleDateString('es-ES') : ""}
           </button>
-          <button onClick={() => setSelecting("end")} >
-            Hasta: {endDate ? endDate.toLocaleDateString() : ""}
+          <button 
+            onClick={() => setSelecting("end")} 
+            className={`${
+              selecting === "end" ? "selecting" : ""
+            } ${endDate ? "has-date" : ""}`}
+          >
+            Hasta: {endDate ? endDate.toLocaleDateString('es-ES') : ""}
           </button>
         </div>
         <div className=" text-sm text-left self-start mt-2 ml-3">Crear recordatorio </div>

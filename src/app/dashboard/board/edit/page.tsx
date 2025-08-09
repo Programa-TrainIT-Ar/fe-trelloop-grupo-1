@@ -61,11 +61,13 @@ function EditBoardPage() {
     getBoardById(boardId, storedToken)
       .then((data) => {
         console.log("Datos del tablero recibidos:", data);
-
+        
         // Asignar valores usando los nombres correctos de los campos
-        setName(data?.name || '');
+        const nameValue = typeof data?.name === 'string' ? data.name : (data?.name?.name || '');
+        
+        setName(nameValue);
         setDescription(data?.description || '');
-        setTags(data?.tags || []);
+        setTags(Array.isArray(data?.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim()) : []);
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
 
@@ -185,7 +187,7 @@ function EditBoardPage() {
     <div className="min-h-screen text-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="mb-12">
-          <h1 className="text-white text-3xl">Edición de tablero: {name || 'Cargando...'}</h1>
+          <h1 className="text-white text-3xl">Edición de tablero: {typeof name === 'string' ? name : 'Cargando...'}</h1>
           <p className="text-gray-400 text-sm">ID: {boardId}</p>
         </div>
 
@@ -282,7 +284,7 @@ function EditBoardPage() {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            {tags.map((tag, i) => (
+            {tags.filter(tag => typeof tag === 'string' && tag.trim()).map((tag, i) => (
               <span
                 key={i}
                 className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"

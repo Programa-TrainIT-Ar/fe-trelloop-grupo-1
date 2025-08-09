@@ -54,7 +54,8 @@
 }
 
 .react-datepicker__day:hover {
-  background-color: rgb(26, 26, 26);
+  background-color: #313131B3 !important;
+
   color: white;
 }
 
@@ -93,7 +94,22 @@
 
 .calendar-buttons button:hover {
   background-color: #444;
+
 }
 
 
+
+.calendar-buttons button.has-date {
+  color: white !important;
+  font-weight: 100;
+  font-size:small;
+  align-items: center;
+}
+
+.calendar-buttons button.selecting {
+  border-color: #6A5FFF !important;
+  background-color: rgba(106, 95, 255, 0.2) !important;
+  color: white !important;
+  font-weight: 100;
+}
 
