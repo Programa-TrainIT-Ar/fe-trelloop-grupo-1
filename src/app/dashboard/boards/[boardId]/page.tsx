@@ -252,7 +252,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                                         </div>
                                     ))}
                                     <div className='mt-auto'>
-                                        <button className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'>
+                                        <button
+                                            onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}`}
+                                            className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'>
                                             <FaPlus />
                                             Agregar tarea
                                         </button>
