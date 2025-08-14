@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash } from 'react-icons/fa';
 import { deleteBoardById } from '@/services/boardService';
+import { useBoardStore } from '@/store/boards/store';
 import '../../styles/globals.css';
 import '../../styles/delModal.css'
 
@@ -11,13 +12,14 @@ import '../../styles/delModal.css'
 interface BoardMenuProps {
   creatorId: string;
   currentUserId: string;
-  boardId: string;  
+  boardId: number;  
 }
 
 const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId }) => {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const removeBoard = useBoardStore(state => state.removeBoard);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -77,7 +79,10 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
         }
 
         // Eliminar tablero
-        await deleteBoardById(boardId, token);
+        await deleteBoardById(Number(boardId), token);
+        
+        // Eliminar del store para actualizar UI inmediatamente
+        removeBoard(boardId);
         
         await Swal.fire({
           title: '¡Eliminado!',

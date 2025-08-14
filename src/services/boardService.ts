@@ -1,3 +1,5 @@
+import { id, is } from "date-fns/locale";
+
 // Función para decodificar JWT (solo para debugging)
 function decodeJWT(token: string) {
   try {
@@ -93,14 +95,38 @@ export async function updateBoardById(boardId: string, data: any, token: string)
   return await res.json();
 }
 
-export async function deleteBoardById(boardId: string, token: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/deleteBoard/${boardId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function deleteBoardById(boardId: string | number, token: string) {
+  const idNum = Number (boardId);
+  if (isNaN(idNum)) {
+    throw new Error('El ID del tablero debe ser un número válido');
+  }
+  try {
+    console.log('Eliminando tablero ID:', boardId);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/deleteBoard/${boardId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (!res.ok) throw new Error('No se pudo eliminar el tablero');
-  return await res.json();
+    console.log('Status de eliminación:', res.status);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error del servidor:', errorText);
+      
+      if (res.status === 403) {
+        throw new Error('No tienes permisos para eliminar este tablero.');
+      }
+      if (res.status === 500) {
+        throw new Error('Error interno del servidor. Revisa los logs del backend.');
+      }
+      throw new Error(`Error ${res.status}: No se pudo eliminar el tablero`);
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error en deleteBoardById:', error);
+    throw error;
+  }
 }
