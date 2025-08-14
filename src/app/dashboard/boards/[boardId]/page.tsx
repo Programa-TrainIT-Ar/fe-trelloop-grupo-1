@@ -27,13 +27,13 @@ interface Card {
 }
 
 interface BoardPageProps {
-    params: {
+    params: Promise<{
         boardId: string;
-    };
+    }>;
 }
 
-export default function BoardPage({ params }: BoardPageProps) {
-    const { boardId } = params || {};
+export default async function BoardPage({ params }: BoardPageProps) {
+    const { boardId } = await params;
     const [boardData, setBoardData] = useState(null);
     const [cards, setCards] = useState<Card[]>([]);
     const { accessToken } = useAuthStore();

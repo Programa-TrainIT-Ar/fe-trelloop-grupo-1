@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import StateBadge from '@/components/card/StateBadge';
 import StateSelector from '@/components/card/StateSelector';
 
-function CreateCardPage() {
+function EditCardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const boardId = searchParams.get('boardId');
@@ -49,6 +49,11 @@ function CreateCardPage() {
       router.push('/login');
     }
   }, [router]);
+
+
+get
+
+
 
   const handleAddTag = () => {
     const trimmed = newTag.trim();
@@ -277,4 +282,4 @@ function CreateCardPage() {
   );
 }
 
-export default CreateCardPage;
+export default EditCardPage;

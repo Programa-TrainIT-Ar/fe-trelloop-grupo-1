@@ -67,7 +67,7 @@ export async function updateBoardById(boardId: string, data: any, token: string)
   formData.append('description', data.description);
   formData.append('isPublic', data.isPublic ? 'true' : 'false');
   
-  // Agregar userId para debugging (temporal)
+
   const jwtUserId = jwtPayload?.sub || jwtPayload?.user_id || jwtPayload?.identity;
   console.log('Enviando userId en FormData:', jwtUserId);
   
@@ -101,6 +101,11 @@ export async function deleteBoardById(boardId: string, token: string) {
     },
   });
 
-  if (!res.ok) throw new Error('No se pudo eliminar el tablero');
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error('No tienes permisos para eliminar este tablero. Solo el creador puede eliminarlo.');
+    }
+    throw new Error('No se pudo eliminar el tablero');
+  }
   return await res.json();
 }

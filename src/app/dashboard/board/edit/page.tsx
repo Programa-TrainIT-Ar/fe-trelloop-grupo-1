@@ -139,7 +139,7 @@ function EditBoardPage() {
         title: 'Error',
         text: err.message || 'No se pudo actualizar el tablero',
         icon: 'error',
-        background: '#222',
+        background: "#222",
         color: '#fff',
         confirmButtonText: 'Aceptar',
         customClass: {
