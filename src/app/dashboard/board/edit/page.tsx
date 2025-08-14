@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
-import { getBoardById, updateBoardById } from '@/services/boardService';
+import { getBoardById, updateBoardById, removeMemberFromBoard } from '@/services/boardService';
 import Swal from 'sweetalert2';
 
 interface User {
@@ -30,6 +30,8 @@ function EditBoardPage() {
   const [canEdit, setCanEdit] = useState(true);
   const [members, setMembers] = useState<User[]>([]);
   const [newMember, setNewMember] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [boardOwnerId, setBoardOwnerId] = useState<number | null>(null);
 
   useEffect(() => {
     // Obtener token desde auth-storage
@@ -58,6 +60,15 @@ function EditBoardPage() {
 
     setToken(storedToken);
 
+    // Decodificar JWT para obtener user ID
+    try {
+      const payload = storedToken.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      setCurrentUserId(parseInt(decoded.sub));
+    } catch (error) {
+      console.error('Error al decodificar JWT:', error);
+    }
+
     // Cargar datos del tablero
     getBoardById(boardId, storedToken)
       .then((data) => {
@@ -81,9 +92,7 @@ function EditBoardPage() {
 
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
-
-        // Verificar si el usuario puede editar (opcional, el backend ya lo valida)
-        // setCanEdit(data?.canEdit !== false);
+        setBoardOwnerId(data?.userId);
 
         setLoading(false);
       })
@@ -120,23 +129,7 @@ function EditBoardPage() {
     if (!token || !boardId) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/removeMember`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          boardId: parseInt(boardId),
-          userId: memberId
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error('No se pudo eliminar el usuario del tablero');
-      }
-
-      // Actualizar la lista de miembros
+      await removeMemberFromBoard(boardId, memberId, token);
       setMembers(prev => prev.filter(member => member.id !== memberId));
 
       Swal.fire({
@@ -189,15 +182,14 @@ function EditBoardPage() {
       const userData = await searchRes.json();
 
       // Agregar usuario al tablero
-      const addRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember`, {
+      const addRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember/${boardId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          boardId: parseInt(boardId),
-          userId: userData.id
+          member_id: userData.id
         }),
       });
 
@@ -416,12 +408,14 @@ function EditBoardPage() {
                     <span className="text-sm font-medium text-white">{member.firstName} {member.lastName}</span>
                     <span className="text-xs text-gray-400">({member.email})</span>
                   </div>
-                  <button
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="text-white hover:text-red-300 transition"
-                  >
-                    <FaRegTrashAlt/>
-                  </button>
+                  {currentUserId === boardOwnerId && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-white hover:text-red-300 transition"
+                    >
+                      <FaRegTrashAlt/>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
