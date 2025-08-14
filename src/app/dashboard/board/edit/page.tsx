@@ -60,11 +60,14 @@ function EditBoardPage() {
 
     setToken(storedToken);
 
-    // Decodificar JWT para obtener user ID
+    // Decodificar JWT para obtener user ID ANTES de cargar el tablero
+    let currentUserIdFromJWT = null;
     try {
       const payload = storedToken.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      setCurrentUserId(parseInt(decoded.sub));
+      const userId = decoded.sub || decoded.user_id || decoded.identity;
+      currentUserIdFromJWT = parseInt(userId);
+      setCurrentUserId(currentUserIdFromJWT);
     } catch (error) {
       console.error('Error al decodificar JWT:', error);
     }
@@ -72,22 +75,19 @@ function EditBoardPage() {
     // Cargar datos del tablero
     getBoardById(boardId, storedToken)
       .then((data) => {
-        console.log("Datos del tablero recibidos:", data);
-        console.log("Campos disponibles:", Object.keys(data || {}));
-        console.log("Miembros en la respuesta:", data?.members);
-        console.log("Usuarios en la respuesta:", data?.users);
-        console.log("Colaboradores en la respuesta:", data?.collaborators);
-
-        // Asignar valores usando los nombres correctos de los campos
         const nameValue = typeof data?.name === 'string' ? data.name : (data?.name?.name || '');
 
         setName(nameValue);
         setDescription(data?.description || '');
-        setTags(Array.isArray(data?.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim()) : []);
+        
+        // Procesar etiquetas - pueden venir como objetos {id, name} o strings
+        const tagsData = data?.tags || [];
+        const processedTags = Array.isArray(tagsData) 
+          ? tagsData.map(tag => typeof tag === 'string' ? tag : tag?.name || '').filter(name => name.trim())
+          : [];
+        setTags(processedTags);
 
-        // Intentar diferentes nombres de campos para miembros
         const membersData = data?.members || data?.users || data?.collaborators || [];
-        console.log("Miembros a cargar:", membersData);
         setMembers(Array.isArray(membersData) ? membersData : []);
 
         setVisibility(data?.isPublic ? 'public' : 'private');
@@ -246,9 +246,6 @@ function EditBoardPage() {
       tags
     };
 
-
-
-
     try {
       await updateBoardById(boardId, data, token);
       Swal.fire({
@@ -266,18 +263,34 @@ function EditBoardPage() {
       });
       router.push('/dashboard');
     } catch (err: any) {
-      await Swal.fire({
-        title: 'Error',
-        text: err.message || 'No se pudo actualizar el tablero',
-        icon: 'error',
-        background: "#222",
-        color: '#fff',
-        confirmButtonText: 'Aceptar',
-        customClass: {
-          confirmButton: 'btn-cancel',
-          popup: 'mi-modal',
-        },
-      });
+      if (err.message.includes('401') || err.message.includes('UNAUTHORIZED')) {
+        await Swal.fire({
+          title: 'Sesión Expirada',
+          text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+          icon: 'warning',
+          background: "#222",
+          color: '#fff',
+          confirmButtonText: 'Ir al Login',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
+        router.push('/login');
+      } else {
+        await Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo actualizar el tablero',
+          icon: 'error',
+          background: "#222",
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
+      }
     }
   };
 

@@ -21,6 +21,13 @@ export async function updateBoardById(boardId: string, data: any, token: string)
   formData.append('description', data.description);
   formData.append('isPublic', data.isPublic ? 'true' : 'false');
   
+  // Agregar etiquetas
+  if (data.tags && Array.isArray(data.tags)) {
+    data.tags.forEach(tag => {
+      formData.append('tags', tag);
+    });
+  }
+  
   const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/updateBoard/${boardId}`, {
     method: 'PUT',
     headers: {
