@@ -23,6 +23,17 @@ function CreateCardPage() {
   const [newTag, setNewTag] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [reminder, setReminder] = useState<string>("none");
+  const [customDays, setCustomDays] = useState<string>("");
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const defaultOptions = [
+    { value: "1", label: "1 día antes" },
+    { value: "2", label: "2 días antes" },
+    { value: "3", label: "3 días antes" },
+
+  ];
 
   const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('')
 
@@ -119,7 +130,7 @@ function CreateCardPage() {
         title: 'Error',
         text: err.message || 'Error al crear tarjeta',
         icon: 'error',
-        background: "rgb(26, 26, 26)",
+        background: '#222',
         color: '#fff',
         confirmButtonText: 'Aceptar',
         customClass: {
@@ -163,9 +174,109 @@ function CreateCardPage() {
               startDate={startDate}
               endDate={endDate}
               setStartDate={setStartDate}
-              setEndDate={setEndDate} />
+              setEndDate={setEndDate}
+            />
+            
+            <div>
+              <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p>
+
+              {/* Dropdown principal */}
+              <div
+                className="bg-gray-800 px-3 py-2 rounded cursor-pointer"
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                {reminder === "none"
+                  ? "Ninguno"
+                  : defaultOptions.find((opt) => opt.value === reminder)?.label ||
+                  `${customDays} días antes`}
+              </div>
+
+              {/* Opciones del dropdown */}
+              {showDropdown && (
+                <div className="mt-2 bg-gray-800 rounded shadow-lg">
+                  {defaultOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700"
+                    >
+                      <input
+                        type="radio"
+                        name="reminder"
+                        value={option.value}
+                        checked={reminder === option.value}
+                        onChange={(e) => {
+                          setReminder(e.target.value);
+                          setIsCustomizing(false);
+                          setShowDropdown(false);
+                        }}
+                        className="accent-purple-500"
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+
+                  {/* Opción personalizar */}
+                  <div className="px-3 py-2 hover:bg-gray-700 cursor-pointer">
+                    {!isCustomizing ? (
+                      <button
+                        className="text-purple-400 text-sm"
+                        onClick={() => setIsCustomizing(true)}
+                      >
+                        Personalizar
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          value={customDays}
+                          onChange={(e) => setCustomDays(e.target.value)}
+                          className="w-14 bg-gray-900 text-white text-sm p-1 rounded"
+                          placeholder="Días"
+                        />
+                        <button
+                          className="text-green-400"
+                          onClick={() => {
+                            if (customDays) {
+                              setReminder("custom");
+                              setShowDropdown(false);
+                            }
+                          }}
+                        >
+                          ✔
+                        </button>
+                        <button
+                          className="text-red-400"
+                          onClick={() => {
+                            setIsCustomizing(false);
+                            setCustomDays("");
+                          }}
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
           <div className="w-2/3 space-y-6">
+            <div>
+              <label htmlFor="title" className="block font-medium mb-2 text-sm">
+                Título de la tarjeta *
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                placeholder="Escribe el título de la tarjeta..."
+                required
+              />
+            </div>
             <div>
               <label htmlFor="title" className="block font-medium mb-2 text-sm">
                 Título de la tarjeta *
@@ -194,6 +305,33 @@ function CreateCardPage() {
               />
             </div>
 
+            <div>
+              <label htmlFor="lead" className="block font-medium mb-2 text-sm">
+                Responsables
+              </label>
+              <div className="relative">
+                <input
+                  id="lead"
+                  type="text"
+                  value={lead}
+                  onChange={(e) => setLead(e.target.value)}
+                  placeholder="Buscar por nombre o @usuario..."
+                  className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  <FaSearch style={{ fontSize: "20px" }} />
+                </button>
+              </div>
+            </div>
+            <div>
+              <div>
+                <label className="block font-medium mb-2 text-sm">Prioridad</label>
+                <PrioritySelector value={priority} onChange={setPriority} />
+                {priority && <PriorityBadge label={priority} />}
+              </div>
             <div>
               <label htmlFor="lead" className="block font-medium mb-2 text-sm">
                 Responsables
@@ -264,7 +402,65 @@ function CreateCardPage() {
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
+                <StateSelector value={state} onChange={setState} />
+                {state && <StateBadge label={state} />}
+              </div>
+              <div>
+                <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
+                  Etiquetas
+                </label>
+                <div className="relative">
+                  <input
+                    id="tags"
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                    placeholder="Agregar etiqueta..."
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {tags.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
+                    >
+                      <FaTag className="text-gray-400" />
+                      {tag}
+                      <FaTimes
+                        className="cursor-pointer hover:text-red-400 transition"
+                        onClick={() => handleRemoveTag(i)}
+                      />
+                    </span>
+                  ))}
+                </div>
+              </div>
 
+              <div className="flex justify-end gap-4 pt-6">
+                <button
+                  onClick={() => router.push(`/dashboard/boards/${boardId}`)}
+                  className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
+                >
+                  Cancelar edición
+                </button>
+                <button
+                  onClick={handleCreateCard}
+                  disabled={!title.trim()}
+                  className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
+                >
+                  Crear Tarjeta
+                </button>
+              </div>
+            </div>
               <div className="flex justify-end gap-4 pt-6">
                 <button
                   onClick={() => router.push(`/dashboard/boards/${boardId}`)}
