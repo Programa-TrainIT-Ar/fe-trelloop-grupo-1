@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState,useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { useBoardStore } from "@/store/boards";
 import { FaPlus } from "react-icons/fa6";
@@ -39,14 +40,23 @@ interface BoardPageProps {
     }>;
 }
 
-export default async function BoardPage({ params }: BoardPageProps) {
-    const { boardId } = await params;
+export default function BoardPage({ params }: BoardPageProps) {
+    const [boardId, setBoardId] = useState<string | null>(null);
     const [boardData, setBoardData] = useState(null);
     const [cards, setCards] = useState<Card[]>([]);
     const { accessToken } = useAuthStore();
     const [activeSection, setActiveSection] = useState<'backlog' | 'listas'>('backlog');
-    const [showMenu, setShowMenu] = useState(false);
+    const [showMenu, setShowMenu] = useState<{[key: string]: boolean}>({});
     const menuRef = useRef<HTMLDivElement | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const getParams = async () => {
+            const { boardId: id } = await params;
+            setBoardId(id);
+        };
+        getParams();
+    }, [params]);
 
         useEffect(() => {
             const handleClickOutside = (event: MouseEvent) => {
@@ -260,13 +270,13 @@ export default async function BoardPage({ params }: BoardPageProps) {
                                                 {/* aqui empieza mi parte------------------------------------------------- */}
                                                 <div ref={menuRef} className="relative inline-block text-left">
                                                       <button
-                                                        onClick={() => setShowMenu(!showMenu)}
+                                                        onClick={() => setShowMenu(prev => ({...prev, [card.id]: !prev[card.id]}))}
                                                         className="text-white text-lg hover:opacity-80"
                                                       >
                                                         <FaEllipsisH />
                                                       </button>
                                                 
-                                                      {showMenu && (
+                                                      {showMenu[card.id] && (
 
                                                         
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
@@ -279,7 +289,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
                                                             </button>
                                                          
                                                           <button
-                                                            
+                                                             onClick={() => {
+                                                               setShowMenu(prev => ({...prev, [card.id]: false}));
+                                                               router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
+                                                             }}
                                                             className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
                                                           >
                                                             <FaPen className="text-white text-lg" />

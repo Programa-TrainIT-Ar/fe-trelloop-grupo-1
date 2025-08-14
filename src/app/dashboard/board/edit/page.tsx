@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
+import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
 import { getBoardById, updateBoardById } from '@/services/boardService';
-import CreateBoardBar from '@/components/User/createBoardBar';
 import Swal from 'sweetalert2';
 
-interface Member {
+interface User {
   id: number;
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
 }
 
@@ -25,10 +25,11 @@ function EditBoardPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [members, setMembers] = useState<Member[]>([]);
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(true);
+  const [members, setMembers] = useState<User[]>([]);
+  const [newMember, setNewMember] = useState("");
 
   useEffect(() => {
     // Obtener token desde auth-storage
@@ -61,13 +62,23 @@ function EditBoardPage() {
     getBoardById(boardId, storedToken)
       .then((data) => {
         console.log("Datos del tablero recibidos:", data);
-        
+        console.log("Campos disponibles:", Object.keys(data || {}));
+        console.log("Miembros en la respuesta:", data?.members);
+        console.log("Usuarios en la respuesta:", data?.users);
+        console.log("Colaboradores en la respuesta:", data?.collaborators);
+
         // Asignar valores usando los nombres correctos de los campos
         const nameValue = typeof data?.name === 'string' ? data.name : (data?.name?.name || '');
-        
+
         setName(nameValue);
         setDescription(data?.description || '');
         setTags(Array.isArray(data?.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim()) : []);
+
+        // Intentar diferentes nombres de campos para miembros
+        const membersData = data?.members || data?.users || data?.collaborators || [];
+        console.log("Miembros a cargar:", membersData);
+        setMembers(Array.isArray(membersData) ? membersData : []);
+
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
 
@@ -103,6 +114,134 @@ function EditBoardPage() {
 
   const handleRemoveTag = (index: number) => {
     setTags(tags.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    if (!token || !boardId) return;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/removeMember`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boardId: parseInt(boardId),
+          userId: memberId
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('No se pudo eliminar el usuario del tablero');
+      }
+
+      // Actualizar la lista de miembros
+      setMembers(prev => prev.filter(member => member.id !== memberId));
+
+      Swal.fire({
+        icon: "success",
+        text: "Usuario eliminado exitosamente",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'No se pudo eliminar el usuario',
+        icon: 'error',
+        background: "rgb(26, 26, 26)",
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
+    }
+  };
+
+  const handleAddMember = async () => {
+    const trimmed = newMember.trim();
+    if (!trimmed || !token || !boardId) return;
+
+    try {
+      // Buscar usuario por email
+      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/user/searchByEmail?email=${encodeURIComponent(trimmed)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!searchRes.ok) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const userData = await searchRes.json();
+
+      // Agregar usuario al tablero
+      const addRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boardId: parseInt(boardId),
+          userId: userData.id
+        }),
+      });
+
+      if (!addRes.ok) {
+        throw new Error('No se pudo agregar el usuario al tablero');
+      }
+
+      // Actualizar la lista de miembros
+      setMembers(prev => [...prev, {
+        id: userData.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email
+      }]);
+
+      setNewMember('');
+
+      Swal.fire({
+        icon: "success",
+        text: "Usuario agregado exitosamente",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'No se pudo agregar el usuario',
+        icon: 'error',
+        background: "rgb(26, 26, 26)",
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -245,20 +384,48 @@ function EditBoardPage() {
           <label htmlFor="members" className="block font-medium mb-2 text-sm">
             Miembros
           </label>
+
           <div className="relative">
             <input
               id="members"
+              value={newMember}
               type="text"
               placeholder="Buscar por nombre o @usuario..."
               className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+              onChange={(e) => setNewMember(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddMember();
+                }
+              }}
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              onClick={handleAddMember}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
             >
-              <FaSearch style={{ fontSize: "20px" }} />
+              <FaPlus style={{ fontSize: "20px" }} />
             </button>
           </div>
+          {members.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-2 bg-neutral-800 rounded">
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-sm font-medium text-white">{member.firstName} {member.lastName}</span>
+                    <span className="text-xs text-gray-400">({member.email})</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveMember(member.id)}
+                    className="text-white hover:text-red-300 transition"
+                  >
+                    <FaRegTrashAlt/>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Etiquetas */}
@@ -274,6 +441,12 @@ function EditBoardPage() {
               placeholder="Escribe un nombre de etiqueta para crearla..."
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddTag();
+                }
+              }}
             />
             <button
               type="button"
@@ -315,6 +488,7 @@ function EditBoardPage() {
               />
               <div className="flex items-start gap-2">
                 <FaLock className="text-white mt-1" />
+
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm font-medium text-white">Privado</span>
                   <span className="text-xs text-gray-400">

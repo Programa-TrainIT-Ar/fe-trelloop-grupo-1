@@ -21,6 +21,11 @@ export const useBoardStore = create(
             expandBoard: (id) => {
                 set({expandedBoardID: id})
             },
+            removeBoard: (boardId) => {
+                set((state) => ({
+                    boards: state.boards?.filter(board => board.id !== boardId) || null
+                }))
+            },
             getBoards: async () => {
             //     set({boards: 
             //         [

@@ -93,7 +93,7 @@ export async function updateBoardById(boardId: string, data: any, token: string)
   return await res.json();
 }
 
-export async function deleteBoardById(boardId: string, token: string) {
+export async function deleteBoardById(boardId: string | number, token: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/deleteBoard/${boardId}`, {
     method: 'DELETE',
     headers: {
