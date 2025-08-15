@@ -5,9 +5,15 @@ import Tag from "../common/Tag";
 import Member from "@/assets/member.png";
 import { useBoardStore } from "@/store/boards";
 import { PiEyeClosedBold } from "react-icons/pi";
+import { useRouter } from "next/navigation";
+
 
 export function ExpandedBoardCard(props) {
   const expandBoard = useBoardStore((state) => state.expandBoard);
+  const router = useRouter()
+  const handleViewBoard = () => {
+    router.push(`/dashboard/boards/${props.id}`);
+  };
 
   return (
     <div className=" w-full board-card expanded-board-card col-span-3 flex justify-between">
@@ -34,7 +40,9 @@ export function ExpandedBoardCard(props) {
               <button className="card-button">
                 <PiEyeClosedBold onClick={() => expandBoard(null)} />
               </button>
-              <button className="access-card-button">Ingresar</button>
+              <button 
+
+              className="access-card-button">Ingresar</button>
             </div>
           </div>
         </div>
