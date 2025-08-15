@@ -9,7 +9,9 @@ import Calendar from '@/components/ui/Calendar';
 import Swal from 'sweetalert2';
 import StateBadge from '@/components/card/StateBadge';
 import StateSelector from '@/components/card/StateSelector';
-import {getCardById, updateCardById } from '@/services/cardService';
+import {getCardById, updateCardById, getCardMembers, addCardMember, removeCardMember } from '@/services/cardService';
+import { searchUsers } from '@/services/userService';
+
 
 
 function EditCardPage() {
@@ -30,6 +32,11 @@ function EditCardPage() {
   const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('')
 
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
+  const [members, setMembers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
 
 
 
@@ -59,13 +66,54 @@ function EditCardPage() {
       
       try {
         const cardData = await getCardById(cardId, token);
-        console.log('Datos de la tarjeta:', cardData);
+        console.log('Datos completos de la tarjeta:', JSON.stringify(cardData, null, 2));
+        console.log('Campos específicos:', {
+          title: cardData.title,
+          description: cardData.description,
+          state: cardData.state,
+          assignee: cardData.assignee,
+          responsable_id: cardData.responsable_id,
+          tags: cardData.tags,
+          priority: cardData.priority,
+          beginDate: cardData.beginDate,
+          dueDate: cardData.dueDate
+        });
         
         setTitle(cardData.title || '');
         setDescription(cardData.description || '');
-        setState(cardData.state || 'TODO');
-        setLead(cardData.assignee || '');
+        
+        // Mapear estado del backend al frontend
+        const stateMapping = {
+          'To Do': 'TODO',
+          'In Progress': 'IN_PROGRESS', 
+          'Done': 'DONE'
+        };
+        setState(stateMapping[cardData.state] || cardData.state || 'TODO');
+        
+        // Usar responsableId del backend
+        setLead(cardData.responsableId ? cardData.responsableId.toString() : '');
+        
+        // Etiquetas: usar las del backend si existen, sino array vacío
+        console.log('Etiquetas del backend:', cardData.tags);
         setTags(cardData.tags || []);
+        
+        // Calcular prioridad basada en fecha de vencimiento
+        if (cardData.dueDate) {
+          const dueDate = new Date(cardData.dueDate);
+          const today = new Date();
+          const diffTime = dueDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays <= 1) {
+            setPriority('Alta');
+          } else if (diffDays <= 7) {
+            setPriority('Media');
+          } else {
+            setPriority('Baja');
+          }
+        } else {
+          setPriority('');
+        }
         
         if (cardData.beginDate) setStartDate(new Date(cardData.beginDate));
         if (cardData.dueDate) setEndDate(new Date(cardData.dueDate));
@@ -74,8 +122,85 @@ function EditCardPage() {
       }
     };
     
+    const loadMembers = async () => {
+      if (!token || !cardId) return;
+      
+      try {
+        const membersData = await getCardMembers(cardId, token);
+        console.log('Miembros de la tarjeta:', membersData);
+        setMembers(membersData || []);
+      } catch (error) {
+        console.error('Error al cargar miembros:', error);
+      }
+    };
+
+
+    
     loadCard();
+    loadMembers();
   }, [token, cardId]);
+
+  // Recalcular prioridad cuando cambien las fechas
+  useEffect(() => {
+    if (endDate) {
+      const today = new Date();
+      const diffTime = endDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 1) {
+        setPriority('Alta');
+      } else if (diffDays <= 7) {
+        setPriority('Media');
+      } else {
+        setPriority('Baja');
+      }
+    } else {
+      setPriority('');
+    }
+  }, [endDate]);
+
+
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || !token) return;
+    
+    try {
+      const results = await searchUsers(searchQuery, token);
+      setSearchResults(results || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Error al buscar usuarios:', error);
+    }
+  };
+
+  const handleAddMember = async (userId: number) => {
+    if (!token || !cardId) return;
+    
+    try {
+      await addCardMember(cardId, userId, token);
+      // Recargar miembros
+      const membersData = await getCardMembers(cardId, token);
+      setMembers(membersData || []);
+      setSearchQuery('');
+      setSearchResults([]);
+      setShowSearchResults(false);
+    } catch (error) {
+      console.error('Error al agregar miembro:', error);
+    }
+  };
+
+  const handleRemoveMember = async (userId: number) => {
+    if (!token || !cardId) return;
+    
+    try {
+      await removeCardMember(cardId, userId, token);
+      // Recargar miembros
+      const membersData = await getCardMembers(cardId, token);
+      setMembers(membersData || []);
+    } catch (error) {
+      console.error('Error al eliminar miembro:', error);
+    }
+  };
 
 
 
@@ -85,8 +210,10 @@ function EditCardPage() {
   const handleAddTag = () => {
     const trimmed = newTag.trim();
     if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
+      const newTags = [...tags, trimmed];
+      setTags(newTags);
       setNewTag('');
+      console.log('Etiqueta agregada:', trimmed, 'Total etiquetas:', newTags);
     }
   };
 
@@ -213,18 +340,60 @@ function EditCardPage() {
                 <input
                   id="lead"
                   type="text"
-                  value={lead}
-                  onChange={(e) => setLead(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por nombre o @usuario..."
                   className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  onClick={handleSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   <FaSearch style={{ fontSize: "20px" }} />
                 </button>
               </div>
+              
+              {/* Resultados de búsqueda */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="mt-2 bg-gray-800 rounded-lg max-h-40 overflow-y-auto">
+                  {searchResults.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-2 hover:bg-gray-700">
+                      <div>
+                        <span className="text-white">{user.first_name} {user.last_name}</span>
+                        <span className="text-gray-400 ml-2">@{user.username}</span>
+                      </div>
+                      <button
+                        onClick={() => handleAddMember(user.id)}
+                        className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Mostrar miembros actuales */}
+              {members.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-400 mb-2">Miembros actuales:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {members.map((member) => (
+                      <div key={member.id} className="bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <span>{member.first_name} {member.last_name}</span>
+                        <span className="text-gray-400">@{member.username}</span>
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-red-400 hover:text-red-300 ml-1"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <div>
@@ -259,6 +428,7 @@ function EditCardPage() {
                     <FaPlus />
                   </button>
                 </div>
+
                 <div className="flex flex-wrap gap-2 mt-3">
                   {tags.map((tag, i) => (
                     <span

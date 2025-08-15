@@ -74,3 +74,77 @@ export async function deleteCardById(cardId: string, token: string) {
     throw error;
   }
 }
+
+export async function getCardMembers(cardId: string, token: string) {
+  const url = `${process.env.NEXT_PUBLIC_API}/card/getMembers/${cardId}`;
+  console.log('Obteniendo miembros de tarjeta:', { cardId, url });
+  
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Respuesta getCardMembers:', res.status, res.statusText);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error response:', errorText);
+      throw new Error(`Error ${res.status}: ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('Miembros obtenidos:', data);
+    return data;
+  } catch (error) {
+    console.error('Error en getCardMembers:', error);
+    throw error;
+  }
+}
+
+export async function addCardMember(cardId: string, userId: number, token: string) {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/addMembers/${cardId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!res.ok) {
+      throw new Error('No se pudo agregar el miembro');
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error en addCardMember:', error);
+    throw error;
+  }
+}
+
+export async function removeCardMember(cardId: string, userId: number, token: string) {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/removeMember/${cardId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (!res.ok) {
+      throw new Error('No se pudo eliminar el miembro');
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error en removeCardMember:', error);
+    throw error;
+  }
+}
