@@ -295,7 +295,7 @@ function EditBoardPage() {
   };
 
   if (loading) {
-    return <p className="p-4">Cargando...</p>;
+    return <p className="p-4 text-white">Cargando...</p>;
   }
 
   if (!token) {
