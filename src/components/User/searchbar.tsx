@@ -2,7 +2,7 @@
 
 import { LuListFilter } from "react-icons/lu";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import { GoBell } from "react-icons/go";
+import NotificationBell from "@/components/ui/NotificationBell";
 import { useState, useRef, useEffect } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 import { LuKey } from "react-icons/lu";
@@ -68,11 +68,11 @@ export default function SearchBar() {
     ];
 
     useEffect(() => {
-        if (!accessToken) return;        
+        if (!accessToken) return;
         if (!boards || boards.length === 0) {
             getBoards();
         }
-        
+
         if (Array.isArray(boards) && boards.length > 0) {
             // Lógica para extraer etiquetas
             const allTags = boards.flatMap(board => board.tags).filter(tag => tag !== null);
@@ -93,7 +93,7 @@ export default function SearchBar() {
             allMembers.forEach(member => {
                 if (member && !uniqueMembersMap.has(member.id)) {
                     uniqueMembersMap.set(member.id, {
-                        id: `member-${member.id}`,                        
+                        id: `member-${member.id}`,
                         label: `${member.firstName} ${member.lastName}`
                     });
                 }
@@ -105,7 +105,7 @@ export default function SearchBar() {
             const thisWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
             const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-            const dynamicDates: { id: string; label: string; }[] = [];            
+            const dynamicDates: { id: string; label: string; }[] = [];
             const hasTodayBoard = boards.some(board => new Date(board.creationDate).toDateString() === today.toDateString());
             const hasThisWeekBoard = boards.some(board => new Date(board.creationDate) >= thisWeek);
             const hasThisMonthBoard = boards.some(board => new Date(board.creationDate) >= thisMonth);
@@ -119,7 +119,7 @@ export default function SearchBar() {
             if (hasThisMonthBoard) {
                 dynamicDates.push({ id: 'this-month', label: 'Este mes' });
             }
-            
+
             setDynamicDateOptions(dynamicDates);
         }
     }, [boards, getBoards, accessToken]);
@@ -176,7 +176,9 @@ export default function SearchBar() {
                     {/* Botón de notificaciones */}
 
                     <button type="button" className={`${!isFilterOpen ? '' : 'hidden'} relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2`}>
-                        <GoBell className="size-10" />
+                        <div className={`${!isFilterOpen ? '' : 'hidden'} relative`}>
+                            <NotificationBell />
+                        </div>
                     </button>
                     <div className={`${!isFilterOpen ? '' : 'hidden'} relative`}>
                         <div>
