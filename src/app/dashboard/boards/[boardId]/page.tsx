@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState,useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { useBoardStore } from "@/store/boards";
@@ -16,7 +16,7 @@ import PriorityBadge from '@/components/card/PriorityBagde';
 import StateBadge from '@/components/card/StateBadge';
 import EmptyBadge from '@/components/ui/EmptyBadge';
 import Swal from 'sweetalert2';
-import { FaPen, FaTrash,FaEllipsisH,FaEye } from 'react-icons/fa';
+import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
 
 
 
@@ -46,7 +46,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     const [cards, setCards] = useState<Card[]>([]);
     const { accessToken } = useAuthStore();
     const [activeSection, setActiveSection] = useState<'backlog' | 'listas'>('backlog');
-    const [showMenu, setShowMenu] = useState<{[key: string]: boolean}>({});
+    const [showMenu, setShowMenu] = useState<{ [key: string]: boolean }>({});
     const menuRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
 
@@ -58,21 +58,21 @@ export default function BoardPage({ params }: BoardPageProps) {
         getParams();
     }, [params]);
 
-        useEffect(() => {
-            const handleClickOutside = (event: MouseEvent) => {
-              if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setShowMenu(false);
-              }
-            };
-        
-            if (showMenu) {
-              document.addEventListener("mousedown", handleClickOutside);
             }
-        
-            return () => {
-              document.removeEventListener("mousedown", handleClickOutside);
-            };
-          }, [showMenu]);
+        };
+
+        if (showMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showMenu]);
     useEffect(() => {
         if (!boardId || !accessToken) return;
 
@@ -229,7 +229,13 @@ export default function BoardPage({ params }: BoardPageProps) {
                             <p>N/A</p>
                             <p>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
                             <div className='flex items-center gap-3'>
-                                <button><LuPencilLine /></button>
+                                <button
+                                    onClick={() => {
+                                        setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                        router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
+                                    }}>
+
+                                    <LuPencilLine /></button>
                                 <button><FaRegTrashAlt /></button>
                             </div>
                         </div>
@@ -269,47 +275,47 @@ export default function BoardPage({ params }: BoardPageProps) {
 
                                                 {/* aqui empieza mi parte------------------------------------------------- */}
                                                 <div ref={menuRef} className="relative inline-block text-left">
-                                                      <button
-                                                        onClick={() => setShowMenu(prev => ({...prev, [card.id]: !prev[card.id]}))}
+                                                    <button
+                                                        onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
                                                         className="text-white text-lg hover:opacity-80"
-                                                      >
+                                                    >
                                                         <FaEllipsisH />
-                                                      </button>
-                                                
-                                                      {showMenu[card.id] && (
+                                                    </button>
 
-                                                        
+                                                    {showMenu[card.id] && (
+
+
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-                                                         
-                                                             <button
-                                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+
+                                                            <button
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
                                                             >
                                                                 <FaEye className="text-white text-lg" />
-                                                            <span>Ver tarjeta</span>
+                                                                <span>Ver tarjeta</span>
                                                             </button>
-                                                         
-                                                          <button
-                                                             onClick={() => {
-                                                               setShowMenu(prev => ({...prev, [card.id]: false}));
-                                                               router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
-                                                             }}
-                                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                          >
-                                                            <FaPen className="text-white text-lg" />
-                                                            <span>Editar tarjeta</span>
-                                                          </button>
 
-                                                           
-                                                          <button
-                                                            
-                                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
-                                                          >
-                                                            <FaTrash className="text-white text-lg" />
-                                                            <span>Eliminar tarjeta</span>
-                                                          </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                                                    router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
+                                                                }}
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                                            >
+                                                                <FaPen className="text-white text-lg" />
+                                                                <span>Editar tarjeta</span>
+                                                            </button>
+
+
+                                                            <button
+
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                                            >
+                                                                <FaTrash className="text-white text-lg" />
+                                                                <span>Eliminar tarjeta</span>
+                                                            </button>
                                                         </div>
-                                                      )}
-                                                    </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <p className='mb-3'>{card.description || 'Sin descrpición'}</p>
                                             <div className='flex items-center justify-between'>

@@ -16,6 +16,7 @@ function EditCardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const boardId = searchParams.get('boardId');
+  const cardId = searchParams.get('cardId');
 
   const [token, setToken] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -52,6 +53,30 @@ function EditCardPage() {
     }
   }, [router]);
 
+  useEffect(() => {
+    const loadCard = async () => {
+      if (!token || !cardId) return;
+      
+      try {
+        const cardData = await getCardById(cardId, token);
+        console.log('Datos de la tarjeta:', cardData);
+        
+        setTitle(cardData.title || '');
+        setDescription(cardData.description || '');
+        setState(cardData.state || 'TODO');
+        setLead(cardData.assignee || '');
+        setTags(cardData.tags || []);
+        
+        if (cardData.beginDate) setStartDate(new Date(cardData.beginDate));
+        if (cardData.dueDate) setEndDate(new Date(cardData.dueDate));
+      } catch (error) {
+        console.error('Error al cargar tarjeta:', error);
+      }
+    };
+    
+    loadCard();
+  }, [token, cardId]);
+
 
 
 
@@ -70,8 +95,8 @@ function EditCardPage() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  const handleCreateCard = async () => {
-    if (!token || !boardId || !title.trim()) return;
+  const handleUpdateCard = async () => {
+    if (!token || !boardId || !cardId || !title.trim()) return;
 
     const cardData = {
       title,
@@ -79,36 +104,17 @@ function EditCardPage() {
       boardId: parseInt(boardId),
       beginDate: startDate?.toISOString(),
       dueDate: endDate?.toISOString(),
-      state: state || "TODO"
+      state: state || "TODO",
+      assignee: lead,
+      tags: tags
     };
 
     try {
-      console.log('Intentando URL:', `${process.env.NEXT_PUBLIC_API}/card/cards`);
-      console.log('Datos a enviar:', cardData);
-      console.log('Token:', token?.substring(0, 20) + '...');
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cardData),
-      });
-
-      console.log('Status de respuesta:', res.status);
-      console.log('Headers de respuesta:', res.headers);
-
-      const responseText = await res.text();
-      console.log('Respuesta del servidor:', responseText);
-
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${responseText}`);
-      }
+      await updateCardById(cardId, cardData, token);
 
       Swal.fire({
         icon: "success",
-        text: "Tarjeta creada exitosamente",
+        text: "Tarjeta actualizada exitosamente",
         background: "rgb(26, 26, 26)",
         iconColor: "#6A5FFF",
         color: "#FFFFFF",
@@ -124,7 +130,7 @@ function EditCardPage() {
       console.error('Error completo:', err);
       await Swal.fire({
         title: 'Error',
-        text: err.message || 'Error al crear tarjeta',
+        text: err.message || 'Error al actualizar tarjeta',
         icon: 'error',
         background: "rgb(26, 26, 26)",
         color: '#fff',
@@ -141,8 +147,8 @@ function EditCardPage() {
     return <p className="p-4 text-white">Cargando...</p>;
   }
 
-  if (!boardId) {
-    return <p className="p-4">Error: ID del tablero no encontrado</p>;
+  if (!boardId || !cardId) {
+    return <p className="p-4">Error: ID del tablero o tarjeta no encontrado</p>;
   }
 
   return (
@@ -152,7 +158,7 @@ function EditCardPage() {
         <div className="mb-6 flex justify-between items-start">
           <div>
             <h1 className="text-2xl text-left text-white">Editar Tarjeta</h1>
-            <p className="text-gray-400">Tablero ID: {boardId}</p>
+            <p className="text-gray-400">Tablero ID: {boardId} | Tarjeta ID: {cardId}</p>
           </div>
           <button
             onClick={() => router.push(`/dashboard/boards/${boardId}`)}
@@ -278,7 +284,7 @@ function EditCardPage() {
                   Cancelar 
                 </button>
                 <button
-                  onClick={handleCreateCard}
+                  onClick={handleUpdateCard}
                   disabled={!title.trim()}
                   className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
                 >

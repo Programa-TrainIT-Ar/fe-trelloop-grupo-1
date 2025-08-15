@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
 import Calendar from '@/components/ui/Calendar';
 import Swal from 'sweetalert2';
 import StateBadge from '@/components/card/StateBadge';
 import StateSelector from '@/components/card/StateSelector';
+
+
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 function CreateCardPage() {
   const searchParams = useSearchParams();
@@ -27,6 +35,8 @@ function CreateCardPage() {
   const [customDays, setCustomDays] = useState<string>("");
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [members, setMembers] = useState<User[]>([]);
+  const [newMember, setNewMember] = useState("");
 
   const defaultOptions = [
     { value: "1", label: "1 día antes" },
@@ -72,6 +82,76 @@ function CreateCardPage() {
 
   const handleRemoveTag = (index: number) => {
     setTags(tags.filter((_, i) => i !== index));
+  };
+
+  const handleAddMember = async () => {
+    const trimmed = newMember.trim();
+    if (!trimmed || !token) return;
+
+    try {
+      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(trimmed)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!searchRes.ok) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const data = await searchRes.json();
+
+      if (data.count === 0) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'No se encontró usuario con ese correo',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      const user = data.users.find((u: User) => u.email.toLowerCase() === trimmed.toLowerCase());
+      if (!user) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'No se encontró usuario exacto con ese correo',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      if (members.some((m) => m.id === user.id)) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'Ese miembro ya está agregado',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      setMembers(prev => [...prev, user]);
+      setNewMember('');
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'Error al buscar usuario',
+        icon: 'error',
+        background: 'rgb(26, 26, 26)',
+        color: '#fff'
+      });
+    }
+  };
+
+  const handleRemoveMember = (id: number) => {
+    setMembers(prev => prev.filter(m => m.id !== id));
   };
 
   const handleCreateCard = async () => {
@@ -176,7 +256,7 @@ function CreateCardPage() {
               setStartDate={setStartDate}
               setEndDate={setEndDate}
             />
-            
+
             <div>
               <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p>
 
@@ -277,20 +357,6 @@ function CreateCardPage() {
                 required
               />
             </div>
-            <div>
-              <label htmlFor="title" className="block font-medium mb-2 text-sm">
-                Título de la tarjeta *
-              </label>
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                placeholder="Escribe el título de la tarjeta..."
-                required
-              />
-            </div>
 
             <div>
               <label htmlFor="description" className="block font-medium mb-2 text-sm">
@@ -304,104 +370,62 @@ function CreateCardPage() {
                 placeholder="Escribe aquí ..."
               />
             </div>
-
             <div>
               <label htmlFor="lead" className="block font-medium mb-2 text-sm">
                 Responsables
               </label>
               <div className="relative">
                 <input
-                  id="lead"
+                  id="members"
+                  value={newMember}
                   type="text"
-                  value={lead}
-                  onChange={(e) => setLead(e.target.value)}
                   placeholder="Buscar por nombre o @usuario..."
                   className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                  onChange={(e) => setNewMember(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddMember();
+                    }
+                  }}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  onClick={handleAddMember}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  <FaSearch style={{ fontSize: "20px" }} />
+                  <FaPlus style={{ fontSize: "20px" }} />
                 </button>
               </div>
-            </div>
-            <div>
-              <div>
-                <label className="block font-medium mb-2 text-sm">Prioridad</label>
-                <PrioritySelector value={priority} onChange={setPriority} />
-                {priority && <PriorityBadge label={priority} />}
-              </div>
-            <div>
-              <label htmlFor="lead" className="block font-medium mb-2 text-sm">
-                Responsables
-              </label>
-              <div className="relative">
-                <input
-                  id="lead"
-                  type="text"
-                  value={lead}
-                  onChange={(e) => setLead(e.target.value)}
-                  placeholder="Buscar por nombre o @usuario..."
-                  className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                >
-                  <FaSearch style={{ fontSize: "20px" }} />
-                </button>
-              </div>
-            </div>
-            <div>
-              <div>
-                <label className="block font-medium mb-2 text-sm">Prioridad</label>
-                <PrioritySelector value={priority} onChange={setPriority} />
-                {priority && <PriorityBadge label={priority} />}
-              </div>
-
-              <div>
-                <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
-                <StateSelector value={state} onChange={setState} />
-                {state && <StateBadge label={state} />}
-              </div>
-              <div>
-                <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
-                  Etiquetas
-                </label>
-                <div className="relative">
-                  <input
-                    id="tags"
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                    placeholder="Agregar etiqueta..."
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddTag}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    <FaPlus />
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
-                    >
-                      <FaTag className="text-gray-400" />
-                      {tag}
-                      <FaTimes
-                        className="cursor-pointer hover:text-red-400 transition"
-                        onClick={() => handleRemoveTag(i)}
-                      />
-                    </span>
+              {members.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-2 bg-neutral-800 rounded">
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-medium text-white">{member.first_name} {member.last_name}</span>
+                        <span className="text-xs text-gray-400">({member.email})</span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="text-white hover:text-red-300 transition"
+                      >
+                        <FaRegTrashAlt />
+                      </button>
+                    </div>
                   ))}
                 </div>
+              )}
+            </div>
+
+            {/* Separador*/}
+
+            <div>
+              <div>
+                <label className="block font-medium mb-2 text-sm">Prioridad</label>
+                <PrioritySelector value={priority} onChange={setPriority} />
+                {priority && <PriorityBadge label={priority} />}
               </div>
+
               <div>
                 <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
                 <StateSelector value={state} onChange={setState} />
@@ -417,6 +441,12 @@ function CreateCardPage() {
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
                     className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
                     placeholder="Agregar etiqueta..."
                   />
@@ -450,23 +480,7 @@ function CreateCardPage() {
                   onClick={() => router.push(`/dashboard/boards/${boardId}`)}
                   className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
                 >
-                  Cancelar edición
-                </button>
-                <button
-                  onClick={handleCreateCard}
-                  disabled={!title.trim()}
-                  className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
-                >
-                  Crear Tarjeta
-                </button>
-              </div>
-            </div>
-              <div className="flex justify-end gap-4 pt-6">
-                <button
-                  onClick={() => router.push(`/dashboard/boards/${boardId}`)}
-                  className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
-                >
-                  Cancelar edición
+                  Cancelar
                 </button>
                 <button
                   onClick={handleCreateCard}
