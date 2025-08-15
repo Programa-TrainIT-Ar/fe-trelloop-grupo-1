@@ -2,13 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
 import Calendar from '@/components/ui/Calendar';
 import Swal from 'sweetalert2';
 import StateBadge from '@/components/card/StateBadge';
 import StateSelector from '@/components/card/StateSelector';
+
+
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 function CreateCardPage() {
   const searchParams = useSearchParams();
@@ -21,13 +29,26 @@ function CreateCardPage() {
   const [lead, setLead] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const[startDate, setStartDate] = useState <Date | null>(null);
-  const [endDate, setEndDate] = useState <Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [reminder, setReminder] = useState<string>("none");
+  const [customDays, setCustomDays] = useState<string>("");
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [members, setMembers] = useState<User[]>([]);
+  const [newMember, setNewMember] = useState("");
+
+  const defaultOptions = [
+    { value: "1", label: "1 día antes" },
+    { value: "2", label: "2 días antes" },
+    { value: "3", label: "3 días antes" },
+
+  ];
 
   const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('')
-  
+
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
-  
+
 
 
   useEffect(() => {
@@ -63,6 +84,76 @@ function CreateCardPage() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
+  const handleAddMember = async () => {
+    const trimmed = newMember.trim();
+    if (!trimmed || !token) return;
+
+    try {
+      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(trimmed)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!searchRes.ok) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const data = await searchRes.json();
+
+      if (data.count === 0) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'No se encontró usuario con ese correo',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      const user = data.users.find((u: User) => u.email.toLowerCase() === trimmed.toLowerCase());
+      if (!user) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'No se encontró usuario exacto con ese correo',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      if (members.some((m) => m.id === user.id)) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'Ese miembro ya está agregado',
+          icon: 'error',
+          background: 'rgb(26, 26, 26)',
+          color: '#fff'
+        });
+        return;
+      }
+
+      setMembers(prev => [...prev, user]);
+      setNewMember('');
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'Error al buscar usuario',
+        icon: 'error',
+        background: 'rgb(26, 26, 26)',
+        color: '#fff'
+      });
+    }
+  };
+
+  const handleRemoveMember = (id: number) => {
+    setMembers(prev => prev.filter(m => m.id !== id));
+  };
+
   const handleCreateCard = async () => {
     if (!token || !boardId || !title.trim()) return;
 
@@ -79,7 +170,7 @@ function CreateCardPage() {
       console.log('Intentando URL:', `${process.env.NEXT_PUBLIC_API}/card/cards`);
       console.log('Datos a enviar:', cardData);
       console.log('Token:', token?.substring(0, 20) + '...');
-      
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
         method: 'POST',
         headers: {
@@ -91,42 +182,42 @@ function CreateCardPage() {
 
       console.log('Status de respuesta:', res.status);
       console.log('Headers de respuesta:', res.headers);
-      
+
       const responseText = await res.text();
       console.log('Respuesta del servidor:', responseText);
-      
+
       if (!res.ok) {
         throw new Error(`Error ${res.status}: ${responseText}`);
       }
 
-       Swal.fire({
-                  icon: "success",
-                  text: "Tarjeta creada exitosamente",
-                  background: "rgb(26, 26, 26)",
-                  iconColor: "#6A5FFF",
-                  color: "#FFFFFF",
-                  confirmButtonColor: "#6A5FFF",
-                  confirmButtonText: "Cerrar",
-                  customClass: {
-                    popup: "swal2-dark",
-                    confirmButton: "swal2-confirm",
-                        }
-            });
+      Swal.fire({
+        icon: "success",
+        text: "Tarjeta creada exitosamente",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
       router.push(`/dashboard/boards/${boardId}`);
     } catch (err: any) {
       console.error('Error completo:', err);
       await Swal.fire({
-                title: 'Error',
-                text: err.message || 'Error al crear tarjeta',
-                icon: 'error',
-                background: '#222',
-                color: '#fff',
-                confirmButtonText: 'Aceptar',
-                customClass: {
-                  confirmButton: 'btn-cancel',
-                  popup: 'mi-modal',
-                },
-              });
+        title: 'Error',
+        text: err.message || 'Error al crear tarjeta',
+        icon: 'error',
+        background: '#222',
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
     }
   };
 
@@ -141,10 +232,21 @@ function CreateCardPage() {
   return (
     <div className="min-h-screen text-white p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl text-left text-white">Crear Tarjeta</h1>
-          <p className="text-gray-400">Tablero ID: {boardId}</p>
+
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl text-left text-white">Crear Tarjeta</h1>
+            <p className="text-gray-400">Tablero ID: {boardId}</p>
+          </div>
+
+          <button
+            onClick={() => router.push(`/dashboard/boards/${boardId}`)}
+            className='flex justify-center items-center rounded-full bg-[--global-color-primary-500] h-20 w-20 text-center text-white '
+          >
+            <FaTimes className='h-10 w-10' />
+          </button>
         </div>
+
         <h4>Fecha de tarjeta</h4>
         <div className="flex gap-8">
           <div className="w-1/3">
@@ -152,124 +254,243 @@ function CreateCardPage() {
               startDate={startDate}
               endDate={endDate}
               setStartDate={setStartDate}
-              setEndDate={setEndDate} />
-          </div>
-          <div className="w-2/3 space-y-6">
-        <div>
-          <label htmlFor="title" className="block font-medium mb-2 text-sm">
-            Título de la tarjeta *
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-            placeholder="Escribe el título de la tarjeta..."
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block font-medium mb-2 text-sm">
-            Descripción
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[127px]"
-            placeholder="Escribe aquí ..."
-          />
-        </div>
-
-        <div>
-          <label htmlFor="lead" className="block font-medium mb-2 text-sm">
-            Responsables
-          </label>
-          <div className="relative">
-            <input
-              id="lead"
-              type="text"
-              value={lead}
-              onChange={(e) => setLead(e.target.value)}
-              placeholder="Buscar por nombre o @usuario..."
-              className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+              setEndDate={setEndDate}
             />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            >
-              <FaSearch style={{ fontSize: "20px" }} />
-            </button>
-          </div>
-        </div>
-        <div>
-          <div>
-            <label className="block font-medium mb-2 text-sm">Prioridad</label>
-            <PrioritySelector value={priority} onChange={setPriority} />
-            {priority && <PriorityBadge label={priority} />}
-          </div>
 
             <div>
-            <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
-            <StateSelector value={state} onChange={setState} />
-            {state && <StateBadge label={state} />}
-          </div>
-          <div>
-            <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
-              Etiquetas
-            </label>
-            <div className="relative">
-              <input
-                id="tags"
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                placeholder="Agregar etiqueta..."
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+              <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p>
+
+              {/* Dropdown principal */}
+              <div
+                className="bg-gray-800 px-3 py-2 rounded cursor-pointer"
+                onClick={() => setShowDropdown(!showDropdown)}
               >
-                <FaPlus />
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
-                >
-                  <FaTag className="text-gray-400" />
-                  {tag}
-                  <FaTimes
-                    className="cursor-pointer hover:text-red-400 transition"
-                    onClick={() => handleRemoveTag(i)}
-                  />
-                </span>
-              ))}
+                {reminder === "none"
+                  ? "Ninguno"
+                  : defaultOptions.find((opt) => opt.value === reminder)?.label ||
+                  `${customDays} días antes`}
+              </div>
+
+              {/* Opciones del dropdown */}
+              {showDropdown && (
+                <div className="mt-2 bg-gray-800 rounded shadow-lg">
+                  {defaultOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700"
+                    >
+                      <input
+                        type="radio"
+                        name="reminder"
+                        value={option.value}
+                        checked={reminder === option.value}
+                        onChange={(e) => {
+                          setReminder(e.target.value);
+                          setIsCustomizing(false);
+                          setShowDropdown(false);
+                        }}
+                        className="accent-purple-500"
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+
+                  {/* Opción personalizar */}
+                  <div className="px-3 py-2 hover:bg-gray-700 cursor-pointer">
+                    {!isCustomizing ? (
+                      <button
+                        className="text-purple-400 text-sm"
+                        onClick={() => setIsCustomizing(true)}
+                      >
+                        Personalizar
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          value={customDays}
+                          onChange={(e) => setCustomDays(e.target.value)}
+                          className="w-14 bg-gray-900 text-white text-sm p-1 rounded"
+                          placeholder="Días"
+                        />
+                        <button
+                          className="text-green-400"
+                          onClick={() => {
+                            if (customDays) {
+                              setReminder("custom");
+                              setShowDropdown(false);
+                            }
+                          }}
+                        >
+                          ✔
+                        </button>
+                        <button
+                          className="text-red-400"
+                          onClick={() => {
+                            setIsCustomizing(false);
+                            setCustomDays("");
+                          }}
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-6">
-            <button
-              onClick={() => router.push(`/dashboard/boards/${boardId}`)}
-              className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
-            >
-              Cancelar edición
-            </button>
-            <button
-              onClick={handleCreateCard}
-              disabled={!title.trim()}
-              className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
-            >
-              Crear Tarjeta
-            </button>
-          </div>
-        </div>
+          <div className="w-2/3 space-y-6">
+            <div>
+              <label htmlFor="title" className="block font-medium mb-2 text-sm">
+                Título de la tarjeta *
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                placeholder="Escribe el título de la tarjeta..."
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block font-medium mb-2 text-sm">
+                Descripción
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[127px]"
+                placeholder="Escribe aquí ..."
+              />
+            </div>
+            <div>
+              <label htmlFor="lead" className="block font-medium mb-2 text-sm">
+                Responsables
+              </label>
+              <div className="relative">
+                <input
+                  id="members"
+                  value={newMember}
+                  type="text"
+                  placeholder="Buscar por nombre o @usuario..."
+                  className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                  onChange={(e) => setNewMember(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddMember();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddMember}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <FaPlus style={{ fontSize: "20px" }} />
+                </button>
+              </div>
+              {members.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-2 bg-neutral-800 rounded">
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-medium text-white">{member.first_name} {member.last_name}</span>
+                        <span className="text-xs text-gray-400">({member.email})</span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="text-white hover:text-red-300 transition"
+                      >
+                        <FaRegTrashAlt />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Separador*/}
+
+            <div>
+              <div>
+                <label className="block font-medium mb-2 text-sm">Prioridad</label>
+                <PrioritySelector value={priority} onChange={setPriority} />
+                {priority && <PriorityBadge label={priority} />}
+              </div>
+
+              <div>
+                <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
+                <StateSelector value={state} onChange={setState} />
+                {state && <StateBadge label={state} />}
+              </div>
+              <div>
+                <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
+                  Etiquetas
+                </label>
+                <div className="relative">
+                  <input
+                    id="tags"
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                    placeholder="Agregar etiqueta..."
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <FaPlus />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {tags.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
+                    >
+                      <FaTag className="text-gray-400" />
+                      {tag}
+                      <FaTimes
+                        className="cursor-pointer hover:text-red-400 transition"
+                        onClick={() => handleRemoveTag(i)}
+                      />
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 pt-6">
+                <button
+                  onClick={() => router.push(`/dashboard/boards/${boardId}`)}
+                  className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreateCard}
+                  disabled={!title.trim()}
+                  className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
+                >
+                  Crear Tarjeta
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
