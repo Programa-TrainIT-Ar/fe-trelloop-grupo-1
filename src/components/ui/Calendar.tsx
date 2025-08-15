@@ -98,7 +98,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
         </div>
         <div className=" text-sm text-left self-start mt-6 ml-3">Crear recordatorio </div>
         <div 
-          className={`mt-2 py-2 px-3 pr-8 bg-[#272727] block w-full rounded-xl text-sm font-light focus:outline-none focus:border-purple-500 h-[21px] cursor-pointer relative flex items-center justify-between ${
+          className={`mt-2 py-2 px-3 pr-8 bg-[#272727] block w-full rounded-xl text-sm font-light focus:outline-none focus:border-purple-400 h-[21px] cursor-pointer relative flex items-center justify-between ${
             reminder === "none" ? "text-[#5e5e5e]" : "text-white"
           }`}
           onClick={() => setShowDropdown(!showDropdown)}
@@ -112,7 +112,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
             {defaultOptions.map((option) => (
               <label
                 key={option.value}
-                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700 #5e5e5e "
+                className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700 "
               >
                 <input
                   type="radio"
@@ -124,7 +124,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
                     setIsCustomizing(false);
                     setShowDropdown(false);
                   }}
-                  className="accent-purple-500"
+                  className="accent-purple-400"
                 />
                 {option.label}
               </label>
@@ -146,7 +146,7 @@ const Calendar: React.FC<Props> = ({ startDate, endDate, setStartDate, setEndDat
                     min="1"
                     value={customDays}
                     onChange={(e) => setCustomDays(e.target.value)}
-                    className="w-14 bg-gray-900 text-white text-sm p-1 rounded"
+                    className="w-14 text-white text-sm p-1 rounded custom-days-input"
                     placeholder="Días"
                   />
                   <button

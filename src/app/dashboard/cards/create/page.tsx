@@ -258,10 +258,10 @@ function CreateCardPage() {
             />
 
             <div>
-              <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p>
+              {/* <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p> */}
 
               {/* Dropdown principal */}
-              <div
+              {/* <div
                 className="bg-gray-800 px-3 py-2 rounded cursor-pointer"
                 onClick={() => setShowDropdown(!showDropdown)}
               >
@@ -269,7 +269,7 @@ function CreateCardPage() {
                   ? "Ninguno"
                   : defaultOptions.find((opt) => opt.value === reminder)?.label ||
                   `${customDays} días antes`}
-              </div>
+              </div> */}
 
               {/* Opciones del dropdown */}
               {showDropdown && (
