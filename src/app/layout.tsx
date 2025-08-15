@@ -3,7 +3,6 @@ import "../styles/globals.css";
 import "@/styles/globals.css";
 
 import { Poppins } from "next/font/google";
-import "@/styles/globals.css";
 import { LayoutProviders } from "@/components/LayoutProviders";
 
 const poppins = Poppins({
