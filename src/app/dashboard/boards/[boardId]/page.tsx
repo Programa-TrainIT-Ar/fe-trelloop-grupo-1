@@ -20,6 +20,8 @@ import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
 import { deleteCardById } from '@/services/cardService';
 import { de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
+import { MembersList } from '@/components/card/memberList';
+
 
 interface Card {
     id: number;
@@ -47,6 +49,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     const { accessToken } = useAuthStore();
     const [activeSection, setActiveSection] = useState<'backlog' | 'listas'>('backlog');
     const [showMenu, setShowMenu] = useState<{ [key: string]: boolean }>({});
+    const [showMemberList, setShowMemberList] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
 
@@ -61,7 +64,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     // Función para refrescar los datos
     const refreshData = async () => {
         if (!boardId || !accessToken) return;
-        
+
         try {
             // Obtener datos del tablero
             const boardRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`, {
@@ -71,7 +74,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                     'Authorization': `Bearer ${accessToken}`,
                 },
             });
-            
+
             let boardMembers = [];
             if (boardRes.ok) {
                 const boardData = await boardRes.json();
@@ -90,7 +93,7 @@ export default function BoardPage({ params }: BoardPageProps) {
 
             if (res.ok) {
                 const cardsData = await res.json();
-                
+
                 const cardsWithData = await Promise.all(
                     cardsData.map(async (card: Card) => {
                         try {
@@ -101,7 +104,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                                     'Authorization': `Bearer ${accessToken}`,
                                 },
                             });
-                            
+
                             let members = [];
                             if (membersRes.ok) {
                                 members = await membersRes.json();
@@ -119,7 +122,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                         }
                     })
                 );
-                
+
                 setCards(cardsWithData);
             }
         } catch (error) {
@@ -132,7 +135,7 @@ export default function BoardPage({ params }: BoardPageProps) {
         const handleFocus = () => {
             refreshData();
         };
-        
+
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
     }, [boardId, accessToken]);
@@ -197,7 +200,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     };
     const handleDelete = async (cardId: number) => {
         const result = await Swal.fire({
-          html: `
+            html: `
         <div class="modal-content-custom">
           <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
           <p class="modal-text">
@@ -205,60 +208,60 @@ export default function BoardPage({ params }: BoardPageProps) {
           </p>
         </div>
       `,
-          background: "#222222",
-          showCancelButton: true,
-          reverseButtons: true,
-          confirmButtonText: "Eliminar",
-          cancelButtonText: "Cancelar",
-          customClass: {
-            popup: "mi-modal",
-            confirmButton: "btn-confirm",
-            cancelButton: "btn-cancel",
-          },
+            background: "#222222",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+            customClass: {
+                popup: "mi-modal",
+                confirmButton: "btn-confirm",
+                cancelButton: "btn-cancel",
+            },
         });
-    
+
         if (result.isConfirmed) {
-          try {
-            if (!accessToken) {
-              throw new Error('No se encontró token de autenticación');
+            try {
+                if (!accessToken) {
+                    throw new Error('No se encontró token de autenticación');
+                }
+
+                await deleteCardById(cardId, accessToken);
+
+
+                await Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'La tarjeta se ha eliminado correctamente',
+                    icon: 'success',
+                    background: '#222',
+                    color: '#fff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+
+                // Refrescar datos
+                refreshData();
+
+            } catch (error: any) {
+                await Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la tarjeta',
+                    icon: 'error',
+                    background: '#222',
+                    color: '#fff',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
             }
-    
-            await deleteCardById(cardId, accessToken);
-            
-            
-            await Swal.fire({
-              title: '¡Eliminado!',
-              text: 'La tarjeta se ha eliminado correctamente',
-              icon: 'success',
-              background: '#222',
-              color: '#fff',
-              showConfirmButton: true,
-              confirmButtonText: 'Aceptar',
-              customClass: {
-                confirmButton: 'btn-cancel',
-                popup: 'mi-modal',
-              },
-            });
-            
-            // Refrescar datos
-            refreshData();
-            
-          } catch (error: any) {
-            await Swal.fire({
-              title: 'Error',
-              text: error.message || 'No se pudo eliminar la tarjeta',
-              icon: 'error',
-              background: '#222',
-              color: '#fff',
-              confirmButtonText: 'Aceptar',
-              customClass: {
-                confirmButton: 'btn-cancel',
-                popup: 'mi-modal',
-              },
-            });
-          }
         }
-      };
+    };
 
     return (
         <>
@@ -294,7 +297,16 @@ export default function BoardPage({ params }: BoardPageProps) {
                             className="object-cover"
                         />
                     </div>
-                    <button className='flex justify-center items-center rounded-full bg-black w-[34px] h-[34px] text-center'><FaPlus /></button>
+                    <button
+                        onClick={() => setShowMemberList(true)}
+                        className='flex justify-center items-center rounded-full bg-black w-[34px] h-[34px] text-center'>
+                        <FaPlus />
+                    </button>
+
+                    {showMemberList && (
+                        <MembersList onClose={() => setShowMemberList(false)} />
+                    )}
+
                 </div>
             </div>
 
@@ -416,10 +428,10 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                                 <FaPen className="text-white text-lg" />
                                                                 <span>Editar tarjeta</span>
                                                             </button>
-                                                            <button 
-                                                            onClick={() => handleDelete(card.id)}
-                                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1">
-                                                                
+                                                            <button
+                                                                onClick={() => handleDelete(card.id)}
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1">
+
                                                                 <FaTrash className="text-white text-lg" />
                                                                 <span>Eliminar tarjeta</span>
                                                             </button>
