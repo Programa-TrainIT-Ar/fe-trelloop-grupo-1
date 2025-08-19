@@ -100,3 +100,36 @@ export async function removeMemberFromBoard(boardId: string | number, userId: nu
   }
   return await res.json();
 }
+
+export async function searchUsersByEmail(email: string, token: string) {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(email)}`;
+    console.log('URL de búsqueda:', url);
+    console.log('Email a buscar:', email);
+    console.log('Token:', token?.substring(0, 20) + '...');
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Status de respuesta:', res.status);
+    console.log('Response OK:', res.ok);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error del servidor:', errorText);
+      throw new Error(`Error ${res.status}: ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('Datos recibidos:', data);
+    return data.users || [];
+  } catch (error) {
+    console.error('Error en searchUsersByEmail:', error);
+    throw error;
+  }
+}

@@ -35,8 +35,8 @@ function CreateCardPage() {
   const [customDays, setCustomDays] = useState<string>("");
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [members, setMembers] = useState<User[]>([]);
-  const [newMember, setNewMember] = useState("");
+  const [responsable, setResponsable] = useState<User | null>(null);
+  const [newResponsable, setNewResponsable] = useState("");
 
   const defaultOptions = [
     { value: "1", label: "1 día antes" },
@@ -84,26 +84,17 @@ function CreateCardPage() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  const handleAddMember = async () => {
-    const trimmed = newMember.trim();
+
+
+  const handleAddResponsable = async () => {
+    const trimmed = newResponsable.trim();
     if (!trimmed || !token) return;
 
     try {
-      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(trimmed)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const { searchUsersByEmail } = await import('@/services/boardService');
+      const users = await searchUsersByEmail(trimmed, token);
 
-      if (!searchRes.ok) {
-        throw new Error('Usuario no encontrado');
-      }
-
-      const data = await searchRes.json();
-
-      if (data.count === 0) {
+      if (!users || users.length === 0) {
         await Swal.fire({
           title: 'Error',
           text: 'No se encontró usuario con ese correo',
@@ -114,31 +105,9 @@ function CreateCardPage() {
         return;
       }
 
-      const user = data.users.find((u: User) => u.email.toLowerCase() === trimmed.toLowerCase());
-      if (!user) {
-        await Swal.fire({
-          title: 'Error',
-          text: 'No se encontró usuario exacto con ese correo',
-          icon: 'error',
-          background: 'rgb(26, 26, 26)',
-          color: '#fff'
-        });
-        return;
-      }
-
-      if (members.some((m) => m.id === user.id)) {
-        await Swal.fire({
-          title: 'Error',
-          text: 'Ese miembro ya está agregado',
-          icon: 'error',
-          background: 'rgb(26, 26, 26)',
-          color: '#fff'
-        });
-        return;
-      }
-
-      setMembers(prev => [...prev, user]);
-      setNewMember('');
+      const user = users[0];
+      setResponsable(user);
+      setNewResponsable('');
     } catch (err: any) {
       await Swal.fire({
         title: 'Error',
@@ -150,8 +119,8 @@ function CreateCardPage() {
     }
   };
 
-  const handleRemoveMember = (id: number) => {
-    setMembers(prev => prev.filter(m => m.id !== id));
+  const handleRemoveResponsable = () => {
+    setResponsable(null);
   };
 
   const handleCreateCard = async () => {
@@ -161,16 +130,13 @@ function CreateCardPage() {
       title,
       description,
       boardId: parseInt(boardId),
+      responsableId: responsable?.id || null,
       beginDate: startDate?.toISOString(),
       dueDate: endDate?.toISOString(),
       state: state || "TODO"
     };
 
     try {
-      console.log('Intentando URL:', `${process.env.NEXT_PUBLIC_API}/card/cards`);
-      console.log('Datos a enviar:', cardData);
-      console.log('Token:', token?.substring(0, 20) + '...');
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
         method: 'POST',
         headers: {
@@ -180,15 +146,13 @@ function CreateCardPage() {
         body: JSON.stringify(cardData),
       });
 
-      console.log('Status de respuesta:', res.status);
-      console.log('Headers de respuesta:', res.headers);
-
-      const responseText = await res.text();
-      console.log('Respuesta del servidor:', responseText);
+      const responseData = await res.json();
 
       if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${responseText}`);
+        throw new Error(`Error ${res.status}: ${responseData.error || 'Error desconocido'}`);
       }
+
+
 
       Swal.fire({
         icon: "success",
@@ -256,90 +220,6 @@ function CreateCardPage() {
               setStartDate={setStartDate}
               setEndDate={setEndDate}
             />
-
-            <div>
-              <p className="text-sm text-gray-300 mb-2">Crear recordatorio</p>
-
-              {/* Dropdown principal */}
-              <div
-                className="bg-gray-800 px-3 py-2 rounded cursor-pointer"
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                {reminder === "none"
-                  ? "Ninguno"
-                  : defaultOptions.find((opt) => opt.value === reminder)?.label ||
-                  `${customDays} días antes`}
-              </div>
-
-              {/* Opciones del dropdown */}
-              {showDropdown && (
-                <div className="mt-2 bg-gray-800 rounded shadow-lg">
-                  {defaultOptions.map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-700"
-                    >
-                      <input
-                        type="radio"
-                        name="reminder"
-                        value={option.value}
-                        checked={reminder === option.value}
-                        onChange={(e) => {
-                          setReminder(e.target.value);
-                          setIsCustomizing(false);
-                          setShowDropdown(false);
-                        }}
-                        className="accent-purple-500"
-                      />
-                      {option.label}
-                    </label>
-                  ))}
-
-                  {/* Opción personalizar */}
-                  <div className="px-3 py-2 hover:bg-gray-700 cursor-pointer">
-                    {!isCustomizing ? (
-                      <button
-                        className="text-purple-400 text-sm"
-                        onClick={() => setIsCustomizing(true)}
-                      >
-                        Personalizar
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          value={customDays}
-                          onChange={(e) => setCustomDays(e.target.value)}
-                          className="w-14 bg-gray-900 text-white text-sm p-1 rounded"
-                          placeholder="Días"
-                        />
-                        <button
-                          className="text-green-400"
-                          onClick={() => {
-                            if (customDays) {
-                              setReminder("custom");
-                              setShowDropdown(false);
-                            }
-                          }}
-                        >
-                          ✔
-                        </button>
-                        <button
-                          className="text-red-400"
-                          onClick={() => {
-                            setIsCustomizing(false);
-                            setCustomDays("");
-                          }}
-                        >
-                          ✖
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="w-2/3 space-y-6">
@@ -371,48 +251,46 @@ function CreateCardPage() {
               />
             </div>
             <div>
-              <label htmlFor="lead" className="block font-medium mb-2 text-sm">
-                Responsables
+              <label htmlFor="responsable" className="block font-medium mb-2 text-sm">
+                Responsable
               </label>
               <div className="relative">
                 <input
-                  id="members"
-                  value={newMember}
+                  id="responsable"
+                  value={newResponsable}
                   type="text"
-                  placeholder="Buscar por nombre o @usuario..."
+                  placeholder="Buscar responsable por email..."
                   className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                  onChange={(e) => setNewMember(e.target.value)}
+                  onChange={(e) => setNewResponsable(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      handleAddMember();
+                      handleAddResponsable();
                     }
                   }}
                 />
                 <button
                   type="button"
-                  onClick={handleAddMember}
+                  onClick={handleAddResponsable}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   <FaPlus style={{ fontSize: "20px" }} />
                 </button>
               </div>
-              {members.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {members.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-2 bg-neutral-800 rounded">
-                      <div className="flex flex-col leading-tight">
-                        <span className="text-sm font-medium text-white">{member.first_name} {member.last_name}</span>
-                        <span className="text-xs text-gray-400">({member.email})</span>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="text-white hover:text-red-300 transition"
-                      >
-                        <FaRegTrashAlt />
-                      </button>
+              {responsable && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between p-2 bg-neutral-800 rounded">
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-medium text-white">{responsable.first_name} {responsable.last_name}</span>
+                      <span className="text-xs text-gray-400">({responsable.email})</span>
                     </div>
-                  ))}
+                    <button
+                      onClick={handleRemoveResponsable}
+                      className="text-white hover:text-red-300 transition"
+                    >
+                      <FaRegTrashAlt />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

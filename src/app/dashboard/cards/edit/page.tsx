@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
 import Calendar from '@/components/ui/Calendar';
@@ -33,6 +33,7 @@ function EditCardPage() {
 
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
   const [members, setMembers] = useState<any[]>([]);
+  const [responsable, setResponsable] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -90,8 +91,26 @@ function EditCardPage() {
         };
         setState(stateMapping[cardData.state] || cardData.state || 'TODO');
         
-        // Usar responsableId del backend
-        setLead(cardData.responsableId ? cardData.responsableId.toString() : '');
+        // Cargar responsable si existe responsableId
+        if (cardData.responsableId) {
+          // Buscar el responsable en los miembros del tablero
+          try {
+            const boardRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            if (boardRes.ok) {
+              const boardData = await boardRes.json();
+              const responsableData = boardData.members?.find((member: any) => member.id === cardData.responsableId);
+              setResponsable(responsableData || null);
+            }
+          } catch (error) {
+            console.error('Error al cargar responsable:', error);
+          }
+        }
         
         // Etiquetas: usar las del backend si existen, sino array vacío
         console.log('Etiquetas del backend:', cardData.tags);
@@ -161,16 +180,35 @@ function EditCardPage() {
 
 
 
-  const handleSearch = async () => {
+  const handleSearchResponsable = async () => {
     if (!searchQuery.trim() || !token) return;
     
     try {
-      const results = await searchUsers(searchQuery, token);
+      console.log('Buscando usuario con email:', searchQuery);
+      const { searchUsersByEmail } = await import('@/services/cardService');
+      const results = await searchUsersByEmail(searchQuery, token);
+      console.log('Resultados de búsqueda:', results);
       setSearchResults(results || []);
       setShowSearchResults(true);
     } catch (error) {
       console.error('Error al buscar usuarios:', error);
+      // Mostrar error al usuario
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo buscar el usuario. Verifica el email e intenta nuevamente.',
+        icon: 'error',
+        background: 'rgb(26, 26, 26)',
+        color: '#fff',
+        confirmButtonText: 'Aceptar'
+      });
     }
+  };
+
+  const handleSelectResponsable = (user: any) => {
+    setResponsable(user);
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
   };
 
   const handleAddMember = async (userId: number) => {
@@ -229,10 +267,10 @@ function EditCardPage() {
       title,
       description,
       boardId: parseInt(boardId),
+      responsableId: responsable?.id || null,
       beginDate: startDate?.toISOString(),
       dueDate: endDate?.toISOString(),
       state: state || "TODO",
-      assignee: lead,
       tags: tags
     };
 
@@ -333,21 +371,27 @@ function EditCardPage() {
             </div>
 
             <div>
-              <label htmlFor="lead" className="block font-medium mb-2 text-sm">
-                Responsables
+              <label htmlFor="responsable" className="block font-medium mb-2 text-sm">
+                Responsable
               </label>
               <div className="relative">
                 <input
-                  id="lead"
+                  id="responsable"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por nombre o @usuario..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearchResponsable();
+                    }
+                  }}
+                  placeholder="Buscar responsable por email..."
                   className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
                 />
                 <button
                   type="button"
-                  onClick={handleSearch}
+                  onClick={handleSearchResponsable}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   <FaSearch style={{ fontSize: "20px" }} />
@@ -356,41 +400,40 @@ function EditCardPage() {
               
               {/* Resultados de búsqueda */}
               {showSearchResults && searchResults.length > 0 && (
-                <div className="mt-2 bg-gray-800 rounded-lg max-h-40 overflow-y-auto">
+                <div className="mt-2 bg-[#313131B3] rounded-lg max-h-40 overflow-y-auto">
                   {searchResults.map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-2 hover:bg-gray-700">
                       <div>
                         <span className="text-white">{user.first_name} {user.last_name}</span>
-                        <span className="text-gray-400 ml-2">@{user.username}</span>
+                        <span className="text-gray-400 ml-2">({user.email})</span>
                       </div>
                       <button
-                        onClick={() => handleAddMember(user.id)}
-                        className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                        onClick={() => handleSelectResponsable(user)}
+    
+                        className=" text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                        style={{ backgroundColor: "#6A5FFF" }}
                       >
-                        Agregar
+                        Seleccionar
                       </button>
                     </div>
                   ))}
                 </div>
               )}
               
-              {/* Mostrar miembros actuales */}
-              {members.length > 0 && (
+              {/* Mostrar responsable seleccionado */}
+              {responsable && (
                 <div className="mt-3">
-                  <p className="text-sm text-gray-400 mb-2">Miembros actuales:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {members.map((member) => (
-                      <div key={member.id} className="bg-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                        <span>{member.first_name} {member.last_name}</span>
-                        <span className="text-gray-400">@{member.username}</span>
-                        <button
-                          onClick={() => handleRemoveMember(member.id)}
-                          className="text-red-400 hover:text-red-300 ml-1"
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between p-2 bg-neutral-800 rounded w-60">
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-medium text-white">{responsable.firstName || responsable.first_name} {responsable.lastName || responsable.last_name}</span>
+                      <span className="text-xs text-gray-400" style={{backgroundColor: "#313131B3"}}>({responsable.email})</span>
+                    </div>
+                    <button
+                      onClick={() => setResponsable(null)}
+                      className="text-white hover:text-red-300 transition"
+                    >
+                      <FaRegTrashAlt />
+                    </button>
                   </div>
                 </div>
               )}

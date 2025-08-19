@@ -17,21 +17,21 @@ import StateBadge from '@/components/card/StateBadge';
 import EmptyBadge from '@/components/ui/EmptyBadge';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
-
-
-
-//const user = useAuthStore(state => state.user);
+import { deleteCardById } from '@/services/cardService';
+import { de } from 'date-fns/locale';
+import '@/styles/delete-modal.css'
 
 interface Card {
     id: number;
     title: string;
     description?: string;
-    assignee?: string;
+    responsableId?: number;
+    responsable?: { id: number; first_name: string; last_name: string; email: string; };
     priority?: 'Baja' | 'Media' | 'Alta';
     state: string;
     dueDate?: string;
     beginDate?: string;
-    members?: any[];
+    members?: { id: number; first_name: string; last_name: string; email: string; }[];
 }
 
 interface BoardPageProps {
@@ -58,14 +58,93 @@ export default function BoardPage({ params }: BoardPageProps) {
         getParams();
     }, [params]);
 
+    // Función para refrescar los datos
+    const refreshData = async () => {
+        if (!boardId || !accessToken) return;
+        
+        try {
+            // Obtener datos del tablero
+            const boardRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+            
+            let boardMembers = [];
+            if (boardRes.ok) {
+                const boardData = await boardRes.json();
+                setBoardData(boardData);
+                boardMembers = boardData.members || [];
+            }
+
+            // Obtener tarjetas
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/getCards/${boardId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            });
+
+            if (res.ok) {
+                const cardsData = await res.json();
+                
+                const cardsWithData = await Promise.all(
+                    cardsData.map(async (card: Card) => {
+                        try {
+                            const membersRes = await fetch(`${process.env.NEXT_PUBLIC_API}/card/getMembers/${card.id}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`,
+                                },
+                            });
+                            
+                            let members = [];
+                            if (membersRes.ok) {
+                                members = await membersRes.json();
+                            }
+
+                            let responsable = null;
+                            if (card.responsableId) {
+                                responsable = boardMembers.find((member: any) => member.id === card.responsableId);
+                            }
+
+                            return { ...card, members, responsable };
+                        } catch (error) {
+                            console.error(`Error fetching data for card ${card.id}:`, error);
+                            return { ...card, members: [], responsable: null };
+                        }
+                    })
+                );
+                
+                setCards(cardsWithData);
+            }
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+        }
+    };
+
+    // Escuchar cuando se regresa de otra página
+    useEffect(() => {
+        const handleFocus = () => {
+            refreshData();
+        };
+        
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [boardId, accessToken]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setShowMenu(false);
+                setShowMenu({});
             }
         };
 
-        if (showMenu) {
+        if (Object.values(showMenu).some(Boolean)) {
             document.addEventListener("mousedown", handleClickOutside);
         }
 
@@ -73,56 +152,10 @@ export default function BoardPage({ params }: BoardPageProps) {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showMenu]);
+
     useEffect(() => {
-        if (!boardId || !accessToken) return;
-
-        const fetchBoardData = async () => {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    console.error("Error del servidor:", errorData);
-                    throw new Error(`Error al obtener los datos del tablero: ${res.statusText}`);
-                }
-
-                const data = await res.json();
-                setBoardData(data);
-            } catch (error) {
-                console.error('Fetch error:', error);
-            }
-        };
-
-        const fetchCards = async () => {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/getCards/${boardId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setCards(data);
-                }
-            } catch (error) {
-                console.error('Error fetching cards:', error);
-            }
-        };
-
-        fetchBoardData();
-        fetchCards();
+        refreshData();
     }, [boardId, accessToken]);
-
-
 
     if (!boardId) {
         return <div className='text-white'>Error: ID del tablero no encontrado</div>;
@@ -162,11 +195,74 @@ export default function BoardPage({ params }: BoardPageProps) {
         'En progreso': 'bg-[#2E90FA]',
         'Hecho': 'bg-[#12B76A]',
     };
+    const handleDelete = async (cardId: number) => {
+        const result = await Swal.fire({
+          html: `
+        <div class="modal-content-custom">
+          <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
+          <p class="modal-text">
+            ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
+          </p>
+        </div>
+      `,
+          background: "#222222",
+          showCancelButton: true,
+          reverseButtons: true,
+          confirmButtonText: "Eliminar",
+          cancelButtonText: "Cancelar",
+          customClass: {
+            popup: "mi-modal",
+            confirmButton: "btn-confirm",
+            cancelButton: "btn-cancel",
+          },
+        });
+    
+        if (result.isConfirmed) {
+          try {
+            if (!accessToken) {
+              throw new Error('No se encontró token de autenticación');
+            }
+    
+            await deleteCardById(cardId, accessToken);
+            
+            
+            await Swal.fire({
+              title: '¡Eliminado!',
+              text: 'La tarjeta se ha eliminado correctamente',
+              icon: 'success',
+              background: '#222',
+              color: '#fff',
+              showConfirmButton: true,
+              confirmButtonText: 'Aceptar',
+              customClass: {
+                confirmButton: 'btn-cancel',
+                popup: 'mi-modal',
+              },
+            });
+            
+            // Refrescar datos
+            refreshData();
+            
+          } catch (error: any) {
+            await Swal.fire({
+              title: 'Error',
+              text: error.message || 'No se pudo eliminar la tarjeta',
+              icon: 'error',
+              background: '#222',
+              color: '#fff',
+              confirmButtonText: 'Aceptar',
+              customClass: {
+                confirmButton: 'btn-cancel',
+                popup: 'mi-modal',
+              },
+            });
+          }
+        }
+      };
 
     return (
         <>
-
-            <div className='flex justify-between mb-6 ps-1 pe-6 py-1 w-full text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'>
+            <div className='flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'>
                 <div className='flex gap-6'>
                     <button
                         onClick={() => handleSectionChange('backlog')}
@@ -176,7 +272,6 @@ export default function BoardPage({ params }: BoardPageProps) {
                             }
                         )}>
                         Backlog
-
                     </button>
                     <div className="my-1 border-l border-[--global-color-neutral-700] mx-3"></div>
                     <button
@@ -190,7 +285,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                     </button>
                 </div>
                 <div className='flex items-center gap-6 py-2'>
-                    <div className='w-12 h-12 rounded-full overflow-hidden'>
+                    <div className='w-[32px] h-[32px] rounded-full overflow-hidden'>
                         <Image
                             src={'https://picsum.photos/200/200?random=1'}
                             width={60}
@@ -199,13 +294,13 @@ export default function BoardPage({ params }: BoardPageProps) {
                             className="object-cover"
                         />
                     </div>
-                    <button className='flex justify-center items-center rounded-full bg-black h-12 w-12 text-center'><FaPlus /></button>
+                    <button className='flex justify-center items-center rounded-full bg-black w-[34px] h-[34px] text-center'><FaPlus /></button>
                 </div>
             </div>
 
             {activeSection === 'backlog' ? (
                 <>
-                    <div className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 py-3 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl mb-6 text-center font-bold'>
+                    <div className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white mb-6 text-center'>
                         <input id="default-checkbox" type="checkbox" value="" className="w-4 h-4 bg-transparent rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
                         <h6>Descripción</h6>
                         <h6>Responsables</h6>
@@ -216,27 +311,53 @@ export default function BoardPage({ params }: BoardPageProps) {
                         <h6>Acciones</h6>
                     </div>
                     {cards.map(card => (
-                        <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center justify-around gap-3 px-4 py-3 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl mb-6 text-start'>
-                            <input id="default-checkbox" type="checkbox" value="" className="w-4 h-4 bg-transparent rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                            <p className='text-white'>{card.title}</p>
-                            <p>{card.assignee || 'Sin asignar'}</p>
+                        <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white h-[50px] mb-6'>
+                            <input id="default-checkbox" type="checkbox" value="" className="w-4 bg-transparent rounded-sm border border-[--global-color-neutral-700] focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 h-10" />
+                            <p className='text-white text-sm'>{card.title}</p>
+                            <div>
+                                {card.responsable ? (
+                                    <div className='flex items-center gap-2'>
+                                        <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white'>
+                                            {card.responsable.first_name?.[0]}{card.responsable.last_name?.[0]}
+                                        </div>
+                                        <span className='text-sm'>{card.responsable.first_name} {card.responsable.last_name}</span>
+                                    </div>
+                                ) : (
+                                    <span className='text-gray-400 text-sm'>Sin responsable</span>
+                                )}
+                            </div>
                             <div className='flex justify-center'>
                                 {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
                             </div>
                             <div className='flex justify-center'>
                                 <StateBadge label={card.state === 'To Do' ? 'TODO' : card.state === 'In Progress' ? 'IN_PROGRESS' : card.state === 'Done' ? 'DONE' : card.state} />
                             </div>
-                            <p>N/A</p>
-                            <p>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
+                            <div className='flex -space-x-2'>
+                                {card.members && card.members.length > 0 ? (
+                                    card.members.slice(0, 3).map((member, index) => (
+                                        <div key={member.id} className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
+                                            {member.first_name?.[0]}{member.last_name?.[0]}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span className='text-gray-400 text-sm'>Sin miembros</span>
+                                )}
+                                {card.members && card.members.length > 3 && (
+                                    <div className='w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
+                                        +{card.members.length - 3}
+                                    </div>
+                                )}
+                            </div>
+                            <p className='text-sm' >{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
                             <div className='flex items-center gap-3'>
                                 <button
                                     onClick={() => {
                                         setShowMenu(prev => ({ ...prev, [card.id]: false }));
                                         router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
                                     }}>
-
-                                    <LuPencilLine /></button>
-                                <button><FaRegTrashAlt /></button>
+                                    <LuPencilLine />
+                                </button>
+                                <button onClick={() => handleDelete(card.id)}><FaRegTrashAlt /></button>
                             </div>
                         </div>
                     ))}
@@ -271,9 +392,6 @@ export default function BoardPage({ params }: BoardPageProps) {
                                         <div key={card.id} className='bg-[--global-color-neutral-700] p-4 rounded-lg text-white'>
                                             <div className='flex justify-between items-start'>
                                                 <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
-
-
-                                                {/* aqui empieza mi parte------------------------------------------------- */}
                                                 <div ref={menuRef} className="relative inline-block text-left">
                                                     <button
                                                         onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
@@ -283,17 +401,11 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                     </button>
 
                                                     {showMenu[card.id] && (
-
-
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-
-                                                            <button
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                            >
+                                                            <button className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors">
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
                                                             </button>
-
                                                             <button
                                                                 onClick={() => {
                                                                     setShowMenu(prev => ({ ...prev, [card.id]: false }));
@@ -304,12 +416,10 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                                 <FaPen className="text-white text-lg" />
                                                                 <span>Editar tarjeta</span>
                                                             </button>
-
-
-                                                            <button
-
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
-                                                            >
+                                                            <button 
+                                                            onClick={() => handleDelete(card.id)}
+                                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1">
+                                                                
                                                                 <FaTrash className="text-white text-lg" />
                                                                 <span>Eliminar tarjeta</span>
                                                             </button>
@@ -317,7 +427,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                     )}
                                                 </div>
                                             </div>
-                                            <p className='mb-3'>{card.description || 'Sin descrpición'}</p>
+                                            <p className='mb-3'>{card.description || 'Sin descripción'}</p>
                                             <div className='flex items-center justify-between'>
                                                 <div className='w-12 h-12 rounded-full overflow-hidden'>
                                                     <Image
@@ -343,11 +453,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 </div>
                             );
                         })}
-
                     </div>
                 </>
             )}
-
         </>
     );
 }

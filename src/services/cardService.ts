@@ -148,3 +148,41 @@ export async function removeCardMember(cardId: string, userId: number, token: st
     throw error;
   }
 }
+
+export async function searchUsersByEmail(email: string, token: string) {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(email)}`;
+    console.log('URL de búsqueda:', url);
+    console.log('Email a buscar:', email);
+    console.log('Token completo:', token);
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Status de respuesta:', res.status);
+    console.log('Response OK:', res.ok);
+
+    if (res.status === 401) {
+      console.error('Token expirado o inválido');
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error del servidor:', errorText);
+      throw new Error(`Error ${res.status}: ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('Datos recibidos:', data);
+    return data.users || [];
+  } catch (error) {
+    console.error('Error en searchUsersByEmail:', error);
+    throw error;
+  }
+}
