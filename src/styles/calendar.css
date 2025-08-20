@@ -97,8 +97,6 @@
 
 }
 
-
-
 .calendar-buttons button.has-date {
   color: white !important;
   font-weight: 100;
@@ -111,5 +109,9 @@
   background-color: rgba(106, 95, 255, 0.2) !important;
   color: white !important;
   font-weight: 100;
+}
+
+.custom-days-input {
+  background-color: rgba(49, 49, 49, 0.7);
 }
 

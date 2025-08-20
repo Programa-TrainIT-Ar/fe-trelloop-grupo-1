@@ -80,6 +80,7 @@ export function BoardCard(props) {
     <>
       {expandedBoardID === props.id ? (
         <ExpandedBoardCard
+          id={props.id}
           image={props.image}
           name={props.name}
           description={props.description}
