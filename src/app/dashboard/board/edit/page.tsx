@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
-import { getBoardById, updateBoardById, removeMemberFromBoard } from '@/services/boardService';
+import { getBoardById, updateBoardById, removeMemberFromBoard, searchUsersByEmail, addMemberToBoard } from '@/services/boardService';
 import Swal from 'sweetalert2';
 
 interface User {
@@ -88,7 +88,11 @@ function EditBoardPage() {
         setTags(processedTags);
 
         const membersData = data?.members || data?.users || data?.collaborators || [];
-        setMembers(Array.isArray(membersData) ? membersData : []);
+        // Filtrar al propietario de la lista de miembros
+        const filteredMembers = Array.isArray(membersData) 
+          ? membersData.filter(member => member.id !== data?.userId)
+          : [];
+        setMembers(filteredMembers);
 
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
@@ -166,42 +170,23 @@ function EditBoardPage() {
     if (!trimmed || !token || !boardId) return;
 
     try {
-      // Buscar usuario por email
-      const searchRes = await fetch(`${process.env.NEXT_PUBLIC_API}/user/searchByEmail?email=${encodeURIComponent(trimmed)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!searchRes.ok) {
+      // Buscar usuarios por email usando el servicio
+      const users = await searchUsersByEmail(trimmed, token);
+      
+      if (!users || users.length === 0) {
         throw new Error('Usuario no encontrado');
       }
 
-      const userData = await searchRes.json();
+      const userData = users[0]; // Tomar el primer resultado
 
-      // Agregar usuario al tablero
-      const addRes = await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember/${boardId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          member_id: userData.id
-        }),
-      });
-
-      if (!addRes.ok) {
-        throw new Error('No se pudo agregar el usuario al tablero');
-      }
+      // Agregar usuario al tablero usando el servicio
+      await addMemberToBoard(boardId, userData.id, token);
 
       // Actualizar la lista de miembros
       setMembers(prev => [...prev, {
         id: userData.id,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        firstName: userData.first_name || userData.firstName,
+        lastName: userData.last_name || userData.lastName,
         email: userData.email
       }]);
 

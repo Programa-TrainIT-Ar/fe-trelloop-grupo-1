@@ -181,16 +181,33 @@ export const BoardSettings = () => {
     if (imageFile) formData.append("image", imageFile);
 
     members.forEach((m) => formData.append("member_ids", m.id.toString()));
-    tags.forEach((t) => formData.append("tag_ids", t.id.toString()));
+    
+    // Eliminar duplicados de tags
+    const uniqueTagIds = [...new Set(tags.map(t => t.id))];
+    uniqueTagIds.forEach((tagId) => formData.append("tag_ids", tagId.toString()));
 
     try {
+      console.log('Datos del formulario:');
+      console.log('- Nombre:', boardName);
+      console.log('- Descripción:', description);
+      console.log('- Visibilidad:', visibility);
+      console.log('- Imagen:', imageFile?.name);
+      console.log('- Miembros:', members);
+      console.log('- Tags:', tags);
+      
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/createBoard`, {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}` },
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Error al crear el tablero");
+      console.log('Status de respuesta:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Error del servidor:', errorText);
+        throw new Error(`Error al crear el tablero: ${res.status} - ${errorText}`);
+      }
 
       await Swal.fire({
         icon: "success",
