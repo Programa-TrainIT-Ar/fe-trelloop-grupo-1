@@ -175,11 +175,11 @@ export default function SearchBar() {
 
                     {/* Botón de notificaciones */}
 
-                    <button type="button" className={`${!isFilterOpen ? '' : 'hidden'} relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2`}>
-                        <div className={`${!isFilterOpen ? '' : 'hidden'} relative`}>
-                            <NotificationBell />
-                        </div>
-                    </button>
+
+                    <div className={`${!isFilterOpen ? '' : 'hidden'} relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2`}>
+                        <NotificationBell />
+                    </div>
+
                     <div className={`${!isFilterOpen ? '' : 'hidden'} relative`}>
                         <div>
                             <button

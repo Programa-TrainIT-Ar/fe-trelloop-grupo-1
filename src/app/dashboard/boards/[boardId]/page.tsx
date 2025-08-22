@@ -21,6 +21,8 @@ import { deleteCardById } from '@/services/cardService';
 import { de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import { MembersList } from '@/components/card/memberList';
+import { LuArrowRightFromLine } from "react-icons/lu";
+import { LuArrowLeftFromLine } from "react-icons/lu";
 
 
 interface Card {
@@ -52,6 +54,8 @@ export default function BoardPage({ params }: BoardPageProps) {
     const [showMemberList, setShowMemberList] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
+    const [isListMenuOpen, setIsListMenuOpen] = useState(false);
+    const [newListName, setNewListName] = useState('');
 
     useEffect(() => {
         const getParams = async () => {
@@ -172,6 +176,94 @@ export default function BoardPage({ params }: BoardPageProps) {
         setActiveSection(section);
     }
 
+    const toggleListMenu = () => {
+        setIsListMenuOpen(!isListMenuOpen);
+    }
+
+    const handleAddNewStateList = async () => {
+        if (!newListName.trim()) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Ingresa un nombre para la nueva lista',
+                icon: 'warning',
+                background: '#222',
+                color: '#fff',
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                    confirmButton: 'btn-cancel',
+                    popup: 'mi-modal'
+                }
+            });
+            return;
+        }
+
+        const currentBoardId = boardId ? parseInt(boardId) : null;
+        if (!currentBoardId) {
+            Swal.fire({
+                title: 'Error de Tablero',
+                text: 'No se pudo obtener el ID del tablero.',
+                icon: 'error',
+                background: '#222',
+                color: '#fff',
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                    confirmButton: 'btn-cancel',
+                    popup: 'mi-modal',
+                },
+            });
+            return; // Detener la ejecución si no hay un boardId válido
+        }
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    boardId: currentBoardId,
+                    title: 'Nueva tarea en ' + newListName, // Título temporal para que la tarjeta no esté vacía
+                    state: newListName,
+                }),
+            });
+
+            if (res.ok) {
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: `Lista "${newListName}" creada correctamente.`,
+                    icon: 'success',
+                    background: '#222',
+                    color: '#fff',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });                
+                setNewListName('');
+                setIsListMenuOpen(false); 
+                refreshData(); 
+            } else {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Error al crear la lista.');
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'No se pudo crear la lista',
+                icon: 'error',
+                background: '#222',
+                color: '#fff',
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                    confirmButton: 'btn-cancel',
+                    popup: 'mi-modal',
+                },
+            });
+        }
+    }
+
     const calculatePriority = (dueDate: string | null): 'Baja' | 'Media' | 'Alta' | null => {
         if (!dueDate) return null;
 
@@ -185,19 +277,25 @@ export default function BoardPage({ params }: BoardPageProps) {
         return 'Baja'; // Más de 7 días
     };
 
+    const defaultStates = ['TODO', 'IN_PROGRESS', 'DONE'];
     const uniqueStates = Array.from(new Set(cards.map(card => card.state))).sort();
+    const customStates = uniqueStates.filter(state => !defaultStates.includes(state));
+    const backlogCards = cards
 
     const stateLabels: Record<string, string> = {
-        'To Do': 'Por hacer',
-        'In Progress': 'En progreso',
-        'Done': 'Hecho',
+        'TODO': 'Por hacer',
+        'IN_PROGRESS': 'En progreso',
+        'DONE': 'Hecho',
+        ...Object.fromEntries(customStates.map(state => [state, state]))
     };
 
-    const stateBgClasses: Record<string, string> = {
-        'Por hacer': 'bg-[#60584E]',
-        'En progreso': 'bg-[#2E90FA]',
-        'Hecho': 'bg-[#12B76A]',
+    const stateColors: Record<string, string> = {
+        'TODO': 'bg-[#60584E]',
+        'IN_PROGRESS': 'bg-[#2E90FA]',
+        'DONE': 'bg-[#12B76A]',
+        ...Object.fromEntries(customStates.map(state => [state, 'bg-gray-500']))
     };
+
     const handleDelete = async (cardId: number) => {
         const result = await Swal.fire({
             html: `
@@ -322,7 +420,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                         <h6>Fecha</h6>
                         <h6>Acciones</h6>
                     </div>
-                    {cards.map(card => (
+                    {backlogCards.map(card => {
+                        //const translatedState = stateLabels[card.state] || card.state;
+                        return (
                         <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white h-[50px] mb-6'>
                             <input id="default-checkbox" type="checkbox" value="" className="w-4 bg-transparent rounded-sm border border-[--global-color-neutral-700] focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 h-10" />
                             <p className='text-white text-sm'>{card.title}</p>
@@ -342,7 +442,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
                             </div>
                             <div className='flex justify-center'>
-                                <StateBadge label={card.state === 'To Do' ? 'TODO' : card.state === 'In Progress' ? 'IN_PROGRESS' : card.state === 'Done' ? 'DONE' : card.state} />
+                                <StateBadge label={card.state} labelsMap={stateLabels} colorsMap={stateColors} />
                             </div>
                             <div className='flex -space-x-2'>
                                 {card.members && card.members.length > 0 ? (
@@ -372,7 +472,8 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 <button onClick={() => handleDelete(card.id)}><FaRegTrashAlt /></button>
                             </div>
                         </div>
-                    ))}
+                        )
+                    })}
                     <div className='fixed bottom-8 right-10 z-50'>
                         <button
                             onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}`}
@@ -388,10 +489,12 @@ export default function BoardPage({ params }: BoardPageProps) {
                         {uniqueStates.map((state) => {
                             const cardsInState = cards.filter(card => card.state === state);
                             const translatedState = stateLabels[state] || state;
+                            const headerColorClass = stateColors[state] || 'bg-gray-500';
 
                             return (
+
                                 <div key={state} className='flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4'>
-                                    <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', stateBgClasses[translatedState])}>
+                                    <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', headerColorClass)}>
                                         <h2>{translatedState}</h2>
                                         <div className='flex gap-3 items-center'>
                                             <h2>{cardsInState.length}</h2>
@@ -463,9 +566,59 @@ export default function BoardPage({ params }: BoardPageProps) {
                                         </button>
                                     </div>
                                 </div>
+
+
                             );
                         })}
+                        <div className='relative'>
+                            <div>
+                                <button
+                                    id="list-menu-button"
+                                    type="button"
+                                    aria-haspopup="true"
+                                    aria-expanded={isListMenuOpen ? "true" : "false"}
+                                    onClick={toggleListMenu}
+                                    className='relative rounded-xl p-3 text-2xl text-white bg-black'>
+                                    <FaPlus />
+                                </button>
+                            </div>
+
+                            <div
+                                role="menu"
+                                tabIndex={1}
+                                aria-labelledby="user-menu-button"
+                                aria-orientation="vertical"
+                                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
+
+
+                                <input
+                                    className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
+                                    type="text"
+                                    placeholder='Escribe aquí...'
+                                    value={newListName}
+                                    onChange={(e) => setNewListName(e.target.value)}
+                                />
+
+
+                                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                                    <LuArrowRightFromLine /> Insertar lista después
+                                </a>
+                                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                                    <LuArrowLeftFromLine /> Insertar lista antes
+                                </a>
+                                <button
+                                    id="list-menu-item-2"
+                                    role="menuitem"
+                                    tabIndex={1}
+                                    onClick={handleAddNewStateList}
+                                    className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
+                                    Agregar lista
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
+
                 </>
             )}
         </>
