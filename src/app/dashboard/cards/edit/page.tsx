@@ -38,7 +38,17 @@ function EditCardPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
+const stateLabels: Record<string, string> = {
+    'TODO': 'Por hacer',
+    'IN_PROGRESS': 'En progreso',
+    'DONE': 'Hecho',
+  };
 
+  const stateColors: Record<string, string> = {
+    'TODO': 'bg-[#60584E]',
+    'IN_PROGRESS': 'bg-[#2E90FA]',
+    'DONE': 'bg-[#12B76A]',
+  };
 
 
   useEffect(() => {
@@ -448,7 +458,7 @@ function EditCardPage() {
               <div>
                 <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
                 <StateSelector value={state} onChange={setState} />
-                {state && <StateBadge label={state} />}
+                {state && <StateBadge label={state} labelsMap={stateLabels} colorsMap={stateColors}/>}
               </div>
               <div>
                 <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
