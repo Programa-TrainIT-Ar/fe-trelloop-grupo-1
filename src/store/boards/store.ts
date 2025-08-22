@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
 export const useBoardStore = create(
         (set, get) => ({
             // Estado inicial
-            boards: null,
+            boards: [],
             expandedBoardID: null,
 
             // Acciones
@@ -104,8 +104,6 @@ export const useBoardStore = create(
                     
                   
                     console.log(data)
-                    set({boards: data})
-
               
                     return true;
                 } catch (error) {

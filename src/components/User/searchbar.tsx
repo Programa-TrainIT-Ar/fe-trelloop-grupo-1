@@ -122,7 +122,7 @@ export default function SearchBar() {
 
             setDynamicDateOptions(dynamicDates);
         }
-    }, [boards, getBoards, accessToken]);
+    }, [getBoards, accessToken]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

@@ -29,7 +29,12 @@ const BoardListView = () => {
     if (!token) {
       router.push("/");
     }
-    getBoards();
+
+      getBoards()
+
+    
+
+
 
     // Fetch para traer los tableros favoritos
     const fetchFavoriteBoards = async () => {
@@ -57,7 +62,7 @@ const BoardListView = () => {
 
     fetchFavoriteBoards();
 
-  }, [token, getBoards, router]);
+  }, [token, router, getBoards]);
 
   if (isLoadingFavorites) {
     return <p className="text-white">Cargando tableros...</p>;
