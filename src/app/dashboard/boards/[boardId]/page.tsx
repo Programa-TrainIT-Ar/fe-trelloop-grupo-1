@@ -21,6 +21,7 @@ import { deleteCardById } from '@/services/cardService';
 import { de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import { MembersList } from '@/components/card/memberList';
+import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine } from "react-icons/lu";
 import { LuArrowLeftFromLine } from "react-icons/lu";
 
@@ -54,6 +55,8 @@ export default function BoardPage({ params }: BoardPageProps) {
     const [showMemberList, setShowMemberList] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const router = useRouter();
+    const [showSharePanel, setShowSharePanel] = useState(false);
+
     const [isListMenuOpen, setIsListMenuOpen] = useState(false);
     const [newListName, setNewListName] = useState('');
 
@@ -363,28 +366,30 @@ export default function BoardPage({ params }: BoardPageProps) {
 
     return (
         <>
-            <div className='flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'>
+        
+            <div className='relative flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'>
                 <div className='flex gap-6'>
                     <button
                         onClick={() => handleSectionChange('backlog')}
-                        className={clsx('px-12 h-auto rounded-lg text-white hover:bg-[--global-color-primary-500] text-blue-600',
-                            {
-                                'bg-[--global-color-primary-500]': activeSection === 'backlog'
-                            }
-                        )}>
+                        className={clsx('px-12 h-auto rounded-lg text-white hover:bg-[--global-color-primary-500] text-blue-600', {
+                            'bg-[--global-color-primary-500]': activeSection === 'backlog'
+                        })}
+                    >
                         Backlog
                     </button>
+
                     <div className="my-1 border-l border-[--global-color-neutral-700] mx-3"></div>
+
                     <button
                         onClick={() => handleSectionChange('listas')}
-                        className={clsx('px-12 rounded-lg text-white  hover:bg-[--global-color-primary-500] text-blue-600',
-                            {
-                                'bg-[--global-color-primary-500]': activeSection === 'listas'
-                            }
-                        )}>
+                        className={clsx('px-12 rounded-lg text-white hover:bg-[--global-color-primary-500] text-blue-600', {
+                            'bg-[--global-color-primary-500]': activeSection === 'listas'
+                        })}
+                    >
                         Listas
                     </button>
                 </div>
+
                 <div className='flex items-center gap-6 py-2'>
                     <div className='w-[32px] h-[32px] rounded-full overflow-hidden'>
                         <Image
@@ -396,17 +401,23 @@ export default function BoardPage({ params }: BoardPageProps) {
                         />
                     </div>
                     <button
-                        onClick={() => setShowMemberList(true)}
-                        className='flex justify-center items-center rounded-full bg-black w-[34px] h-[34px] text-center'>
+                        onClick={() => setShowSharePanel(true)}
+                        className='flex justify-center items-center rounded-full bg-black w-[34px] h-[34px] text-center'
+                        aria-label="Compartir tablero"
+                        title="Compartir tablero"
+                    >
                         <FaPlus />
                     </button>
-
-                    {showMemberList && (
-                        <MembersList onClose={() => setShowMemberList(false)} />
-                    )}
-
                 </div>
             </div>
+            {showSharePanel && accessToken && boardId && (
+                <ShareBoardPanel
+                    boardId={boardId}
+                    token={accessToken}
+                    onClose={() => setShowSharePanel(false)}
+                    onChanged={refreshData}
+                />
+            )}
 
             {activeSection === 'backlog' ? (
                 <>
@@ -426,6 +437,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                         <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white h-[50px] mb-6'>
                             <input id="default-checkbox" type="checkbox" value="" className="w-4 bg-transparent rounded-sm border border-[--global-color-neutral-700] focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 h-10" />
                             <p className='text-white text-sm'>{card.title}</p>
+
                             <div>
                                 {card.responsable ? (
                                     <div className='flex items-center gap-2'>
@@ -438,15 +450,18 @@ export default function BoardPage({ params }: BoardPageProps) {
                                     <span className='text-gray-400 text-sm'>Sin responsable</span>
                                 )}
                             </div>
+
                             <div className='flex justify-center'>
                                 {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
                             </div>
+
                             <div className='flex justify-center'>
                                 <StateBadge label={card.state} labelsMap={stateLabels} colorsMap={stateColors} />
                             </div>
+
                             <div className='flex -space-x-2'>
                                 {card.members && card.members.length > 0 ? (
-                                    card.members.slice(0, 3).map((member, index) => (
+                                    card.members.slice(0, 3).map((member) => (
                                         <div key={member.id} className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
                                             {member.first_name?.[0]}{member.last_name?.[0]}
                                         </div>
@@ -460,7 +475,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                                     </div>
                                 )}
                             </div>
-                            <p className='text-sm' >{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
+
+                            <p className='text-sm'>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
+
                             <div className='flex items-center gap-3'>
                                 <button
                                     onClick={() => {
@@ -503,10 +520,12 @@ export default function BoardPage({ params }: BoardPageProps) {
                                             </button>
                                         </div>
                                     </div>
+
                                     {cardsInState.map(card => (
                                         <div key={card.id} className='bg-[--global-color-neutral-700] p-4 rounded-lg text-white'>
                                             <div className='flex justify-between items-start'>
                                                 <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
+
                                                 <div ref={menuRef} className="relative inline-block text-left">
                                                     <button
                                                         onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
@@ -533,8 +552,8 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDelete(card.id)}
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1">
-
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                                            >
                                                                 <FaTrash className="text-white text-lg" />
                                                                 <span>Eliminar tarjeta</span>
                                                             </button>
@@ -542,7 +561,9 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                     )}
                                                 </div>
                                             </div>
+
                                             <p className='mb-3'>{card.description || 'Sin descripción'}</p>
+
                                             <div className='flex items-center justify-between'>
                                                 <div className='w-12 h-12 rounded-full overflow-hidden'>
                                                     <Image
@@ -557,10 +578,12 @@ export default function BoardPage({ params }: BoardPageProps) {
                                             </div>
                                         </div>
                                     ))}
+
                                     <div className='mt-auto'>
                                         <button
                                             onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}`}
-                                            className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'>
+                                            className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'
+                                        >
                                             <FaPlus />
                                             Agregar tarea
                                         </button>
@@ -623,4 +646,5 @@ export default function BoardPage({ params }: BoardPageProps) {
             )}
         </>
     );
+
 }

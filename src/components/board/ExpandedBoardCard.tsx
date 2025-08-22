@@ -42,7 +42,9 @@ export function ExpandedBoardCard(props) {
               </button>
               <button 
 
-              className="access-card-button">Ingresar</button>
+              className="access-card-button"
+              onClick={() => router.push(`/dashboard/boards/${props.id}`)}
+              >Ingresar</button>
             </div>
           </div>
         </div>
