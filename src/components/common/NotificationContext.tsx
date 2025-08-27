@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { AppNotification } from "@/types/notifications";
 import { subscribeToUserChannel, disconnectPusher } from "@/lib/pusherClient";
+import Pusher from "pusher-js";
 
 type Ctx = {
   notifications: AppNotification[];
