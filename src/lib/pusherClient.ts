@@ -3,27 +3,29 @@ import Pusher, { Channel } from "pusher-js";
 
 let pusher: Pusher | null = null;
 
-function getAccesToken(): string | null {
+function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("accesToken");
+  return localStorage.getItem("accessToken");
 }
 
 function initPusher(): Pusher | null {
   if (typeof window === "undefined") return null;
   if (pusher) return pusher;
 
-   Pusher.logToConsole = true;
+  // debug
+  // @ts-ignore
+  Pusher.logToConsole = true;
 
   const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
   const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
-  const authEndpoint = process.env.NEXT_PUBLIC_PUSHER_AUTH_ENDPOINT ||  "http://localhost:5000/pusher/auth";
+  const authEndpoint = process.env.NEXT_PUBLIC_PUSHER_AUTH_ENDPOINT || "http://localhost:5000/pusher/auth";
 
   if (!key || !cluster) {
-    console.warn("Pusher env vars missing");
+    console.warn("Pusher env vars missing (NEXT_PUBLIC_PUSHER_KEY / NEXT_PUBLIC_PUSHER_CLUSTER)");
     return null;
   }
 
-  const token = getAccesToken() ?? "";
+  const token = getAccessToken() ?? "";
   if (!token) {
     console.warn("[pusher] No JWT accestoken found in localStorage; will not auth private channels");
   }
@@ -34,13 +36,11 @@ function initPusher(): Pusher | null {
     authEndpoint,
     auth: {
       headers: {
-        Authorization: `Bearer ${token ?? ""}`,
+        Authorization: token ? `Bearer ${token}` : "",
       },
     },
   });
 
-  // logs globales
-  // @ts-ignore
   pusher.connection.bind("error", (err: any) => {
     console.error("[pusher] connection error", err);
   });

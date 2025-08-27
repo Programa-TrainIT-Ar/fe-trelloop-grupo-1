@@ -22,7 +22,8 @@ export function NotificationProvider({
   children: React.ReactNode;
 }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+
 
   useEffect(() => {
     if (!userId) return;
@@ -31,11 +32,14 @@ export function NotificationProvider({
     const handler = (data: AppNotification) => {
       console.log("NotificationProvider: received notification", data);
       setNotifications((prev) => [{ ...data, read: false }, ...prev]);
-      setUnreadCount((c) => c + 1);
     };
     channel.bind("notification", handler);
     return () => {
-      channel.unbind("notification", handler);
+      try {
+        channel.unbind("notification", handler);
+      } catch (e) {
+        console.warn("Error unbinding channel", e);
+      }
       disconnectPusher();
     };
   }, [userId]);
@@ -43,14 +47,10 @@ export function NotificationProvider({
 
   const markAsRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    setUnreadCount((c) => Math.max(0, c - 1));
-    // TODO: aquí harás PATCH /notifications/:id/read a tu backend
   };
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnreadCount(0);
-    // TODO: aquí harás POST /notifications/read-bulk a tu backend
   };
 
   // Utilidad para probar la UI sin backend
@@ -64,9 +64,10 @@ export function NotificationProvider({
       resource: n?.resource || { kind: "board", id: "demo" },
       createdAt: new Date().toISOString(),
       read: false,
+      metadata: n?.metadata,
+      actorId: n?.actorId,
     };
     setNotifications((prev) => [demo, ...prev]);
-    setUnreadCount((c) => c + 1);
   };
 
   const value = useMemo(
