@@ -243,10 +243,10 @@ export default function BoardPage({ params }: BoardPageProps) {
                         confirmButton: 'btn-cancel',
                         popup: 'mi-modal',
                     },
-                });                
+                });
                 setNewListName('');
-                setIsListMenuOpen(false); 
-                refreshData(); 
+                setIsListMenuOpen(false);
+                refreshData();
             } else {
                 const errorData = await res.json();
                 throw new Error(errorData.message || 'Error al crear la lista.');
@@ -366,7 +366,7 @@ export default function BoardPage({ params }: BoardPageProps) {
 
     return (
         <>
-        
+
             <div className='relative flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'>
                 <div className='flex gap-6'>
                     <button
@@ -434,61 +434,61 @@ export default function BoardPage({ params }: BoardPageProps) {
                     {backlogCards.map(card => {
                         //const translatedState = stateLabels[card.state] || card.state;
                         return (
-                        <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white h-[50px] mb-6'>
-                            <input id="default-checkbox" type="checkbox" value="" className="w-4 bg-transparent rounded-sm border border-[--global-color-neutral-700] focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 h-10" />
-                            <p className='text-white text-sm'>{card.title}</p>
+                            <div key={card.id} className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white h-[50px] mb-6'>
+                                <input id="default-checkbox" type="checkbox" value="" className="w-4 bg-transparent rounded-sm border border-[--global-color-neutral-700] focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 h-10" />
+                                <p className='text-white text-sm'>{card.title}</p>
 
-                            <div>
-                                {card.responsable ? (
-                                    <div className='flex items-center gap-2'>
-                                        <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white'>
-                                            {card.responsable.first_name?.[0]}{card.responsable.last_name?.[0]}
+                                <div>
+                                    {card.responsable ? (
+                                        <div className='flex items-center gap-2'>
+                                            <div className='w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white'>
+                                                {card.responsable.first_name?.[0]}{card.responsable.last_name?.[0]}
+                                            </div>
+                                            <span className='text-sm'>{card.responsable.first_name} {card.responsable.last_name}</span>
                                         </div>
-                                        <span className='text-sm'>{card.responsable.first_name} {card.responsable.last_name}</span>
-                                    </div>
-                                ) : (
-                                    <span className='text-gray-400 text-sm'>Sin responsable</span>
-                                )}
-                            </div>
+                                    ) : (
+                                        <span className='text-gray-400 text-sm'>Sin responsable</span>
+                                    )}
+                                </div>
 
-                            <div className='flex justify-center'>
-                                {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
-                            </div>
+                                <div className='flex justify-center'>
+                                    {calculatePriority(card.dueDate) ? <PriorityBadge label={calculatePriority(card.dueDate)!} /> : <EmptyBadge text="Sin prioridad" />}
+                                </div>
 
-                            <div className='flex justify-center'>
-                                <StateBadge label={card.state} labelsMap={stateLabels} colorsMap={stateColors} />
-                            </div>
+                                <div className='flex justify-center'>
+                                    <StateBadge label={card.state} labelsMap={stateLabels} colorsMap={stateColors} />
+                                </div>
 
-                            <div className='flex -space-x-2'>
-                                {card.members && card.members.length > 0 ? (
-                                    card.members.slice(0, 3).map((member) => (
-                                        <div key={member.id} className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
-                                            {member.first_name?.[0]}{member.last_name?.[0]}
+                                <div className='flex -space-x-2'>
+                                    {card.members && card.members.length > 0 ? (
+                                        card.members.slice(0, 3).map((member) => (
+                                            <div key={member.id} className='w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
+                                                {member.first_name?.[0]}{member.last_name?.[0]}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <span className='text-gray-400 text-sm'>Sin miembros</span>
+                                    )}
+                                    {card.members && card.members.length > 3 && (
+                                        <div className='w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
+                                            +{card.members.length - 3}
                                         </div>
-                                    ))
-                                ) : (
-                                    <span className='text-gray-400 text-sm'>Sin miembros</span>
-                                )}
-                                {card.members && card.members.length > 3 && (
-                                    <div className='w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-xs text-white border-2 border-gray-800'>
-                                        +{card.members.length - 3}
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
 
-                            <p className='text-sm'>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
+                                <p className='text-sm'>{card.dueDate ? new Date(card.dueDate).toLocaleDateString('es') : 'Sin fecha'}</p>
 
-                            <div className='flex items-center gap-3'>
-                                <button
-                                    onClick={() => {
-                                        setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                        router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
-                                    }}>
-                                    <LuPencilLine />
-                                </button>
-                                <button onClick={() => handleDelete(card.id)}><FaRegTrashAlt /></button>
+                                <div className='flex items-center gap-3'>
+                                    <button
+                                        onClick={() => {
+                                            setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                            router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
+                                        }}>
+                                        <LuPencilLine />
+                                    </button>
+                                    <button onClick={() => handleDelete(card.id)}><FaRegTrashAlt /></button>
+                                </div>
                             </div>
-                        </div>
                         )
                     })}
                     <div className='fixed bottom-8 right-10 z-50'>
@@ -536,7 +536,12 @@ export default function BoardPage({ params }: BoardPageProps) {
 
                                                     {showMenu[card.id] && (
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-                                                            <button className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors">
+                                                            <button onClick={() => {
+                                                                setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                                                router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
+                                                            }}
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors">
+
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
                                                             </button>
