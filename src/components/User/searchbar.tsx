@@ -3,7 +3,7 @@
 import { LuListFilter } from "react-icons/lu";
 import { IoPersonCircleOutline } from "react-icons/io5";
 import NotificationBell from "@/components/ui/NotificationBell";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect,useMemo } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 import { LuKey } from "react-icons/lu";
 import { RxExit } from "react-icons/rx";
@@ -15,13 +15,19 @@ import { IoHeartOutline } from "react-icons/io5";
 import Image from "next/image";
 import FilterDropdownButton from "./filterDropdownButtons";
 import { useAuthStore } from "@/store/auth";
-import { useBoardStore } from "@/store/boards";
+import { useBoardStore } from "@/store/boards/store";
 import { useRouter } from "next/navigation";
-
+import { profile } from "console";
+import {create} from "zustand";
+import type {User} from "@/store/auth";
+import type { Board } from "@/store/boards/store";
 
 
 export default function SearchBar() {
     const router = useRouter();
+   
+    
+    
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -37,10 +43,16 @@ export default function SearchBar() {
 
     const boards = useBoardStore(state => state.boards);
     const getBoards = useBoardStore(state => state.getBoards);
+    const searchQuery = useBoardStore(state => state.searchQuery);
+    const setSearchQuery = useBoardStore(state => state.setSearchQuery);
+    const filterBoards = useBoardStore(state => state.filterBoards);
     const accessToken = useAuthStore(state => state.accessToken);
 
     const userFullName = user ? `${user.firstName} ${user.lastName}` : 'Usuario';
 
+    
+
+    
     const handleLogout = () => {
         storeLogout()
         router.push('/')
@@ -99,6 +111,7 @@ export default function SearchBar() {
                 }
             });
             setDynamicMembers(Array.from(uniqueMembersMap.values()));
+            
 
             // Lógica para extraer opciones de fecha
             const today = new Date();
@@ -150,13 +163,18 @@ export default function SearchBar() {
 
                     {/* Barra de búsqueda */}
 
-                    <form className={`${isFilterOpen ? 'w-full' : 'w-full max-w-md'}`}>
-                        <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+                    <form  onSubmit={e => e.preventDefault()} className={`${isFilterOpen ? 'w-full' : 'w-full max-w-md'}`}>
+                        <label htmlFor="default-search" className="sr-only">Search</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-white">
                                 <HiMiniMagnifyingGlass className="size-8" />
                             </div>
-                            <input type="search" id="default-search" className="block w-full p-4 ps-12 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Buscar tablero..." required />
+                            <input type="search" 
+                            id="default-search" 
+                            className="block w-full p-4 ps-12 text-lg text-white border border-[--global-color-neutral-700] rounded-2xl focus:ring-blue-500 focus:border-blue-500 dark:bg-[--global-color-neutral-800] dark:border-[--global-color-neutral-700] dark:placeholder-white dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                            placeholder="Buscar tablero..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)} />
                         </div>
                     </form>
 

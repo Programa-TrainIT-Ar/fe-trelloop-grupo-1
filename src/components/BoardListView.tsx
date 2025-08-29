@@ -5,25 +5,23 @@ import { StaticImageData } from "next/image";
 import { useBoardStore } from "@/store/boards/store";
 import { useAuthStore } from "@/store/auth";
 import { useRouter } from "next/navigation";
+import type { Board } from "@/store/boards/store";
 
-interface Board {
-  id: number;
-  name: string;
-  description: string;
-  image: StaticImageData;
-  creationDate: string;
-  userId: number;
-  members: object[];
-  isPublic: boolean;
-}
+
+
+
 
 const BoardListView = () => {
   const getBoards = useBoardStore((state) => state.getBoards);
   const token = useAuthStore.getState().accessToken;
   const boards = useBoardStore((state) => state.boards);
+  const searchQuery = useBoardStore((state) => state.searchQuery);
+  const filteredBoards = useBoardStore((state) => state.filteredBoards);
   const router = useRouter();
   const [favoriteBoardIds, setFavoriteBoardIds] = useState<number[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
+
+  
 
   useEffect(() => {
     if (!token) {
@@ -70,8 +68,8 @@ const BoardListView = () => {
         <div className="w-full border-b-[1px] border-b-[--global-color-neutral-700]"></div>
       </div>
       <div className="grid grid-cols-4  gap-8">
-        {boards?.length > 0 &&
-          boards.map((board, index) => (
+                {filteredBoards.length > 0 ? (
+          filteredBoards.map((board:Board, index:number) => (
             <BoardCard
               key={board.id}
               name={board.name}
@@ -83,7 +81,10 @@ const BoardListView = () => {
               index={index}
               isFavorite={favoriteBoardIds.includes(board.id)}
             />
-          ))}
+          ))
+        ) : (
+          <p className="text-white">No se encontraron tableros</p>
+        )}
       </div>
     </>
   );
