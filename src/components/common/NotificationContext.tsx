@@ -72,7 +72,9 @@ export function NotificationProvider({
             console.log("[NotificationProvider] Notification already exists, skipping");
             return prev;
           }
-          return [{ ...data, read: false }, ...prev];
+          return [{ ...data, read: false }, ...prev].sort(
+            (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+          );
         });
       };
 
@@ -166,7 +168,9 @@ export function NotificationProvider({
         const newNotifications = result.notifications.filter(
           (newNotif) => !prev.some((existing) => existing.id === newNotif.id),
         );
-        return [...prev, ...newNotifications];
+        return [...prev, ...newNotifications].sort(
+          (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        );
       });
 
       // Verificar si hay más notificaciones para cargar

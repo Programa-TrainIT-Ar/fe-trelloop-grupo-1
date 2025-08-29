@@ -40,25 +40,17 @@ export default function NotificationBell() {
 
   return (
     <div className="relative">
+      {/* Botón de campana */}
       <button
         type="button"
         onClick={handleToggle}
         aria-label="Notificaciones"
-        className="relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2"
+        className="relative rounded-full text-white hover:bg-neutral-700 p-2"
       >
-        <GoBell className="size-10" />
+        <GoBell className="size-8" />
         {unreadCount > 0 && (
           <span
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              background: "red",
-              color: "white",
-              borderRadius: "999px",
-              padding: "2px 6px",
-              fontSize: 12,
-            }}
+            className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full shadow"
             aria-live="polite"
           >
             {unreadCount}
@@ -71,127 +63,90 @@ export default function NotificationBell() {
           ref={dropdownRef}
           role="dialog"
           aria-label="Lista de notificaciones"
-          className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-[--global-color-neutral-700] text-white rounded-xl shadow-lg p-3 z-50"
+          className="absolute right-0 mt-3 w-96 max-h-[32rem] overflow-y-auto bg-neutral-800 text-white rounded-2xl shadow-2xl border border-neutral-700 z-50"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <strong>Notificaciones</strong>
-              {unreadCount > 0 && (
-                <span className="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {unreadCount > 0 && (
-                <button
-                  onClick={() => markAllAsRead()}
-                  className="text-sm px-2 py-1 rounded hover:bg-[--global-color-neutral-800]"
-                  disabled={loading}
-                >
-                  Marcar todas
-                </button>
-              )}
-            </div>
+          {/* Encabezado */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-700">
+            <h3 className="font-semibold text-lg">Notificaciones</h3>
+            {unreadCount > 0 && (
+              <button
+                onClick={() => markAllAsRead()}
+                className="text-xs px-2 py-1 rounded-lg bg-neutral-700 hover:bg-neutral-600"
+                disabled={loading}
+              >
+                Marcar todas como leídas
+              </button>
+            )}
           </div>
 
-          {notifications.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-300">No tienes notificaciones.</p>
-            </div>
-          ) : (
-            <>
-              {notifications.map((n: AppNotification) => (
-                <div
-                  key={n.id}
-                  className={`p-2 rounded mb-2 ${n.read ? "bg-transparent" : "bg-white/10"}`}
-                >
-                  <div className="text-sm font-medium">{n.title}</div>
-                  <div className="text-sm text-gray-200">{n.message}</div>
+          {/* Lista de notificaciones */}
+          <div className="p-3">
+            {notifications.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-sm text-gray-400">No tienes notificaciones.</p>
+              </div>
+            ) : (
+              <>
+                {notifications.map((n: AppNotification) => (
+                  <div
+                    key={n.id}
+                    className={`p-4 mb-3 rounded-xl border border-neutral-700 bg-neutral-900 hover:bg-neutral-700/40 transition ${n.read ? "" : "border-l-4 border-l-purple-500"}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-semibold text-sm">{n.title}</div>
+                        <p className="text-sm text-gray-300 mt-1">{n.message}</p>
+                      </div>
+                      {!n.read && <span className="w-3 h-3 rounded-full bg-red-600 mt-1"></span>}
+                    </div>
 
-                  <div className="mt-2 flex items-center gap-3">
-                    {n.resource?.kind === "board" && (
-                      <Link
-                        href={`/board/${n.resource.id}`}
+                    <div className="mt-3 flex items-center gap-4 text-xs">
+                      {n.resource?.kind === "board" && (
+                        <Link
+                          href={`/board/${n.resource.id}`}
+                          onClick={() => markAsRead(n.id)}
+                          className="flex items-center gap-1 text-purple-400 hover:underline"
+                        >
+                          Ver tablero →
+                        </Link>
+                      )}
+                      {n.resource?.kind === "card" && (
+                        <Link
+                          href={`/board/cards/${n.resource.id}`}
+                          onClick={() => markAsRead(n.id)}
+                          className="flex items-center gap-1 text-purple-400 hover:underline"
+                        >
+                          Ver tarea →
+                        </Link>
+                      )}
+                      <button
                         onClick={() => markAsRead(n.id)}
-                        className="text-xs underline"
+                        className="ml-auto px-2 py-1 rounded-md bg-neutral-700 hover:bg-neutral-600"
                       >
-                        Ir al tablero
-                      </Link>
-                    )}
-                    {n.resource?.kind === "card" && (
-                      <Link
-                        href={`/board/cards/${n.resource.id}`}
-                        onClick={() => markAsRead(n.id)}
-                        className="text-xs underline"
-                      >
-                        Ver tarjeta
-                      </Link>
-                    )}
+                        Marcar leída
+                      </button>
+                    </div>
+                  </div>
+                ))}
 
+                {/* Botón "Cargar más" */}
+                {hasMoreNotifications && (
+                  <div className="mt-2 text-center">
                     <button
-                      onClick={() => markAsRead(n.id)}
-                      className="text-xs px-2 py-1 rounded hover:bg-[--global-color-neutral-800]"
+                      onClick={() => loadHistoricalNotifications()}
+                      disabled={loading}
+                      className="w-full text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
                     >
-                      Marcar leída
+                      {loading ? "Cargando..." : "Cargar más"}
                     </button>
                   </div>
-                </div>
-              ))}
-
-              {/* Mostrar botón "Cargar más" si hay más notificaciones */}
-              {hasMoreNotifications && (
-                <div className="mt-2 text-center">
-                  <button
-                    onClick={() => loadHistoricalNotifications()}
-                    disabled={loading}
-                    className="w-full text-xs px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50"
-                  >
-                    {loading ? "Cargando..." : "Cargar más"}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Botones de prueba en development */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="mt-4 border-t border-white/10 pt-2">
-              <p className="text-xs text-gray-400 mb-2">Herramientas de desarrollo:</p>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => pushLocalNotification()}
-                  className="w-full px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-xs"
-                >
-                  Probar notificación local
-                </button>
-                {token && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const response = await fetch("/api/test-notification", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                          },
-                        });
-                        if (!response.ok)
-                          throw new Error("Error sending test notification");
-                      } catch (error) {
-                        console.error("Error testing notification:", error);
-                      }
-                    }}
-                    className="w-full px-3 py-2 rounded bg-blue-700/30 hover:bg-blue-700/50 text-xs"
-                  >
-                    Probar notificación desde API
-                  </button>
                 )}
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
+
