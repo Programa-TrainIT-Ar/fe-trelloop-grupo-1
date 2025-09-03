@@ -120,7 +120,29 @@ export async function addCardMember(cardId: string, userId: number, token: strin
       throw new Error('No se pudo agregar el miembro');
     }
     
-    return await res.json();
+    const result = await res.json();
+    
+    // Enviar notificación al usuario agregado
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API}/realtime/notifications/test-push`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'CARD_ASSIGNED',
+          title: 'Asignado a tarjeta',
+          message: `Has sido asignado a una nueva tarjeta`,
+          resource_kind: 'card',
+          resource_id: cardId
+        }),
+      });
+    } catch (notifError) {
+      console.warn('No se pudo enviar notificación:', notifError);
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error en addCardMember:', error);
     throw error;

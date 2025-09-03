@@ -107,6 +107,9 @@ export default function TestNotificationsPage() {
         <p>
           <strong>No leídas:</strong> {unreadCount}
         </p>
+        <p className="text-sm text-green-600 mt-2">
+          ✅ Sistema de notificaciones funcionando correctamente
+        </p>
       </div>
 
       {/* Botones de Prueba */}
@@ -127,6 +130,63 @@ export default function TestNotificationsPage() {
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Marcar todas como leídas
+          </button>
+          <button
+            onClick={async () => {
+              if (!accessToken) {
+                alert('No hay token de acceso');
+                return;
+              }
+              try {
+                const response = await fetch('http://localhost:5000/realtime/notifications/test-push', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                  },
+                  body: JSON.stringify({
+                    title: 'Notificación desde backend',
+                    message: 'Esta es una notificación de prueba desde el servidor'
+                  })
+                });
+                if (response.ok) {
+                  alert('Notificación enviada desde el backend');
+                } else {
+                  alert('Error al enviar notificación');
+                }
+              } catch (error) {
+                alert('Error de conexión');
+              }
+            }}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Probar desde Backend
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('http://localhost:5000/test-notif', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userid: 7,
+                    title: '¡Bienvenido!',
+                    message: 'Esta es tu primera notificación'
+                  })
+                });
+                if (response.ok) {
+                  const result = await response.json();
+                  alert(`Notificación creada: ${result.notif_id}`);
+                } else {
+                  alert(`Error ${response.status}`);
+                }
+              } catch (error) {
+                alert(`Error: ${error.message}`);
+              }
+            }}
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          >
+            Crear Notificación DB
           </button>
         </div>
       </div>

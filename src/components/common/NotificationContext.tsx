@@ -191,8 +191,11 @@ export function NotificationProvider({
   useEffect(() => {
     if (userId && token) {
       loadHistoricalNotifications();
+    } else {
+      // Usuario nuevo sin token - empezar sin notificaciones
+      setNotifications([]);
     }
-  }, [userId, token, loadHistoricalNotifications]);
+  }, [userId, token]);
 
   // Utilidad para probar la UI sin backend
   const pushLocalNotification = useCallback((n?: Partial<AppNotification>) => {

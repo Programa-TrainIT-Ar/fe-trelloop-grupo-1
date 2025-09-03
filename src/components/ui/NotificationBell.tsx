@@ -112,7 +112,7 @@ export default function NotificationBell() {
                       )}
                       {n.resource?.kind === "card" && (
                         <Link
-                          href={`/board/cards/${n.resource.id}`}
+                          href={`/dashboard/cards/view?cardId=${n.resource.id}`}
                           onClick={() => markAsRead(n.id)}
                           className="flex items-center gap-1 text-purple-400 hover:underline"
                         >
