@@ -15,7 +15,7 @@ export default function Layout({children, params}: DashboardLayoutProps) {
             <div className="w-full flex-none md:w-64">
                 <SideNav />
             </div>
-            <div className="bg-[--global-color-neutral-800] flex-grow p-6 md:overflow-y-auto md:p-12">
+            <div className="bg-[#1A1A1A] flex-grow p-6 md:overflow-y-auto md:p-12">
                 <SearchBar />
                 {children}
             </div>
