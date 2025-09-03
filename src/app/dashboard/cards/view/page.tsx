@@ -192,14 +192,18 @@ export default function ViewCardPage() {
                                 className="object-cover rounded-full"
                             />
                         </div>
-                        <textarea className="p-3 rounded-xl h-32 w-full bg-transparent border-2 border-[#3C3C3CB2]" placeholder="Escribe aquí..." name="comentary" id=""></textarea>
+                        <textarea className="p-3 rounded-xl h-40 w-full bg-transparent border-2 border-[#3C3C3CB2]" placeholder="Escribe aquí..." name="comentary" id=""></textarea>
                         
                     </div>
                     <div className="flex justify-end mt-3">
-                    <button className="flexpx-4 py-2 px-12 gap-2 rounded-xl text-white bg-[--global-color-primary-500]">Enviar</button>
+                    <button className="flexpx-4 py-2 px-12 gap-2 rounded-xl text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Enviar</button>
 
                     </div>
                 </div>
+            </div>
+            <div className="ms-auto w-4/6 2xl:w-2/6 flex justify-end mt-6 gap-4">
+                <button className="w-full py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] hover:bg-[--global-color-primary-500]">Cancelar</button>
+                <button className="w-full py-2 px-12 rounded-xl bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Guardar</button>
             </div>
         </div>
     );
