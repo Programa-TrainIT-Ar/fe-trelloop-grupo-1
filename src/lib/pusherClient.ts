@@ -6,7 +6,6 @@ let pusher: Pusher | null = null;
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
 
-  // Obtener el token del store de Zustand
   try {
     const authStorage = localStorage.getItem("auth-storage");
     if (!authStorage) return null;
@@ -23,7 +22,7 @@ function initPusher(): Pusher | null {
   if (typeof window === "undefined") return null;
   if (pusher) return pusher;
 
-  // debug
+  // Debug
   // @ts-ignore
   Pusher.logToConsole = true;
 
@@ -38,7 +37,7 @@ function initPusher(): Pusher | null {
 
   const token = getAccessToken();
   if (!token) {
-    console.warn("[pusher] No JWT access token found; will not auth private channels");
+    console.warn("[pusher] No JWT access token found; private channels may fail");
   }
 
   pusher = new Pusher(key, {
@@ -49,6 +48,7 @@ function initPusher(): Pusher | null {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },
+      params: {}, // params opcional si quieres enviar algo extra
     },
   });
 
@@ -72,29 +72,32 @@ export function subscribeToUserChannel(userId: string, onNotification?: (data: a
   if (!instance) throw new Error("Pusher not initialized");
 
   const channelName = `private-user-${userId}`;
-  console.log(`[pusher] Attempting to subscribe to channel: ${channelName}`);
+  console.log(`[pusher] Subscribing to channel: ${channelName}`);
 
-  // Verificar si ya estamos suscritos a este canal
+  // Evitar múltiples subscripciones
   const existingChannel = instance.channel(channelName);
   if (existingChannel && existingChannel.subscribed) {
-    console.log(`[pusher] Already subscribed to ${channelName}, reusing channel`);
+    console.log(`[pusher] Already subscribed to ${channelName}`);
     return existingChannel as Channel;
   }
 
   const channel = instance.subscribe(channelName) as Channel;
 
-  // DEBUG: ver si nos suscribimos correctamente
+  // Eventos
   channel.bind("pusher:subscription_succeeded", () => {
-    console.log(`[pusher] subscription succeeded to ${channelName}`);
+    console.log(`[pusher] Subscription succeeded to ${channelName}`);
   });
 
   channel.bind("pusher:subscription_error", (status: any) => {
-    console.error(`[pusher] subscription error for ${channelName}`, status);
-    // Si hay error de autenticación, reiniciar pusher
+    console.error(`[pusher] Subscription error for ${channelName}`, status);
     if (status === 401 || status === 403) {
-      console.error("[pusher] Authentication failed. Check your auth endpoint and token.");
+      console.error("[pusher] Authentication failed. Check your JWT and auth endpoint.");
     }
   });
+
+  if (onNotification) {
+    channel.bind("notification", onNotification);
+  }
 
   return channel;
 }
