@@ -59,6 +59,8 @@ export const BoardSettings = () => {
 
   const handleAddMember = async () => {
     const value = newMember.trim();
+    console.log('🔍 Valor completo del input:', value);
+    console.log('🔍 Longitud del valor:', value.length);
     if (!value) return;
 
     if (userEmail && value.toLowerCase() === userEmail.toLowerCase()) {
@@ -180,33 +182,48 @@ export const BoardSettings = () => {
     formData.append("isPublic", visibility === "public" ? "true" : "false");
     if (imageFile) formData.append("image", imageFile);
 
-    members.forEach((m) => formData.append("member_ids", m.id.toString()));
+    // NO agregar miembros aquí - los agregaremos después
     
     // Eliminar duplicados de tags
     const uniqueTagIds = [...new Set(tags.map(t => t.id))];
     uniqueTagIds.forEach((tagId) => formData.append("tag_ids", tagId.toString()));
 
     try {
-      console.log('Datos del formulario:');
-      console.log('- Nombre:', boardName);
-      console.log('- Descripción:', description);
-      console.log('- Visibilidad:', visibility);
-      console.log('- Imagen:', imageFile?.name);
-      console.log('- Miembros:', members);
-      console.log('- Tags:', tags);
-      
+      // 1. Crear el tablero sin miembros
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/createBoard`, {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}` },
         body: formData,
       });
-
-      console.log('Status de respuesta:', res.status);
       
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('Error del servidor:', errorText);
         throw new Error(`Error al crear el tablero: ${res.status} - ${errorText}`);
+      }
+
+      const boardData = await res.json();
+      const boardId = boardData.board?.id || boardData.id;
+      
+      if (!boardId) {
+        throw new Error("No se pudo obtener el ID del tablero creado");
+      }
+
+      // 2. Agregar miembros uno por uno para disparar notificaciones
+      if (members.length > 0) {
+        for (const member of members) {
+          try {
+            await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember/${boardId}`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ member_id: member.id }),
+            });
+          } catch (memberErr) {
+            console.warn(`Error al agregar miembro ${member.email}:`, memberErr);
+          }
+        }
       }
 
       await Swal.fire({
@@ -281,7 +298,7 @@ export const BoardSettings = () => {
           <label className="block font-medium mb-2 text-sm">Miembros</label>
           <div className="relative">
             <input
-              type="email"
+              type="text"
               placeholder="Buscar por correo..."
               value={newMember}
               onChange={(e) => setNewMember(e.target.value)}
