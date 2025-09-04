@@ -21,6 +21,7 @@ type Ctx = {
   pushLocalNotification: (n?: Partial<AppNotification>) => void; // para pruebas locales
   loading: boolean;
   loadHistoricalNotifications: () => Promise<void>;
+  loadMoreNotifications: () => Promise<void>;
   hasMoreNotifications: boolean;
 };
 
@@ -150,7 +151,7 @@ export function NotificationProvider({
     }
   }, [token, notificationService]);
 
-  // Cargar notificaciones históricas desde el backend
+  // Cargar notificaciones históricas desde el backend (carga inicial)
   const loadHistoricalNotifications = useCallback(async () => {
     if (!token || !userId) return;
 
@@ -160,23 +161,16 @@ export function NotificationProvider({
 
       const result = await notificationService.loadNotifications({
         limit: 20,
-        offset: notifications.length,
+        offset: 0,
       });
 
-      setNotifications((prev) => {
-        // Combinar evitando duplicados
-        const newNotifications = result.notifications.filter(
-          (newNotif) => !prev.some((existing) => existing.id === newNotif.id),
-        );
-        return [...prev, ...newNotifications].sort(
-          (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-        );
-      });
+      // Reemplazar completamente las notificaciones con los datos del servidor
+      setNotifications(result.notifications.sort(
+        (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+      ));
 
       // Verificar si hay más notificaciones para cargar
-      setHasMoreNotifications(
-        result.meta.total_count > notifications.length + result.notifications.length,
-      );
+      setHasMoreNotifications(result.meta.total_count > result.notifications.length);
     } catch (error) {
       console.error(
         "[NotificationProvider] Error loading historical notifications:",
@@ -185,14 +179,43 @@ export function NotificationProvider({
     } finally {
       setLoading(false);
     }
-  }, [token, userId, notifications.length, notificationService]);
+  }, [token, userId, notificationService]);
+
+  // Cargar más notificaciones (paginación)
+  const loadMoreNotifications = useCallback(async () => {
+    if (!token || !userId || loading) return;
+
+    try {
+      setLoading(true);
+      const result = await notificationService.loadNotifications({
+        limit: 20,
+        offset: notifications.length,
+      });
+
+      setNotifications((prev) => {
+        const newNotifications = result.notifications.filter(
+          (newNotif) => !prev.some((existing) => existing.id === newNotif.id),
+        );
+        return [...prev, ...newNotifications].sort(
+          (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        );
+      });
+
+      setHasMoreNotifications(
+        result.meta.total_count > notifications.length + result.notifications.length,
+      );
+    } catch (error) {
+      console.error("[NotificationProvider] Error loading more notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, userId, loading, notifications.length, notificationService]);
 
   // Cargar notificaciones iniciales al montar el componente
   useEffect(() => {
-    if (userId && token) {
+    if (userId && token && notifications.length === 0) {
       loadHistoricalNotifications();
-    } else {
-      // Usuario nuevo sin token - empezar sin notificaciones
+    } else if (!userId || !token) {
       setNotifications([]);
     }
   }, [userId, token]);
@@ -224,6 +247,7 @@ export function NotificationProvider({
       pushLocalNotification,
       loading,
       loadHistoricalNotifications,
+      loadMoreNotifications,
       hasMoreNotifications,
     }),
     [
@@ -234,6 +258,7 @@ export function NotificationProvider({
       pushLocalNotification,
       loading,
       loadHistoricalNotifications,
+      loadMoreNotifications,
       hasMoreNotifications,
     ],
   );

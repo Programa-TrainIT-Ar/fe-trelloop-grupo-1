@@ -15,7 +15,7 @@ export default function NotificationBell() {
     markAsRead,
     pushLocalNotification,
     loading,
-    loadHistoricalNotifications,
+    loadMoreNotifications,
     hasMoreNotifications,
   } = useNotifications();
   const [open, setOpen] = useState(false);
@@ -103,7 +103,7 @@ export default function NotificationBell() {
                     <div className="mt-3 flex items-center gap-4 text-xs">
                       {n.resource?.kind === "board" && (
                         <Link
-                          href={`/board/${n.resource.id}`}
+                          href={`/dashboard/boards/${n.resource.id}`}
                           onClick={() => markAsRead(n.id)}
                           className="flex items-center gap-1 text-purple-400 hover:underline"
                         >
@@ -133,7 +133,7 @@ export default function NotificationBell() {
                 {hasMoreNotifications && (
                   <div className="mt-2 text-center">
                     <button
-                      onClick={() => loadHistoricalNotifications()}
+                      onClick={() => loadMoreNotifications()}
                       disabled={loading}
                       className="w-full text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
                     >
