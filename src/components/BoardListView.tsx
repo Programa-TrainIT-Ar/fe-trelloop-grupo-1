@@ -1,6 +1,6 @@
 "use client";
 import { BoardCard } from "@/components/board/BoardCard";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StaticImageData } from "next/image";
 import { useBoardStore } from "@/store/boards/store";
 import { useAuthStore } from "@/store/auth";
@@ -22,13 +22,51 @@ const BoardListView = () => {
   const token = useAuthStore.getState().accessToken;
   const boards = useBoardStore((state) => state.boards);
   const router = useRouter();
+  const [favoriteBoardIds, setFavoriteBoardIds] = useState<number[]>([]);
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
 
   useEffect(() => {
     if (!token) {
       router.push("/");
     }
-    getBoards();
-  }, []);
+
+      getBoards()
+
+    
+
+
+
+    // Fetch para traer los tableros favoritos
+    const fetchFavoriteBoards = async () => {
+      setIsLoadingFavorites(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getFavoriteBoards`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const ids = data.map((board: { id: number }) => board.id);
+          setFavoriteBoardIds(ids);
+        } else {
+          console.error("Error al obtener tableros favoritos");
+        }
+      } catch (error) {
+        console.error("Error en la petición de tableros favoritos:", error);
+      } finally {
+        setIsLoadingFavorites(false);
+      }
+    };
+
+    fetchFavoriteBoards();
+
+  }, [token, router, getBoards]);
+
+  if (isLoadingFavorites) {
+    return <p className="text-white">Cargando tableros...</p>;
+  }
 
   return (
     <>
@@ -48,6 +86,7 @@ const BoardListView = () => {
               tags={board.tags}
               id={board.id}
               index={index}
+              isFavorite={favoriteBoardIds.includes(board.id)}
             />
           ))}
       </div>

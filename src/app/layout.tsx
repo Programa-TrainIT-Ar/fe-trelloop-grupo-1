@@ -3,7 +3,6 @@ import "../styles/globals.css";
 import "@/styles/globals.css";
 
 import { Poppins } from "next/font/google";
-import "@/styles/globals.css";
 import { LayoutProviders } from "@/components/LayoutProviders";
 
 const poppins = Poppins({
@@ -13,13 +12,11 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-
-
 export const metadata: Metadata = {
   title: "TrainIT",
-  description: "Organiza tus proyectos con un tablero Kanban intuitivo. Ideal para equipos ágiles y gestión de tareas colaborativas.",
+  description:
+    "Organiza tus proyectos con un tablero Kanban intuitivo. Ideal para equipos ágiles y gestión de tareas colaborativas.",
 };
-
 
 export default function RootLayout({
   children,
@@ -27,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={`${poppins.variable} font-sans`}>
         <LayoutProviders>
           {children}
@@ -36,3 +33,4 @@ export default function RootLayout({
     </html>
   );
 }
+

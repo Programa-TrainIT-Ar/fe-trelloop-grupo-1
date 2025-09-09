@@ -6,6 +6,11 @@ import Tag from "@/components/common/Tag";
 import clsx from "clsx";
 import { fixDescriptionLength } from "@/lib/boardCardController";
 import BoardMenu from "@/components/board/BoardMenu";
+import { useRouter } from "next/navigation";
+import { FaRegHeart } from "react-icons/fa";
+import { FaHeart } from "react-icons/fa";
+import { useState } from "react";
+import { useAuthStore } from "@/store/auth";
 
 interface MemberType {
   id: string;
@@ -19,6 +24,7 @@ interface BoardCardProps {
   members: MemberType[];
   creatorId: string;
   currentUserId: string;
+  isFavorite: boolean;
 }
 import { ExpandedBoardCard } from "./ExpandedBoardCard";
 import { useBoardStore } from "@/store/boards";
@@ -26,11 +32,55 @@ import { useBoardStore } from "@/store/boards";
 export function BoardCard(props) {
   const expandBoard = useBoardStore((state) => state.expandBoard);
   const expandedBoardID = useBoardStore((state) => state.expandedBoardID);
+  const router = useRouter();
+  const [isFavorite, setIsFavorite] = useState(props.isFavorite);
+
+  const token = useAuthStore(state => state.accessToken)
+
+  const handleViewBoard = () => {
+    router.push(`/dashboard/boards/${props.id}`);
+  };
+
+  const handleFavorite = async () => {    
+    if (!token) {
+      console.error("Token no encontrado")
+      return
+    }
+    try {
+      let response;
+      if (isFavorite) {
+        response = await fetch(`${process.env.NEXT_PUBLIC_API}/board/removeFavoriteBoard/${props.id}`, {
+          method: 'DELETE',
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        })
+      } else {
+        response = await fetch(`${process.env.NEXT_PUBLIC_API}/board/favoriteBoard/${props.id}`, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        })
+      }
+      if (response.ok) {
+        setIsFavorite(!isFavorite);
+      } else {
+        const errorData = await response.json()
+        console.error('Error al actualizar favoritos:', errorData.Warning);
+      }
+    } catch (error) {
+      console.error('Error en la peticion:', error);
+    }
+  }
 
   return (
     <>
       {expandedBoardID === props.id ? (
         <ExpandedBoardCard
+          id={props.id}
           image={props.image}
           name={props.name}
           description={props.description}
@@ -50,10 +100,12 @@ export function BoardCard(props) {
 
             <div className="board-info"></div>
             <div className="z-10">
-              <div className="flex justify-between pe-2 items-center">
+              <div className="flex justify-between items-center">
                 <p className="board-title ">{props.name}</p>
-                <button className="bg-transparent">
-                  <i className=" fav-icon fa-regular fa-heart board-description"></i>
+                <button
+                  onClick={handleFavorite}
+                  className="bg-transparent text-[#F200FF] flex items-center">
+                    {isFavorite ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl"/>}
                 </button>
               </div>
               <p className="text-sm mb-1 font-normal board-description">
@@ -101,7 +153,9 @@ export function BoardCard(props) {
               <button className="card-button" onClick={() => expandBoard(props.id)}>
                 <i className="fa-regular fa-eye"></i>
               </button>
-              <button className="access-card-button">Ingresar</button>
+              <button
+                onClick={handleViewBoard}
+                className="access-card-button">Ingresar</button>
             </div>
           </div>
           <div className="flex tag-container-width">

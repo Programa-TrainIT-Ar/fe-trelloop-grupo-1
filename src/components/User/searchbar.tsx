@@ -2,7 +2,7 @@
 
 import { LuListFilter } from "react-icons/lu";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import { GoBell } from "react-icons/go";
+import NotificationBell from "@/components/ui/NotificationBell";
 import { useState, useRef, useEffect } from "react";
 import { IoPersonOutline } from "react-icons/io5";
 import { LuKey } from "react-icons/lu";
@@ -14,14 +14,37 @@ import { IoCalendarClearOutline } from "react-icons/io5";
 import { IoHeartOutline } from "react-icons/io5";
 import Image from "next/image";
 import FilterDropdownButton from "./filterDropdownButtons";
+import { useAuthStore } from "@/store/auth";
+import { useBoardStore } from "@/store/boards";
+import { useRouter } from "next/navigation";
+
+
 
 export default function SearchBar() {
+    const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+    const [dynamicTags, setDynamicTags] = useState<{ id: string; label: string; }[]>([]);
+    const [dynamicMembers, setDynamicMembers] = useState<{ id: string; label: string; }[]>([]);
+    const [dynamicDateOptions, setDynamicDateOptions] = useState<{ id: string; label: string; }[]>([]);
 
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const filterOptions = useRef<HTMLDivElement>(null);
+
+    const user = useAuthStore(state => state.user);
+    const storeLogout = useAuthStore(state => state.logout);
+
+    const boards = useBoardStore(state => state.boards);
+    const getBoards = useBoardStore(state => state.getBoards);
+    const accessToken = useAuthStore(state => state.accessToken);
+
+    const userFullName = user ? `${user.firstName} ${user.lastName}` : 'Usuario';
+
+    const handleLogout = () => {
+        storeLogout()
+        router.push('/')
+    }
 
     const toggleProfileMenu = () => {
         setIsProfileOpen(!isProfileOpen);
@@ -31,7 +54,7 @@ export default function SearchBar() {
 
     const toggleFilterOptions = () => {
         setIsFilterOpen(!isFilterOpen);
-        setOpenDropdownId(null);        
+        setOpenDropdownId(null);
     }
 
     const handleToggleDropdown = (id: string) => {
@@ -39,28 +62,67 @@ export default function SearchBar() {
         setIsProfileOpen(false);
     }
 
-    const miembrosItems = [
-        { id: 'all-members', label: 'Todos los miembros' },
-        { id: 'active-members', label: 'Miembros activos' },
-        { id: 'inactive-members', label: 'Miembros inactivos' },
-    ];
-
-    const etiquetasItems = [
-        { id: 'tag-1', label: 'Urgente' },
-        { id: 'tag-2', label: 'En Progreso' },
-        { id: 'tag-3', label: 'Completado' },
-    ];
-
-    const fechaItems = [
-        { id: 'today', label: 'Hoy' },
-        { id: 'this-week', label: 'Esta semana' },
-        { id: 'this-month', label: 'Este mes' },
-    ];
-
     const favoritosItems = [
         { id: 'show-fav', label: 'Mostrar favoritos' },
         { id: 'hide-fav', label: 'Ocultar favoritos' },
     ];
+
+    useEffect(() => {
+        if (!accessToken) return;
+        if (!boards || boards.length === 0) {
+            getBoards();
+        }
+
+        if (Array.isArray(boards) && boards.length > 0) {
+            // Lógica para extraer etiquetas
+            const allTags = boards.flatMap(board => board.tags).filter(tag => tag !== null);
+            const uniqueTagsMap = new Map();
+            allTags.forEach(tag => {
+                if (tag && !uniqueTagsMap.has(tag.id)) {
+                    uniqueTagsMap.set(tag.id, {
+                        id: `tag-${tag.id}`,
+                        label: tag.name
+                    });
+                }
+            });
+            setDynamicTags(Array.from(uniqueTagsMap.values()));
+
+            // Lógica para extraer miembros
+            const allMembers = boards.flatMap(board => board.members).filter(member => member !== null);
+            const uniqueMembersMap = new Map();
+            allMembers.forEach(member => {
+                if (member && !uniqueMembersMap.has(member.id)) {
+                    uniqueMembersMap.set(member.id, {
+                        id: `member-${member.id}`,
+                        label: `${member.firstName} ${member.lastName}`
+                    });
+                }
+            });
+            setDynamicMembers(Array.from(uniqueMembersMap.values()));
+
+            // Lógica para extraer opciones de fecha
+            const today = new Date();
+            const thisWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+            const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+            const dynamicDates: { id: string; label: string; }[] = [];
+            const hasTodayBoard = boards.some(board => new Date(board.creationDate).toDateString() === today.toDateString());
+            const hasThisWeekBoard = boards.some(board => new Date(board.creationDate) >= thisWeek);
+            const hasThisMonthBoard = boards.some(board => new Date(board.creationDate) >= thisMonth);
+
+            if (hasTodayBoard) {
+                dynamicDates.push({ id: 'today', label: 'Hoy' });
+            }
+            if (hasThisWeekBoard) {
+                dynamicDates.push({ id: 'this-week', label: 'Esta semana' });
+            }
+            if (hasThisMonthBoard) {
+                dynamicDates.push({ id: 'this-month', label: 'Este mes' });
+            }
+
+            setDynamicDateOptions(dynamicDates);
+        }
+    }, [getBoards, accessToken]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -113,9 +175,11 @@ export default function SearchBar() {
 
                     {/* Botón de notificaciones */}
 
-                    <button type="button" className={`${!isFilterOpen ? '' : 'hidden'} relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2`}>
-                        <GoBell className="size-10" />
-                    </button>
+
+                    <div className={`${!isFilterOpen ? '' : 'hidden'} relative rounded-full text-white hover:text-white hover:bg-[--global-color-neutral-700] p-2`}>
+                        <NotificationBell />
+                    </div>
+
                     <div className={`${!isFilterOpen ? '' : 'hidden'} relative`}>
                         <div>
                             <button
@@ -140,15 +204,15 @@ export default function SearchBar() {
                             className={`${isProfileOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl bg-[--global-color-neutral-700] flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
                             <div className="flex gap-3 items-center">
                                 <Image
-                                    src='https://picsum.photos/200/200?random=1'
+                                    src={user?.profilePicture || 'https://picsum.photos/200/200?random=1'}
                                     alt="User profile photo"
                                     width={60}
                                     height={60}
                                     className="object-cover rounded-full ms-4"
                                 />
                                 <div className="text-white flex-col">
-                                    <h4 className="text-lg text-">Arturo Belano</h4>
-                                    <h5>Administrador</h5>
+                                    <h4 className="text-lg text-">{userFullName}</h4>
+                                    <h5>Miembro</h5>
                                 </div>
                             </div>
                             <a id="user-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
@@ -158,7 +222,7 @@ export default function SearchBar() {
                                 <LuKey className="size-6" />Contraseña
                             </a>
                             <div className="my-1 border-t border-gray-500 mx-3"></div>
-                            <a id="user-menu-item-2" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                            <a onClick={handleLogout} id="user-menu-item-2" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
                                 <RxExit className="size-6" />Cerrar sesión
                             </a>
                         </div>
@@ -171,31 +235,31 @@ export default function SearchBar() {
                 ref={filterOptions}
                 className={`${isFilterOpen ? '' : 'hidden'} flex gap-8 mt-4 border-t-black border-t-[1px] py-3 text-lg items-center`}
             >
-                <FilterDropdownButton 
+                <FilterDropdownButton
                     id="miembros"
                     label="Miembros"
                     icon={MdOutlinePeopleAlt}
-                    items={miembrosItems}
+                    items={dynamicMembers}
                     isOpen={openDropdownId === 'miembros'}
                     onToggle={handleToggleDropdown}
                 />
-                <FilterDropdownButton 
+                <FilterDropdownButton
                     id="etiquetas"
                     label="Etiquetas"
                     icon={PiTagSimple}
-                    items={etiquetasItems}
+                    items={dynamicTags}
                     isOpen={openDropdownId === 'etiquetas'}
                     onToggle={handleToggleDropdown}
                 />
-                <FilterDropdownButton 
+                <FilterDropdownButton
                     id="fecha"
                     label="Fecha"
                     icon={IoCalendarClearOutline}
-                    items={fechaItems}
+                    items={dynamicDateOptions}
                     isOpen={openDropdownId === 'fecha'}
                     onToggle={handleToggleDropdown}
                 />
-                <FilterDropdownButton 
+                <FilterDropdownButton
                     id="favoritos"
                     label="Solo favoritos"
                     icon={IoHeartOutline}

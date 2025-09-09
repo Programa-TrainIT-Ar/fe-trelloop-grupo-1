@@ -1,7 +1,7 @@
+
+
 export async function getBoardById(boardId: string, token: string) {
-  const url = `${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`;
-  
-  const res = await fetch(url, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/getBoard/${boardId}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -12,26 +12,56 @@ export async function getBoardById(boardId: string, token: string) {
     throw new Error(`No se pudo obtener el tablero: ${res.status} ${res.statusText}`);
   }
   
-  const data = await res.json();
-  console.log('Respuesta completa de la API:', data);
-  return data;
+  return await res.json();
 }
 
 export async function updateBoardById(boardId: string, data: any, token: string) {
+  const formData = new FormData();
+  formData.append('name', data.name);
+  formData.append('description', data.description);
+  formData.append('isPublic', data.isPublic ? 'true' : 'false');
+  
+  // Agregar etiquetas
+  if (data.tags && Array.isArray(data.tags)) {
+    data.tags.forEach(tag => {
+      formData.append('tags', tag);
+    });
+  }
+  
   const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/updateBoard/${boardId}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data),
+    body: formData,
   });
-
-  if (!res.ok) throw new Error('No se pudo actualizar el tablero');
+  
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error('No tienes permisos para editar este tablero. Solo el creador puede editarlo.');
+    }
+    throw new Error(`Error ${res.status}: No se pudo actualizar el tablero`);
+  }
   return await res.json();
 }
 
-export async function deleteBoardById(boardId: string, token: string) {
+export async function addMemberToBoard(boardId: string | number, userId: number, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/addMember/${boardId}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ member_id: userId }),
+  });
+
+  if (!res.ok) {
+    throw new Error('No se pudo agregar el miembro al tablero');
+  }
+  return await res.json();
+}
+
+export async function deleteBoardById(boardId: string | number, token: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/deleteBoard/${boardId}`, {
     method: 'DELETE',
     headers: {
@@ -39,6 +69,67 @@ export async function deleteBoardById(boardId: string, token: string) {
     },
   });
 
-  if (!res.ok) throw new Error('No se pudo eliminar el tablero');
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error('No tienes permisos para eliminar este tablero. Solo el creador puede eliminarlo.');
+    }
+    throw new Error('No se pudo eliminar el tablero');
+  }
   return await res.json();
+}
+
+export async function removeMemberFromBoard(boardId: string | number, userId: number, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API}/board/removeMember`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      boardId: parseInt(boardId.toString()),
+      userId: userId
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    if (res.status === 403) {
+      throw new Error('No tienes permisos para eliminar miembros de este tablero.');
+    }
+    throw new Error('No se pudo eliminar el miembro del tablero');
+  }
+  return await res.json();
+}
+
+export async function searchUsersByEmail(email: string, token: string) {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_API}/board/users/search?q=${encodeURIComponent(email)}`;
+    console.log('URL de búsqueda:', url);
+    console.log('Email a buscar:', email);
+    console.log('Token:', token?.substring(0, 20) + '...');
+    
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('Status de respuesta:', res.status);
+    console.log('Response OK:', res.ok);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error del servidor:', errorText);
+      throw new Error(`Error ${res.status}: ${errorText}`);
+    }
+    
+    const data = await res.json();
+    console.log('Datos recibidos:', data);
+    return data.users || [];
+  } catch (error) {
+    console.error('Error en searchUsersByEmail:', error);
+    throw error;
+  }
 }

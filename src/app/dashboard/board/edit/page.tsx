@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch } from 'react-icons/fa';
-import { getBoardById, updateBoardById } from '@/services/boardService';
+import { FaCamera, FaLock, FaGlobe, FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
+import { getBoardById, updateBoardById, removeMemberFromBoard, searchUsersByEmail, addMemberToBoard } from '@/services/boardService';
+import Swal from 'sweetalert2';
 
-interface Member {
+interface User {
   id: number;
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
 }
 
@@ -23,9 +25,13 @@ function EditBoardPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [members, setMembers] = useState<Member[]>([]);
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [loading, setLoading] = useState(true);
+  const [canEdit, setCanEdit] = useState(true);
+  const [members, setMembers] = useState<User[]>([]);
+  const [newMember, setNewMember] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [boardOwnerId, setBoardOwnerId] = useState<number | null>(null);
 
   useEffect(() => {
     // Obtener token desde auth-storage
@@ -39,13 +45,13 @@ function EditBoardPage() {
     } catch (error) {
       console.error('Error al parsear auth-storage:', error);
     }
-    
+
     // Si no hay token, redirigir al login
     if (!storedToken) {
       router.push('/login');
       return;
     }
-    
+
     // Si no hay boardId, detener la carga
     if (!boardId) {
       setLoading(false);
@@ -54,21 +60,51 @@ function EditBoardPage() {
 
     setToken(storedToken);
 
+    // Decodificar JWT para obtener user ID ANTES de cargar el tablero
+    let currentUserIdFromJWT = null;
+    try {
+      const payload = storedToken.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      const userId = decoded.sub || decoded.user_id || decoded.identity;
+      currentUserIdFromJWT = parseInt(userId);
+      setCurrentUserId(currentUserIdFromJWT);
+    } catch (error) {
+      console.error('Error al decodificar JWT:', error);
+    }
+
     // Cargar datos del tablero
     getBoardById(boardId, storedToken)
       .then((data) => {
-        console.log("Datos del tablero recibidos:", data);
-        
-        // Asignar valores usando los nombres correctos de los campos
-        setName(data?.name || '');
+        const nameValue = typeof data?.name === 'string' ? data.name : (data?.name?.name || '');
+
+        setName(nameValue);
         setDescription(data?.description || '');
-        setTags(data?.tags || []);
+        
+        // Procesar etiquetas - pueden venir como objetos {id, name} o strings
+        const tagsData = data?.tags || [];
+        const processedTags = Array.isArray(tagsData) 
+          ? tagsData.map(tag => typeof tag === 'string' ? tag : tag?.name || '').filter(name => name.trim())
+          : [];
+        setTags(processedTags);
+
+        const membersData = data?.members || data?.users || data?.collaborators || [];
+        // Filtrar al propietario de la lista de miembros
+        const filteredMembers = Array.isArray(membersData) 
+          ? membersData.filter(member => member.id !== data?.userId)
+          : [];
+        setMembers(filteredMembers);
+
         setVisibility(data?.isPublic ? 'public' : 'private');
         setImagePreview(data?.image || null);
+        setBoardOwnerId(data?.userId);
+
         setLoading(false);
       })
       .catch((err) => {
         console.error('Error al cargar el tablero:', err);
+        if (err.message.includes('403') || err.message.includes('Forbidden')) {
+          setCanEdit(false);
+        }
         setLoading(false);
       });
   }, [boardId, router]);
@@ -93,6 +129,98 @@ function EditBoardPage() {
     setTags(tags.filter((_, i) => i !== index));
   };
 
+  const handleRemoveMember = async (memberId: number) => {
+    if (!token || !boardId) return;
+
+    try {
+      await removeMemberFromBoard(boardId, memberId, token);
+      setMembers(prev => prev.filter(member => member.id !== memberId));
+
+      Swal.fire({
+        icon: "success",
+        text: "Usuario eliminado exitosamente",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'No se pudo eliminar el usuario',
+        icon: 'error',
+        background: "rgb(26, 26, 26)",
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
+    }
+  };
+
+  const handleAddMember = async () => {
+    const trimmed = newMember.trim();
+    if (!trimmed || !token || !boardId) return;
+
+    try {
+      // Buscar usuarios por email usando el servicio
+      const users = await searchUsersByEmail(trimmed, token);
+      
+      if (!users || users.length === 0) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const userData = users[0]; // Tomar el primer resultado
+
+      // Agregar usuario al tablero usando el servicio
+      await addMemberToBoard(boardId, userData.id, token);
+
+      // Actualizar la lista de miembros
+      setMembers(prev => [...prev, {
+        id: userData.id,
+        firstName: userData.first_name || userData.firstName,
+        lastName: userData.last_name || userData.lastName,
+        email: userData.email
+      }]);
+
+      setNewMember('');
+
+      Swal.fire({
+        icon: "success",
+        text: "Usuario agregado exitosamente",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
+    } catch (err: any) {
+      await Swal.fire({
+        title: 'Error',
+        text: err.message || 'No se pudo agregar el usuario',
+        icon: 'error',
+        background: "rgb(26, 26, 26)",
+        color: '#fff',
+        confirmButtonText: 'Aceptar',
+        customClass: {
+          confirmButton: 'btn-cancel',
+          popup: 'mi-modal',
+        },
+      });
+    }
+  };
+
   const handleSave = async () => {
     if (!token || !boardId) return;
 
@@ -105,17 +233,56 @@ function EditBoardPage() {
 
     try {
       await updateBoardById(boardId, data, token);
-      alert('✅ Tablero actualizado');
+      Swal.fire({
+        icon: "success",
+        text: "Tablero actualizado con éxito",
+        background: "rgb(26, 26, 26)",
+        iconColor: "#6A5FFF",
+        color: "#FFFFFF",
+        confirmButtonColor: "#6A5FFF",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          popup: "swal2-dark",
+          confirmButton: "swal2-confirm",
+        }
+      });
       router.push('/dashboard');
     } catch (err: any) {
-      alert('❌ Error al actualizar: ' + err.message);
+      if (err.message.includes('401') || err.message.includes('UNAUTHORIZED')) {
+        await Swal.fire({
+          title: 'Sesión Expirada',
+          text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+          icon: 'warning',
+          background: "#222",
+          color: '#fff',
+          confirmButtonText: 'Ir al Login',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
+        router.push('/login');
+      } else {
+        await Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo actualizar el tablero',
+          icon: 'error',
+          background: "#222",
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: {
+            confirmButton: 'btn-cancel',
+            popup: 'mi-modal',
+          },
+        });
+      }
     }
   };
 
   if (loading) {
-    return <p className="p-4">Cargando...</p>;
+    return <p className="p-4 text-white">Cargando...</p>;
   }
-  
+
   if (!token) {
     return (
       <div className="p-4">
@@ -124,19 +291,35 @@ function EditBoardPage() {
       </div>
     );
   }
-  
+
   if (!boardId) {
     return <p className="p-4">Error: ID del tablero no encontrado</p>;
   }
-  return (
-    <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
-      <div className="max-w-3xl mx-auto space-y-8">
-        {/* Título de la página */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">
-            Edición de tablero | {name || 'Cargando...'}
-          </h1>
+
+  if (!canEdit) {
+    return (
+      <div className="min-h-screen bg-[#1c1c1c] text-white p-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Acceso Denegado</h1>
+          <p className="text-gray-300">No tienes permisos para editar este tablero. Solo el creador puede editarlo.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Volver al Dashboard
+          </button>
         </div>
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-screen text-white p-8">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="mb-12">
+          <h1 className="text-white text-3xl">Edición de tablero: {typeof name === 'string' ? name : 'Cargando...'}</h1>
+          <p className="text-gray-400 text-sm">ID: {boardId}</p>
+        </div>
+
         {/* Imagen del tablero */}
         <div>
           <label className="block font-medium mb-2 text-sm">Imagen del tablero</label>
@@ -191,20 +374,50 @@ function EditBoardPage() {
           <label htmlFor="members" className="block font-medium mb-2 text-sm">
             Miembros
           </label>
+
           <div className="relative">
             <input
               id="members"
+              value={newMember}
               type="text"
               placeholder="Buscar por nombre o @usuario..."
               className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+              onChange={(e) => setNewMember(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddMember();
+                }
+              }}
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              onClick={handleAddMember}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
             >
-              <FaSearch style={{ fontSize: "20px" }} />
+              <FaPlus style={{ fontSize: "20px" }} />
             </button>
           </div>
+          {members.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-2 bg-neutral-800 rounded">
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-sm font-medium text-white">{member.firstName} {member.lastName}</span>
+                    <span className="text-xs text-gray-400">({member.email})</span>
+                  </div>
+                  {currentUserId === boardOwnerId && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-white hover:text-red-300 transition"
+                    >
+                      <FaRegTrashAlt/>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Etiquetas */}
@@ -220,6 +433,12 @@ function EditBoardPage() {
               placeholder="Escribe un nombre de etiqueta para crearla..."
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddTag();
+                }
+              }}
             />
             <button
               type="button"
@@ -230,16 +449,16 @@ function EditBoardPage() {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            {tags.map((tag, i) => (
+            {tags.filter(tag => typeof tag === 'string' && tag.trim()).map((tag, i) => (
               <span
                 key={i}
                 className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
               >
                 <FaTag className="text-gray-400" />
                 {tag}
-                <FaTimes 
+                <FaTimes
                   className="cursor-pointer hover:text-red-400 transition"
-                  onClick={() => handleRemoveTag(i)} 
+                  onClick={() => handleRemoveTag(i)}
                 />
               </span>
             ))}
@@ -261,6 +480,7 @@ function EditBoardPage() {
               />
               <div className="flex items-start gap-2">
                 <FaLock className="text-white mt-1" />
+
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm font-medium text-white">Privado</span>
                   <span className="text-xs text-gray-400">
