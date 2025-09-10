@@ -18,7 +18,10 @@ export const useAuthStore = create<AuthStore>()(
             // Acciones
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
+<<<<<<< HEAD
                 
+=======
+>>>>>>> fe-grupo1
                 try {
                     const response = await fetch(`${API_URL}/auth/login`, {
                         method: 'POST',

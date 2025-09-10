@@ -537,17 +537,24 @@ export default function BoardPage({ params }: BoardPageProps) {
 
                                                     {showMenu[card.id] && (
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+<<<<<<< HEAD
                                                             
                                                             <button onClick={() => {
+=======
+                                                            <Link onClick={() => {
+>>>>>>> fe-grupo1
                                                                 setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                                                router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
                                                             }}
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors">
-
+                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                                                href={`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`} >
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
+<<<<<<< HEAD
                                                             </button>
                                                             
+=======
+                                                            </Link>
+>>>>>>> fe-grupo1
                                                             
                                                             <button
                                                                 onClick={() => {
