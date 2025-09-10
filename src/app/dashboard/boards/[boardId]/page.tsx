@@ -537,7 +537,7 @@ export default function BoardPage({ params }: BoardPageProps) {
 
                                                     {showMenu[card.id] && (
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-                                                            <Link href={`/cards/${card.id}`}>
+                                                            
                                                             <button onClick={() => {
                                                                 setShowMenu(prev => ({ ...prev, [card.id]: false }));
                                                                 router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
@@ -547,7 +547,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
                                                             </button>
-                                                            </Link>
+                                                            
                                                             
                                                             <button
                                                                 onClick={() => {

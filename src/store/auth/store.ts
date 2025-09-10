@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthStore>()(
             // Acciones
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
-                set({accessToken: "some toke"})
+                
                 try {
                     const response = await fetch(`${API_URL}/auth/login`, {
                         method: 'POST',
