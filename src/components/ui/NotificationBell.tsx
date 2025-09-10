@@ -63,24 +63,15 @@ export default function NotificationBell() {
           ref={dropdownRef}
           role="dialog"
           aria-label="Lista de notificaciones"
-          className="absolute right-0 mt-3 w-96 max-h-[32rem] overflow-y-auto bg-neutral-800 text-white rounded-2xl shadow-2xl border border-neutral-700 z-50"
+          className="absolute right-0 mt-3 w-96 max-h-[32rem] bg-neutral-800 text-white rounded-2xl shadow-2xl border border-neutral-700 z-50 flex flex-col"
         >
           {/* Encabezado */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-700">
             <h3 className="font-semibold text-lg">Notificaciones</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={() => markAllAsRead()}
-                className="text-xs px-2 py-1 rounded-lg bg-neutral-700 hover:bg-neutral-600"
-                disabled={loading}
-              >
-                Marcar todas como leídas
-              </button>
-            )}
           </div>
 
-          {/* Lista de notificaciones */}
-          <div className="p-3">
+          {/* Lista con scroll */}
+          <div className="flex-1 overflow-y-auto p-3">
             {notifications.length === 0 ? (
               <div className="text-center py-6">
                 <p className="text-sm text-gray-400">No tienes notificaciones.</p>
@@ -119,34 +110,40 @@ export default function NotificationBell() {
                           Ver tarea →
                         </Link>
                       )}
-                      <button
-                        onClick={() => markAsRead(n.id)}
-                        className="ml-auto px-2 py-1 rounded-md bg-neutral-700 hover:bg-neutral-600"
-                      >
-                        Marcar leída
-                      </button>
+                      {!n.read && (
+                        <button
+                          onClick={() => markAsRead(n.id)}
+                          className="ml-auto px-2 py-1 rounded-md bg-neutral-700 hover:bg-neutral-600"
+                        >
+                          Marcar como leída
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
-
-                {/* Botón "Cargar más" */}
-                {hasMoreNotifications && (
-                  <div className="mt-2 text-center">
-                    <button
-                      onClick={() => loadMoreNotifications()}
-                      disabled={loading}
-                      className="w-full text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
-                    >
-                      {loading ? "Cargando..." : "Cargar más"}
-                    </button>
-                  </div>
-                )}
               </>
             )}
+          </div>
+
+          {/* Pie fijo */}
+          <div className="border-t border-neutral-700 p-3 flex gap-2">
+            <button
+              onClick={() => markAllAsRead()}
+              disabled={loading || unreadCount === 0}
+              className="flex-1 text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
+            >
+              {unreadCount > 0 ? `Marcar todas (${unreadCount})` : "Todas leídas"}
+            </button>
+            <button
+              onClick={() => loadMoreNotifications()}
+              disabled={loading || !hasMoreNotifications}
+              className="flex-1 text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
+            >
+              {loading ? "Cargando..." : hasMoreNotifications ? "Cargar más" : "No hay más"}
+            </button>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
-
