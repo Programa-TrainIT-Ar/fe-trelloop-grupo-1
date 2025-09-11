@@ -24,7 +24,7 @@ import { MembersList } from '@/components/card/memberList';
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine } from "react-icons/lu";
 import { LuArrowLeftFromLine } from "react-icons/lu";
-import Link from "next/link";
+
 
 
 interface Card {
@@ -54,7 +54,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     const [activeSection, setActiveSection] = useState<'backlog' | 'listas'>('backlog');
     const [showMenu, setShowMenu] = useState<{ [key: string]: boolean }>({});
     const [showMemberList, setShowMemberList] = useState(false);
-    const menuRef = useRef<HTMLDivElement | null>(null);
+    const menuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
     const router = useRouter();
     const [showSharePanel, setShowSharePanel] = useState(false);
 
@@ -150,8 +150,13 @@ export default function BoardPage({ params }: BoardPageProps) {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setShowMenu({});
+            const openMenus = Object.entries(showMenu).filter(([_, isOpen]) => isOpen);
+            
+            for (const [cardId, _] of openMenus) {
+                const menuElement = menuRefs.current.get(parseInt(cardId));
+                if (menuElement && !menuElement.contains(event.target as Node)) {
+                    setShowMenu(prev => ({ ...prev, [cardId]: false }));
+                }
             }
         };
 
@@ -527,7 +532,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                                             <div className='flex justify-between items-start'>
                                                 <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
-                                                <div ref={menuRef} className="relative inline-block text-left">
+                                                <div className="relative inline-block text-left">
                                                     <button
                                                         onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
                                                         className="text-white text-lg hover:opacity-80"
@@ -536,15 +541,26 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                     </button>
 
                                                     {showMenu[card.id] && (
-                                                        <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-                                                            <Link onClick={() => {
-                                                                setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                                        <div 
+                                                            ref={(el) => {
+                                                                if (el) {
+                                                                    menuRefs.current.set(card.id, el);
+                                                                } else {
+                                                                    menuRefs.current.delete(card.id);
+                                                                }
                                                             }}
+                                                            className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4"
+                                                        >
+                                                            <button
+                                                                onClick={() => {
+                                                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                                                    router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
+                                                                }}
                                                                 className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                                href={`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`} >
+                                                            >
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
-                                                            </Link>
+                                                            </button>
                                                             
                                                             <button
                                                                 onClick={() => {

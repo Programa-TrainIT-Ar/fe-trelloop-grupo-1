@@ -2,7 +2,8 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, } from 'react-icons/fa';
+import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, FaTrash } from 'react-icons/fa';
+import { BiMove } from "react-icons/bi";
 import { GoCommentDiscussion } from "react-icons/go";
 import { useAuthStore } from '@/store/auth';
 import { create } from "domain";
@@ -11,6 +12,7 @@ import { es } from "date-fns/locale";
 import { parse } from "path";
 import { text } from "stream/consumers";
 import Swal from "sweetalert2";
+import '@/styles/delete-modal.css';
 
 
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -31,6 +33,8 @@ type CardData = {
     responsable?: Member;
     members?: Member[];
     dueDate?: string;
+    state?: string;
+    beginDate?: string;
 };
 interface Comment {
     _id?: number | string;
@@ -60,6 +64,10 @@ export default function ViewCardPage() {
     const [newComment, setNewComment] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
     const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+    const [estimatedTime, setEstimatedTime] = useState('0h 0m');
+    const [workedTime, setWorkedTime] = useState('0 hrs');
+    const [progress, setProgress] = useState(0);
+    const [showMenu, setShowMenu] = useState(false);
 
 
     const userFirstName = (u?: Comment["user"] | null) => u?.firstName ?? "";
@@ -96,6 +104,44 @@ export default function ViewCardPage() {
                 : c
         ));
     };
+    const calculateTimes = (cardData: CardData) => {
+        if (!cardData) return;
+        
+        // Calcular tiempo estimado basado en fecha de entrega
+        if (cardData.dueDate) {
+            const dueDate = new Date(cardData.dueDate);
+            const now = new Date();
+            const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
+            const hours = Math.floor(diffHours / 24) * 8; // 8 horas por día laboral
+            const minutes = (diffHours % 24) * 60 / 24;
+            setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
+        }
+        
+        // Simular tiempo trabajado (en una app real vendría del backend)
+        const workedHours = Math.floor(Math.random() * 40) + 5;
+        setWorkedTime(`${workedHours} hrs`);
+        
+        // Calcular progreso basado en el estado
+        let progressValue = 0;
+        switch (cardData.state || '') {
+            case 'TODO':
+            case 'To Do':
+                progressValue = 10;
+                break;
+            case 'IN_PROGRESS':
+            case 'In Progress':
+                progressValue = 50;
+                break;
+            case 'DONE':
+            case 'Done':
+                progressValue = 100;
+                break;
+            default:
+                progressValue = 25;
+        }
+        setProgress(progressValue);
+    };
+
     useEffect(() => {
         if (!cardId || !accessToken) return;
         fetch(`${process.env.NEXT_PUBLIC_API}/card/getCard/${cardId}`, {
@@ -106,7 +152,10 @@ export default function ViewCardPage() {
             },
         })
             .then(res => res.json())
-            .then(data => setCard(data))
+            .then(data => {
+                setCard(data);
+                calculateTimes(data);
+            })
             .catch(() => setCard(null));
 
 
@@ -287,6 +336,77 @@ export default function ViewCardPage() {
         }
     };
 
+    const handleDeleteCard = async () => {
+        if (!cardId || !accessToken) return;
+
+        const result = await Swal.fire({
+            html: `
+                <div class="modal-content-custom">
+                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
+                    <p class="modal-text">
+                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
+                    </p>
+                </div>
+            `,
+            background: "#222222",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+            customClass: {
+                popup: "mi-modal",
+                confirmButton: "btn-confirm",
+                cancelButton: "btn-cancel",
+            },
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/deleteCard/${cardId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Error al eliminar la tarjeta');
+                }
+
+                await Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'La tarjeta se ha eliminado correctamente',
+                    icon: 'success',
+                    background: '#222',
+                    color: '#fff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+
+                router.back();
+
+            } catch (error: any) {
+                await Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la tarjeta',
+                    icon: 'error',
+                    background: '#222',
+                    color: '#fff',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+            }
+        }
+        setShowMenu(false);
+    };
+
 
 
     return (
@@ -296,14 +416,41 @@ export default function ViewCardPage() {
                 <div className="flex items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] mb-6">
                     <FaArrowLeft onClick={handleGoBack} className="cursor-pointer text-lg" />
                     <p className="text-sm">Volver al tablero</p>
-                    <FaEllipsisV className="ml-auto cursor-pointer text-lg" />
-                    <FaTimes className="cursor-pointer text-lg" />
+                    <div className="relative ml-auto">
+                        <FaEllipsisV 
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="cursor-pointer text-lg" 
+                        />
+                        {showMenu && (
+                            <div className="absolute right-0 top-8 w-48 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+                                <button
+                                    onClick={() => {
+                                        console.log('Mover tarjeta');
+                                        setShowMenu(false);
+                                    }}
+                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                >
+                                    <BiMove className="text-white text-lg" />
+                                    <span>Mover tarjeta</span>
+                                </button>
+                                <button
+                                    onClick={handleDeleteCard}
+                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                >
+                                    <FaTrash className="text-white text-lg" />
+                                    <span>Eliminar tarjeta</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <FaTimes onClick={handleGoBack} className="cursor-pointer text-lg" />
                 </div>
 
-                <h1 className="text-3xl font-bold mb-8">
-                    {card?.title || "Cargando..."}
-                </h1>
-                <div className="flex gap-3 w-full">
+                <div className="bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] p-6">
+                    <h1 className="text-3xl font-bold mb-8">
+                        {card?.title || "Cargando..."}
+                    </h1>
+                    <div className="flex gap-3 w-full">
                     <div className="w-4/6">
                         <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
                         <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
@@ -396,7 +543,7 @@ export default function ViewCardPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm " style={{ color: "#ffffff" }}>
-                                            3h 20m
+                                            {estimatedTime}
                                         </p>
                                     </div>
                                 </div>
@@ -418,7 +565,7 @@ export default function ViewCardPage() {
                                     </div>
                                     <div>
                                         <p className="text-base " style={{ color: "#ffffff" }}>
-                                            20 hrs
+                                            {workedTime}
                                         </p>
                                     </div>
                                 </div>
@@ -442,13 +589,34 @@ export default function ViewCardPage() {
                                         <div
                                             className="h-2.5 rounded-full"
                                             style={{
-                                                width: "35%",
+                                                width: `${progress}%`,
                                                 background: "var(--global-color-primary-500)",
                                             }}
                                         ></div>
                                     </div>
+                                    <p className="text-xs mt-1" style={{ color: "#ffffff" }}>
+                                        {progress}%
+                                    </p>
                                 </div>
                             </div>
+                        </div>
+
+                    
+                 
+                      
+                        <div className="flex justify-end mt-6 gap-4">
+                            <button 
+                                onClick={handleGoBack}
+                                className="py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] text-white hover:bg-[--global-color-primary-500] transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={() => console.log('Guardar cambios')}
+                                className="py-2 px-12 rounded-xl bg-[--global-color-primary-500] text-white hover:bg-[--global-color-primary-400] transition-colors"
+                            >
+                                Guardar
+                            </button>
                         </div>
                     </div>
 
@@ -602,7 +770,7 @@ export default function ViewCardPage() {
 
                     </div>
                 </div>
-
+                </div>
             </div>
         </div>
 
