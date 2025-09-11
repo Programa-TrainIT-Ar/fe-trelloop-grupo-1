@@ -78,7 +78,7 @@ export default function NotificationBell() {
               </div>
             ) : (
               <>
-                {notifications.map((n: AppNotification) => (
+                {notifications.slice(0, 4).map((n: AppNotification) => (
                   <div
                     key={n.id}
                     className={`p-4 mb-3 rounded-xl border border-neutral-700 bg-neutral-900 hover:bg-neutral-700/40 transition ${n.read ? "" : "border-l-4 border-l-purple-500"}`}
@@ -134,13 +134,12 @@ export default function NotificationBell() {
             >
               {unreadCount > 0 ? `Marcar todas (${unreadCount})` : "Todas leídas"}
             </button>
-            <button
-              onClick={() => loadMoreNotifications()}
-              disabled={loading || !hasMoreNotifications}
-              className="flex-1 text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50"
+            <Link
+              href="/dashboard/notifications"
+              className="flex-1 text-sm px-3 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-center"
             >
-              {loading ? "Cargando..." : hasMoreNotifications ? "Cargar más" : "No hay más"}
-            </button>
+              Ver todas
+            </Link>
           </div>
         </div>
       )}
