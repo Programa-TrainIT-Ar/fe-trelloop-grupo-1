@@ -1,24 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, FaTrash } from 'react-icons/fa';
 import { BiMove } from "react-icons/bi";
 import { GoCommentDiscussion } from "react-icons/go";
+import { LuLayoutDashboard, LuPanelRightOpen } from "react-icons/lu";
+import { FaPlus } from "react-icons/fa6";
 import { useAuthStore } from '@/store/auth';
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Swal from "sweetalert2";
-import '@/styles/delete-modal.css';
-
-
-import { LuLayoutDashboard } from "react-icons/lu";
-import { LuPanelRightOpen } from "react-icons/lu";
-import { FaPlus } from "react-icons/fa6";
-import { BiMove } from "react-icons/bi";
-import Image from "next/image";
 import { deleteCardById } from '@/services/cardService';
-import '@/styles/delete-modal.css'
+import '@/styles/delete-modal.css';
 
 type Member = {
     id: number;
@@ -74,10 +68,6 @@ export default function ViewCardPage() {
     const [newComment, setNewComment] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
     const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
-    const [estimatedTime, setEstimatedTime] = useState('0h 0m');
-    const [workedTime, setWorkedTime] = useState('0 hrs');
-    const [progress, setProgress] = useState(0);
-    const [showMenu, setShowMenu] = useState(false);
 
     const userFirstName = (u?: Comment["user"] | null) => u?.firstName ?? "";
     const userLastName = (u?: Comment["user"] | null) => u?.lastName ?? "";
@@ -101,31 +91,21 @@ export default function ViewCardPage() {
             return "";
         }
     };
-    const handleSoftDelete = async (commentId: number | string) => {
-        setComments(prev => prev.map(c =>
-            (c.id === commentId || c._id === commentId)
-                ? { ...c, content: 'Comentario eliminado', deleted: true, user: {} }
-                : c
-        ));
-    };
     const calculateTimes = (cardData: CardData) => {
         if (!cardData) return;
         
-        // Calcular tiempo estimado basado en fecha de entrega
         if (cardData.dueDate) {
             const dueDate = new Date(cardData.dueDate);
             const now = new Date();
             const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
-            const hours = Math.floor(diffHours / 24) * 8; // 8 horas por día laboral
+            const hours = Math.floor(diffHours / 24) * 8;
             const minutes = (diffHours % 24) * 60 / 24;
             setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
         }
         
-        // Simular tiempo trabajado (en una app real vendría del backend)
         const workedHours = Math.floor(Math.random() * 40) + 5;
         setWorkedTime(`${workedHours} hrs`);
         
-        // Calcular progreso basado en el estado
         let progressValue = 0;
         switch (cardData.state || '') {
             case 'TODO':
@@ -185,41 +165,6 @@ export default function ViewCardPage() {
 
     }, [cardId, accessToken]);
 
-    const calculateTimes = (cardData: CardData) => {
-        if (!cardData) return;
-        
-        if (cardData.dueDate) {
-            const dueDate = new Date(cardData.dueDate);
-            const now = new Date();
-            const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
-            const hours = Math.floor(diffHours / 24) * 8;
-            const minutes = (diffHours % 24) * 60 / 24;
-            setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
-        }
-        
-        const workedHours = Math.floor(Math.random() * 40) + 5;
-        setWorkedTime(`${workedHours} hrs`);
-        
-        let progressValue = 0;
-        switch (cardData.state || '') {
-            case 'TODO':
-            case 'To Do':
-                progressValue = 10;
-                break;
-            case 'IN_PROGRESS':
-            case 'In Progress':
-                progressValue = 50;
-                break;
-            case 'DONE':
-            case 'Done':
-                progressValue = 100;
-                break;
-            default:
-                progressValue = 25;
-        }
-        setProgress(progressValue);
-    };
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -238,6 +183,11 @@ export default function ViewCardPage() {
 
     const handleGoBack = () => {
         router.back();
+    };
+
+    const handleMove = () => {
+        console.log('Mover tarjeta');
+        setShowMenu(false);
     };
 
     const handleDeleteCard = async () => {
@@ -303,11 +253,6 @@ export default function ViewCardPage() {
                 });
             }
         }
-        setShowMenu(false);
-    };
-
-    const handleMove = () => {
-        console.log('Mover tarjeta');
         setShowMenu(false);
     };
 
@@ -464,77 +409,6 @@ export default function ViewCardPage() {
         }
     };
 
-    const handleDeleteCard = async () => {
-        if (!cardId || !accessToken) return;
-
-        const result = await Swal.fire({
-            html: `
-                <div class="modal-content-custom">
-                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
-                    <p class="modal-text">
-                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
-                    </p>
-                </div>
-            `,
-            background: "#222222",
-            showCancelButton: true,
-            reverseButtons: true,
-            confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar",
-            customClass: {
-                popup: "mi-modal",
-                confirmButton: "btn-confirm",
-                cancelButton: "btn-cancel",
-            },
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/deleteCard/${cardId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (!res.ok) {
-                    throw new Error('Error al eliminar la tarjeta');
-                }
-
-                await Swal.fire({
-                    title: '¡Eliminado!',
-                    text: 'La tarjeta se ha eliminado correctamente',
-                    icon: 'success',
-                    background: '#222',
-                    color: '#fff',
-                    showConfirmButton: true,
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-
-                router.back();
-
-            } catch (error: any) {
-                await Swal.fire({
-                    title: 'Error',
-                    text: error.message || 'No se pudo eliminar la tarjeta',
-                    icon: 'error',
-                    background: '#222',
-                    color: '#fff',
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-            }
-        }
-        setShowMenu(false);
-    };
-
 
     if (!accessToken) {
         return (
@@ -604,8 +478,8 @@ export default function ViewCardPage() {
                     <h1 className="text-3xl font-bold mb-8">
                         {card?.title || "Cargando..."}
                     </h1>
-                    <div className="flex gap-3 w-full">
-                    <div className="w-4/6">
+                    <div className="flex gap-6 w-full">
+                        <div className="flex-1">
                         <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
                         <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
 
@@ -720,9 +594,6 @@ export default function ViewCardPage() {
                             </div>
                         </div>
 
-                    
-                 
-                      
                         <div className="flex justify-end mt-6 gap-4">
                             <button 
                                 onClick={handleGoBack}
@@ -737,145 +608,145 @@ export default function ViewCardPage() {
                                 Guardar
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Columna derecha - Comentarios */}
-            <div className="flex flex-col h-full border-l border-gray-700 p-4 w-80">
-                <div className="flex items-center gap-2 mb-4">
-                    <GoCommentDiscussion className="text-lg" />
-                    <h3 className="text-white font-semibold">Comentarios</h3>
-                </div>
-
-                {/* Input de comentario */}
-                <div className="flex items-start gap-2 mb-6">
-                    <img
-                        src={
-                            user?.avatar ||
-                            `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
-                        }
-                        alt="avatar"
-                        className="w-9 h-9 rounded-full"
-                    />
-                    <div className="w-full">
-                        {replyingTo && (
-                            <div className="text-sm text-gray-400 mb-2">
-                                Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
-                                <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
-                                    Cancelar
-                                </button>
-                            </div>
-                        )}
-                        <textarea
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Escribe aquí..."
-                            className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button
-                                onClick={handleAddComment}
-                                className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
-                            >
-                                Enviar
-                            </button>
                         </div>
-                    </div>
-                </div>
 
-                {/* Lista de comentarios */}
-                <div className="flex-1 overflow-y-auto space-y-4">
-                    {(() => {
-                        const rootComments = comments.filter((c) => c.parentId == null);
+                        {/* Columna derecha - Comentarios */}
+                        <div className="flex flex-col border-l border-gray-700 pl-6 w-80">
+                            <div className="flex items-center gap-2 mb-4">
+                                <GoCommentDiscussion className="text-lg" />
+                                <h3 className="text-white font-semibold">Comentarios</h3>
+                            </div>
 
-                        const renderComment = (c: Comment, depth = 0) => {
-                            const cid = c.id ?? c._id;
-                            if (cid == null) return null;
-
-                            const author = c.user;
-                            const authorFirst = userFirstName(author ?? undefined);
-                            const authorLast = userLastName(author ?? undefined);
-                            const authorId = author?.id;
-                            const replies = comments.filter(
-                                (cm) => String(cm.parentId) === String(cid)
-                            );
-
-                            return (
-                                <div
-                                    key={String(cid)}
-                                    className="mb-3"
-                                    style={{
-                                        marginLeft: Math.min(depth * 20, 40),
-                                    }}
-                                >
-                                    <div className="flex gap-2">
-                                        <img
-                                            src={
-                                                author?.avatar ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                    `${authorFirst || "?"} ${authorLast || ""}`
-                                                )}`
-                                            }
-                                            alt={`${authorFirst || "?"} ${authorLast || ""}`}
-                                            className="w-8 h-8 rounded-full"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-sm font-semibold">
-                                                    {authorFirst} {authorLast}
-                                                    <span className="ml-2 text-gray-400 text-xs">
-                                                        {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
-                                                    </span>
-                                                </p>
-
-                                                <div className="relative">
-                                                    <FaEllipsisV
-                                                        className="text-sm cursor-pointer"
-                                                        onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
-                                                    />
-                                                    {openMenuId === cid && (
-                                                        <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
-                                                            {authorId === user?.id && (
-                                                                <button
-                                                                    onClick={() => handleEditComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
-                                                                    Editar
-                                                                </button>
-                                                            )}
-                                                            {(authorId === user?.id || user?.id === card?.responsable?.id) && (
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
-                                                                    Eliminar
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <p className="text-sm text-gray-300">{c.content}</p>
-                                            <button
-                                                onClick={() => setReplyingTo(c)}
-                                                className="text-xs text-blue-400 mt-1">
-                                                Responder
+                            {/* Input de comentario */}
+                            <div className="flex items-start gap-2 mb-6">
+                                <img
+                                    src={
+                                        user?.avatar ||
+                                        `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
+                                    }
+                                    alt="avatar"
+                                    className="w-9 h-9 rounded-full"
+                                />
+                                <div className="w-full">
+                                    {replyingTo && (
+                                        <div className="text-sm text-gray-400 mb-2">
+                                            Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
+                                            <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
+                                                Cancelar
                                             </button>
-
-                                            {replies.length > 0 && (
-                                                <div className="mt-2">
-                                                    {replies.map((reply) => renderComment(reply, depth + 1))}
-                                                </div>
-                                            )}
                                         </div>
+                                    )}
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Escribe aquí..."
+                                        className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
+                                    />
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            onClick={handleAddComment}
+                                            className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
+                                        >
+                                            Enviar
+                                        </button>
                                     </div>
                                 </div>
-                            );
-                        };
+                            </div>
 
-                        return rootComments.map((c) => renderComment(c));
-                    })()}
-                </div>
+                            {/* Lista de comentarios */}
+                            <div className="flex-1 overflow-y-auto space-y-4">
+                                {(() => {
+                                    const rootComments = comments.filter((c) => c.parentId == null);
+
+                                    const renderComment = (c: Comment, depth = 0) => {
+                                        const cid = c.id ?? c._id;
+                                        if (cid == null) return null;
+
+                                        const author = c.user;
+                                        const authorFirst = userFirstName(author ?? undefined);
+                                        const authorLast = userLastName(author ?? undefined);
+                                        const authorId = author?.id;
+                                        const replies = comments.filter(
+                                            (cm) => String(cm.parentId) === String(cid)
+                                        );
+
+                                        return (
+                                            <div
+                                                key={String(cid)}
+                                                className="mb-3"
+                                                style={{
+                                                    marginLeft: Math.min(depth * 20, 40),
+                                                }}
+                                            >
+                                                <div className="flex gap-2">
+                                                    <img
+                                                        src={
+                                                            author?.avatar ||
+                                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                                `${authorFirst || "?"} ${authorLast || ""}`
+                                                            )}`
+                                                        }
+                                                        alt={`${authorFirst || "?"} ${authorLast || ""}`}
+                                                        className="w-8 h-8 rounded-full"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="text-sm font-semibold">
+                                                                {authorFirst} {authorLast}
+                                                                <span className="ml-2 text-gray-400 text-xs">
+                                                                    {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
+                                                                </span>
+                                                            </p>
+
+                                                            <div className="relative">
+                                                                <FaEllipsisV
+                                                                    className="text-sm cursor-pointer"
+                                                                    onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
+                                                                />
+                                                                {openMenuId === cid && (
+                                                                    <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
+                                                                        {authorId === user?.id && (
+                                                                            <button
+                                                                                onClick={() => handleEditComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
+                                                                                Editar
+                                                                            </button>
+                                                                        )}
+                                                                        {(authorId === user?.id || user?.id === card?.responsable?.id) && (
+                                                                            <button
+                                                                                onClick={() => handleDeleteComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
+                                                                                Eliminar
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="text-sm text-gray-300">{c.content}</p>
+                                                        <button
+                                                            onClick={() => setReplyingTo(c)}
+                                                            className="text-xs text-blue-400 mt-1">
+                                                            Responder
+                                                        </button>
+
+                                                        {replies.length > 0 && (
+                                                            <div className="mt-2">
+                                                                {replies.map((reply) => renderComment(reply, depth + 1))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    };
+
+                                    return rootComments.map((c) => renderComment(c));
+                                })()}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
