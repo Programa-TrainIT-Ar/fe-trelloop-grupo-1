@@ -1,13 +1,20 @@
 'use client';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent } from 'react-icons/fa';
+import { useEffect, useState, useRef } from "react";
+import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, FaTrash } from 'react-icons/fa';
+import { GoCommentDiscussion } from "react-icons/go";
 import { useAuthStore } from '@/store/auth';
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import Swal from "sweetalert2";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { LuPanelRightOpen } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
+import { BiMove } from "react-icons/bi";
 import Image from "next/image";
+import { deleteCardById } from '@/services/cardService';
+import '@/styles/delete-modal.css'
 
 type Member = {
     id: number;
@@ -22,19 +29,77 @@ type CardData = {
     responsable?: Member;
     members?: Member[];
     dueDate?: string;
+    state?: string;
 };
+
+interface Comment {
+    _id?: number | string;
+    id?: number | string;
+    content: string;
+    createdAt?: string;
+    parentId?: number | string | null;
+    user: {
+        id?: number;
+        firstName?: string;
+        lastName?: string;
+        avatar?: string;
+    };
+    deleted?: boolean;
+}
 
 export default function ViewCardPage() {
     const searchParams = useSearchParams();
     const cardId = searchParams.get("cardId");
+    const boardId = searchParams.get("boardId");
     const router = useRouter();
-    const { accessToken } = useAuthStore();
+    const { accessToken, user } = useAuthStore();
+
+    // Debug logs
+    console.log('ViewCardPage - cardId:', cardId);
+    console.log('ViewCardPage - boardId:', boardId);
+    console.log('ViewCardPage - accessToken:', !!accessToken);
 
     const [card, setCard] = useState<CardData | null>(null);
-    const user = useAuthStore(state => state.user);
+    const [showMenu, setShowMenu] = useState(false);
+    const [estimatedTime, setEstimatedTime] = useState('0h 0m');
+    const [workedTime, setWorkedTime] = useState('0 hrs');
+    const [progress, setProgress] = useState(0);
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [newComment, setNewComment] = useState("");
+    const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
+    const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+
+    const userFirstName = (u?: Comment["user"] | null) => u?.firstName ?? "";
+    const userLastName = (u?: Comment["user"] | null) => u?.lastName ?? "";
+
+    const formatRelativeTime = (dateString?: string) => {
+        if (!dateString) return "";
+        try {
+            const date = new Date(dateString);
+            const safeDate = date.getTime() > Date.now() ? new Date() : date;
+            let text = formatDistanceToNow(safeDate, {
+                addSuffix: true,
+                locale: es,
+            });
+
+            if (text.startsWith("en")) {
+                text = text.replace("en", "hace");
+            }
+
+            return text;
+        } catch {
+            return "";
+        }
+    };
 
     useEffect(() => {
-        if (!cardId || !accessToken) return;
+        if (!cardId || !accessToken) {
+            console.log('ViewCardPage - Missing cardId or accessToken:', { cardId, accessToken: !!accessToken });
+            return;
+        }
+        
+        console.log('ViewCardPage - Fetching card data for cardId:', cardId);
         fetch(`${process.env.NEXT_PUBLIC_API}/card/getCard/${cardId}`, {
             method: 'GET',
             headers: {
@@ -42,170 +107,645 @@ export default function ViewCardPage() {
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
-            .then(res => res.json())
-            .then(data => setCard(data))
-            .catch(() => setCard(null));
+            .then(res => {
+                console.log('ViewCardPage - Card fetch response status:', res.status);
+                return res.json();
+            })
+            .then(data => {
+                console.log('ViewCardPage - Card data received:', data);
+                setCard(data);
+                calculateTimes(data);
+            })
+            .catch(error => {
+                console.error('ViewCardPage - Error fetching card:', error);
+                setCard(null);
+            });
+
+        // Cargar comentarios
+        fetch(`${process.env.NEXT_PUBLIC_API}/comment/list?cardId=${cardId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                const arr = Array.isArray(data) ? data : data.items ?? [];
+                setComments(arr);
+            })
+            .catch(() => setComments([]));
+
     }, [cardId, accessToken]);
+
+    const calculateTimes = (cardData: CardData) => {
+        if (!cardData) return;
+        
+        if (cardData.dueDate) {
+            const dueDate = new Date(cardData.dueDate);
+            const now = new Date();
+            const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
+            const hours = Math.floor(diffHours / 24) * 8;
+            const minutes = (diffHours % 24) * 60 / 24;
+            setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
+        }
+        
+        const workedHours = Math.floor(Math.random() * 40) + 5;
+        setWorkedTime(`${workedHours} hrs`);
+        
+        let progressValue = 0;
+        switch (cardData.state || '') {
+            case 'TODO':
+            case 'To Do':
+                progressValue = 10;
+                break;
+            case 'IN_PROGRESS':
+            case 'In Progress':
+                progressValue = 50;
+                break;
+            case 'DONE':
+            case 'Done':
+                progressValue = 100;
+                break;
+            default:
+                progressValue = 25;
+        }
+        setProgress(progressValue);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setShowMenu(false);
+            }
+        };
+
+        if (showMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showMenu]);
 
     const handleGoBack = () => {
         router.back();
     };
 
-    // Convierte la fecha a formato YYYY-MM-DD para el input date
-    function getDateForInput(dateStr?: string) {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        return date.toISOString().split('T')[0];
+    const handleDeleteCard = async () => {
+        if (!cardId || !accessToken) return;
+
+        const result = await Swal.fire({
+            html: `
+                <div class="modal-content-custom">
+                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
+                    <p class="modal-text">
+                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
+                    </p>
+                </div>
+            `,
+            background: "#222222",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+            customClass: {
+                popup: "mi-modal",
+                confirmButton: "btn-confirm",
+                cancelButton: "btn-cancel",
+            },
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await deleteCardById(parseInt(cardId), accessToken);
+
+                await Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'La tarjeta se ha eliminado correctamente',
+                    icon: 'success',
+                    background: '#222',
+                    color: '#fff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+
+                if (boardId) {
+                    router.push(`/dashboard/boards/${boardId}`);
+                } else {
+                    router.back();
+                }
+
+            } catch (error: any) {
+                await Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la tarjeta',
+                    icon: 'error',
+                    background: '#222',
+                    color: '#fff',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+            }
+        }
+        setShowMenu(false);
+    };
+
+    const handleMove = () => {
+        console.log('Mover tarjeta');
+        setShowMenu(false);
+    };
+
+    const handleAddComment = async () => {
+        if (!cardId) return;
+        if (!newComment.trim()) return;
+
+        const parsedCardId = Number(cardId);
+        if (isNaN(parsedCardId)) return;
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API}/comment/create`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    content: newComment,
+                    cardId: parsedCardId,
+                    parentId: replyingTo ? (replyingTo.id ?? replyingTo._id ?? null) : null,
+                }),
+            });
+
+            let payload: any = {};
+            try {
+                payload = await res.json();
+            } catch (err) {
+                console.warn("⚠️ No se pudo parsear la respuesta como JSON");
+            }
+
+            if (!res.ok) {
+                console.error("❌ Error en respuesta:", res.status, payload);
+                throw new Error("Error al enviar el comentario");
+            }
+
+            setComments((prev) => [...prev, payload]);
+            setNewComment("");
+            setReplyingTo(null);
+        } catch (error) {
+            console.error("❌ handleAddComment error:", error);
+        }
+    };
+
+    const handleEditComment = async (comment: Comment) => {
+        const id = comment.id ?? comment._id;
+        if (!id) return;
+
+        const { value: newContent } = await Swal.fire({
+            title: "Editar comentario",
+            input: "textarea",
+            inputLabel: "Modifica tu comentario:",
+            inputValue: comment.content,
+            background: "rgb(26, 26, 26)",
+            color: "#FFFFFF",
+            confirmButtonColor: "#6A5FFF",
+            cancelButtonColor: "#FF4B4B",
+            showCancelButton: true,
+            confirmButtonText: "Guardar",
+            cancelButtonText: "Cancelar",
+            inputValidator: (value) => {
+                if (!value?.trim()) {
+                    return "El comentario no puede estar vacío";
+                }
+                return null;
+            },
+        });
+        if (!newContent.trim() || newContent.trim() === comment.content) return;
+
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API}/comment/update/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ content: newContent }),
+            });
+
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    text: "No se pudo editar el comentario",
+                    background: "rgb(26, 26, 26)",
+                    color: "#FFFFFF",
+                    confirmButtonColor: "#6A5FFF",
+                });
+                return;
+            }
+            const updated = await res.json().catch(() => null);
+
+            setComments((prev) => prev.map(c => ((c.id ?? c._id) === id ? { ...c, content: newContent, ...updated } : c)));
+            setOpenMenuId(null);
+            Swal.fire({
+                icon: "success",
+                text: "Comentario actualizado",
+                background: "rgb(26, 26, 26)",
+                color: "#FFFFFF",
+                confirmButtonColor: "#6A5FFF",
+            });
+        } catch (err) {
+            console.error("handleEdit error:", err);
+        }
+    };
+
+    const handleDeleteComment = async (comment: Comment) => {
+        const id = comment.id ?? comment._id;
+        if (!id) return;
+
+        const result = await Swal.fire({
+            title: "¿Eliminar comentario?",
+            text: "Esta acción no se puede deshacer",
+            icon: "warning",
+            background: "rgb(26, 26, 26)",
+            color: "#FFFFFF",
+            showCancelButton: true,
+            confirmButtonColor: "#FF4B4B",
+            cancelButtonColor: "#6A5FFF",
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API}/comment/delete/${id}`,
+                { method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    text: "No se pudo eliminar el comentario",
+                    background: "rgb(26, 26, 26)",
+                    color: "#FFFFFF",
+                    confirmButtonColor: "#6A5FFF",
+                });
+                return;
+            }
+
+            setComments((prev) => prev.filter((c) => (c.id ?? c._id) !== id));
+            setOpenMenuId(null);
+
+            Swal.fire({
+                icon: "success",
+                text: "Comentario eliminado",
+                background: "rgb(26, 26, 26)",
+                color: "#FFFFFF",
+                confirmButtonColor: "#6A5FFF",
+            });
+
+        } catch (err) {
+            console.error("handleDelete error:", err);
+        }
+    };
+
+    // Early return for loading/error states
+    if (!cardId) {
+        return (
+            <div className="flex items-center justify-center h-screen text-white">
+                <div className="text-center">
+                    <h2 className="text-2xl mb-4">Error: ID de tarjeta no encontrado</h2>
+                    <button 
+                        onClick={() => router.back()}
+                        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+                    >
+                        Volver
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!accessToken) {
+        return (
+            <div className="flex items-center justify-center h-screen text-white">
+                <div className="text-center">
+                    <h2 className="text-2xl mb-4">Error: No autenticado</h2>
+                    <button 
+                        onClick={() => router.push('/login')}
+                        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+                    >
+                        Ir a Login
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!card) {
+        return (
+            <div className="flex items-center justify-center h-screen text-white">
+                <div className="text-center">
+                    <h2 className="text-2xl mb-4">Cargando tarjeta...</h2>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="p-4 text-white ">
-            <div className="flex items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] mb-6">
-                <FaArrowLeft
-                    onClick={handleGoBack}
-                    className="cursor-pointer text-lg" />
-                <p className="text-sm">Volver al tablero</p>
-                <FaEllipsisV className="ml-auto cursor-pointer text-lg" />
-                <FaTimes className="cursor-pointer text-lg" />
-            </div>
-
-            <h1 className="text-3xl font-bold mb-8">
-                {card?.title || "Cargando..."}
-            </h1>
-            <div className="flex gap-3 w-full">
-                <div className="w-4/6">
-                    <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
-                    <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
-
-                    <div className="flex flex-row gap-16 mb-8">
-                        {/* Responsable */}
-                        <div className="flex-1 flex flex-col items-center">
-                            <span className="text-white font-semibold mb-2">Responsable</span>
-                            <span className="text-gray-400 text-center text-lg">
-                                {card?.responsable
-                                    ? `${card.responsable.first_name} ${card.responsable.last_name}`
-                                    : "Cargando..."}
-                            </span>
-                        </div>
-
-                        {/* Miembros */}
-                        <div className="flex-1 flex flex-col items-center">
-                            <span className="text-white font-semibold mb-2">Miembros</span>
-                            <div className="flex flex-row flex-wrap justify-center gap-2">
-                                {card?.members && card.members.length > 0 ? (
-                                    card.members.map(member => (
-                                        <img
-                                            key={member.id}
-                                            src={member.avatar || `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}`}
-                                            alt={member.first_name}
-                                            className="w-10 h-10 rounded-full border-2 border-gray-600"
-                                            title={`${member.first_name} ${member.last_name}`}
-                                        />
-                                    ))
-                                ) : (
-                                    <span className="text-gray-400 ml-2">Cargando...</span>
-                                )}
+        <div className="flex flex-row h-screen text-white">
+            {/* Columna izquierda */}
+            <div className="flex-1 p-4 overflow-y-auto">
+                <div className="flex items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] mb-6">
+                    <FaArrowLeft onClick={handleGoBack} className="cursor-pointer text-lg" />
+                    <p className="text-sm">Volver al tablero</p>
+                    <div ref={menuRef} className="relative ml-auto">
+                        <FaEllipsisV 
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="cursor-pointer text-lg" 
+                        />
+                        {showMenu && (
+                            <div className="absolute right-0 top-8 w-48 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+                                <button
+                                    onClick={handleMove}
+                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                >
+                                    <BiMove className="text-white text-lg" />
+                                    <span>Mover tarjeta</span>
+                                </button>
+                                <button
+                                    onClick={handleDeleteCard}
+                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                >
+                                    <FaTrash className="text-white text-lg" />
+                                    <span>Eliminar tarjeta</span>
+                                </button>
                             </div>
-                        </div>
-
-                        {/* Fecha de entrega */}
-                        <div className="flex-1 flex flex-col items-center">
-                            <span className="text-white font-semibold mb-2">Fecha de entrega</span>
-                            <input
-                                type="date"
-
-                                className="bg-[#232323] text-gray-400 rounded px-3 py-2 border border-gray-600 text-center text-lg w-[170px]"
-                            />
-                        </div>
+                        )}
                     </div>
-
-                    <div className="flex items-center mb-6">
-                        <label htmlFor="">Vista:</label>
-                        <div className="border-2 border-[#3C3C3CB2] ms-4 gap-3 flex bg-[#212121] p-2 rounded-xl">
-                            <button className="flex gap-2 items-center px-4 py-2 text-white rounded-xl hover:bg-[--global-color-primary-500]"><LuLayoutDashboard className="size-6" /> Detallada</button>
-                            <div className="my-1 border-l border-[#3C3C3CB2]"></div>
-                            <button className="flex px-4 py-2 items-center gap-2 rounded-xl text-white hover:bg-[--global-color-primary-500]"><LuPanelRightOpen className="size-6" /> Secciones</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h2 className="mb-6">Subtareas</h2>
-                        <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] items-center gap-3 border-2 border-[#3C3C3CB2] px-4 py-2 rounded-lg">
-                            <input id="default-checkbox" type="checkbox" value="" className="w-4 me-8 h-4 bg-transparent rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                            <h6>Descripción</h6>
-                            <h6>Responsable</h6>
-                            <h6>Fecha límite</h6>
-                            <h6>Acciones</h6>
-
-
-
-                        </div>
-                        <button className="flex items-center justify-center gap-3 mt-2 rounded-lg w-full border-2 border-dotted border-[#3C3C3CB2] py-1 hover:bg-[--global-color-primary-500]"><FaPlus className="size-5" /> Agregar subtarea</button>
-
-                    </div>
-
-                    <div className="flex flex-wrap gap-5 mt-8">
-                        <div className="rounded-lg overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#2E90FA" }}>
-                            <div className="px-4 py-2 flex-1">
-                                <div className="flex flex-row items-center mb-2 gap-2" >
-                                    <FaClock className="text-white text-2xl" style={{ padding: "2px" }} />
-                                    <p className="text-sm p-2" style={{ color: "#ffffffff" }}> Tiempo estimado</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm " style={{ color: "#ffffff" }}> 3h 20m </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded-lg overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#DF8200" }}>
-                            <div className="px-4 py-2 flex-1">
-                                <div className="flex flex-row items-center mb-2  gap-2  ">
-                                    <FaPlay className="text-white text-2xl" style={{ padding: "2px" }} />
-                                    <p className="text-sm p-2" style={{ color: "#ffffff" }}> Tiempo trabajado</p>
-                                </div>
-                                <div>
-                                    <p className="text-base " style={{ color: "#ffffff" }}> 20 hrs </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#A70000" }}>
-                            <div className="px-4 py-2 flex-1">
-                                <div className="flex flex-row items-center mb-2 gap-2  ">
-                                    <FaPercent className="text-white text-2xl" style={{ padding: "2px" }} />
-                                    <p className="text-sm p-2" style={{ color: "#ffffff" }}> Progreso</p>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                    <div className="h-2.5 rounded-full" style={{ width: "35%", background: "var(--global-color-primary-500)" }}></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <FaTimes onClick={handleGoBack} className="cursor-pointer text-lg" />
                 </div>
-                <div className="flex-col w-2/6">
-                    <h2 className="text-white">Comentarios:</h2>
-                    <div className="flex items-start gap-2 mt-5">
+
+                <div className="bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] p-6">
+                    <h1 className="text-3xl font-bold mb-8">
+                        {card?.title || "Cargando..."}
+                    </h1>
+                    
+                    <div className="w-full">
+                        <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
+                        <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
+
+                        <div className="flex flex-row gap-16 mb-8">
+                            <div className="flex-1 flex flex-col items-center">
+                                <span className="text-white font-semibold mb-2">Responsable</span>
+                                <span className="text-gray-400 text-center text-lg">
+                                    {card?.responsable
+                                        ? `${card.responsable.first_name} ${card.responsable.last_name}`
+                                        : "Cargando..."}
+                                </span>
+                            </div>
+
+                            <div className="flex-1 flex flex-col items-center">
+                                <span className="text-white font-semibold mb-2">Miembros</span>
+                                <div className="flex flex-row flex-wrap justify-center gap-2">
+                                    {card?.members && card.members.length > 0 ? (
+                                        card.members.map((member: Member) => (
+                                            <img
+                                                key={member.id}
+                                                src={
+                                                    member.avatar ||
+                                                    `https://ui-avatars.com/api/?name=${member.first_name}+${member.last_name}`
+                                                }
+                                                alt={member.first_name}
+                                                className="w-10 h-10 rounded-full border-2 border-gray-600"
+                                                title={`${member.first_name} ${member.last_name}`}
+                                            />
+                                        ))
+                                    ) : (
+                                        <span className="text-gray-400 ml-2">Cargando...</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex flex-col items-center">
+                                <span className="text-white font-semibold mb-2">Fecha de entrega</span>
+                                <input
+                                    type="date"
+                                    className="bg-[#232323] text-gray-400 rounded px-3 py-2 border border-gray-600 text-center text-lg w-[170px]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center mb-6">
+                            <label htmlFor="">Vista:</label>
+                            <div className="border-2 border-[#3C3C3CB2] ms-4 gap-3 flex bg-[#212121] p-2 rounded-xl">
+                                <button className="flex gap-2 items-center px-4 py-2 text-white rounded-xl hover:bg-[--global-color-primary-500]"><LuLayoutDashboard className="size-6" /> Detallada</button>
+                                <div className="my-1 border-l border-[#3C3C3CB2]"></div>
+                                <button className="flex px-4 py-2 items-center gap-2 rounded-xl text-white hover:bg-[--global-color-primary-500]"><LuPanelRightOpen className="size-6" /> Secciones</button>
+                            </div>
+                        </div>
+
                         <div>
-                            <Image
-                                src={user?.profilePicture || 'https://picsum.photos/200/200?random=1'}
-                                alt="user image"
-                                width={60}
-                                height={60}
-                                className="object-cover rounded-full"
-                            />
+                            <h2 className="mb-6">Subtareas</h2>
+                            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] items-center gap-3 border-2 border-[#3C3C3CB2] px-4 py-2 rounded-lg">
+                                <input id="default-checkbox" type="checkbox" value="" className="w-4 me-8 h-4 bg-transparent rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                                <h6>Descripción</h6>
+                                <h6>Responsable</h6>
+                                <h6>Fecha límite</h6>
+                                <h6>Acciones</h6>
+                            </div>
+                            <button className="flex items-center justify-center gap-3 mt-2 rounded-lg w-full border-2 border-dotted border-[#3C3C3CB2] py-1 hover:bg-[--global-color-primary-500]"><FaPlus className="size-5" /> Agregar subtarea</button>
                         </div>
-                        <textarea className="p-3 rounded-xl h-40 w-full bg-transparent border-2 border-[#3C3C3CB2]" placeholder="Escribe aquí..." name="comentary" id=""></textarea>
-                        
-                    </div>
-                    <div className="flex justify-end mt-3">
-                    <button className="flexpx-4 py-2 px-12 gap-2 rounded-xl text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Enviar</button>
 
+                        <div className="flex flex-wrap gap-5 mt-8">
+                            <div className="rounded-lg overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#2E90FA" }}>
+                                <div className="px-4 py-2 flex-1">
+                                    <div className="flex flex-row items-center mb-2 gap-2">
+                                        <FaClock className="text-white text-2xl" style={{ padding: "2px" }} />
+                                        <p className="text-sm p-2" style={{ color: "#ffffffff" }}>Tiempo estimado</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm " style={{ color: "#ffffff" }}>{estimatedTime}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="rounded-lg overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#DF8200" }}>
+                                <div className="px-4 py-2 flex-1">
+                                    <div className="flex flex-row items-center mb-2 gap-2">
+                                        <FaPlay className="text-white text-2xl" style={{ padding: "2px" }} />
+                                        <p className="text-sm p-2" style={{ color: "#ffffff" }}>Tiempo trabajado</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-base " style={{ color: "#ffffff" }}>{workedTime}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="rounded overflow-hidden shadow-lg flex flex-col h-[88px] w-[215px]" style={{ backgroundColor: "#A70000" }}>
+                                <div className="px-4 py-2 flex-1">
+                                    <div className="flex flex-row items-center mb-2 gap-2">
+                                        <FaPercent className="text-white text-2xl" style={{ padding: "2px" }} />
+                                        <p className="text-sm p-2" style={{ color: "#ffffff" }}>Progreso</p>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                        <div className="h-2.5 rounded-full" style={{ width: `${progress}%`, background: "var(--global-color-primary-500)" }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-6 gap-4">
+                            <button className="py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] hover:bg-[--global-color-primary-500]">Cancelar</button>
+                            <button className="py-2 px-12 rounded-xl bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Guardar</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className="ms-auto w-4/6 2xl:w-2/6 flex justify-end mt-6 gap-4">
-                <button className="w-full py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] hover:bg-[--global-color-primary-500]">Cancelar</button>
-                <button className="w-full py-2 px-12 rounded-xl bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Guardar</button>
+
+            {/* Columna derecha - Comentarios */}
+            <div className="flex flex-col h-full border-l border-gray-700 p-4 w-80">
+                <div className="flex items-center gap-2 mb-4">
+                    <GoCommentDiscussion className="text-lg" />
+                    <h3 className="text-white font-semibold">Comentarios</h3>
+                </div>
+
+                {/* Input de comentario */}
+                <div className="flex items-start gap-2 mb-6">
+                    <img
+                        src={
+                            user?.avatar ||
+                            `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
+                        }
+                        alt="avatar"
+                        className="w-9 h-9 rounded-full"
+                    />
+                    <div className="w-full">
+                        {replyingTo && (
+                            <div className="text-sm text-gray-400 mb-2">
+                                Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
+                                <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
+                                    Cancelar
+                                </button>
+                            </div>
+                        )}
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Escribe aquí..."
+                            className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
+                        />
+                        <div className="flex justify-end mt-2">
+                            <button
+                                onClick={handleAddComment}
+                                className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
+                            >
+                                Enviar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Lista de comentarios */}
+                <div className="flex-1 overflow-y-auto space-y-4">
+                    {(() => {
+                        const rootComments = comments.filter((c) => c.parentId == null);
+
+                        const renderComment = (c: Comment, depth = 0) => {
+                            const cid = c.id ?? c._id;
+                            if (cid == null) return null;
+
+                            const author = c.user;
+                            const authorFirst = userFirstName(author ?? undefined);
+                            const authorLast = userLastName(author ?? undefined);
+                            const authorId = author?.id;
+                            const replies = comments.filter(
+                                (cm) => String(cm.parentId) === String(cid)
+                            );
+
+                            return (
+                                <div
+                                    key={String(cid)}
+                                    className="mb-3"
+                                    style={{
+                                        marginLeft: Math.min(depth * 20, 40),
+                                    }}
+                                >
+                                    <div className="flex gap-2">
+                                        <img
+                                            src={
+                                                author?.avatar ||
+                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                    `${authorFirst || "?"} ${authorLast || ""}`
+                                                )}`
+                                            }
+                                            alt={`${authorFirst || "?"} ${authorLast || ""}`}
+                                            className="w-8 h-8 rounded-full"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-sm font-semibold">
+                                                    {authorFirst} {authorLast}
+                                                    <span className="ml-2 text-gray-400 text-xs">
+                                                        {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
+                                                    </span>
+                                                </p>
+
+                                                <div className="relative">
+                                                    <FaEllipsisV
+                                                        className="text-sm cursor-pointer"
+                                                        onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
+                                                    />
+                                                    {openMenuId === cid && (
+                                                        <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
+                                                            {authorId === user?.id && (
+                                                                <button
+                                                                    onClick={() => handleEditComment(c)}
+                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
+                                                                    Editar
+                                                                </button>
+                                                            )}
+                                                            {(authorId === user?.id || user?.id === card?.responsable?.id) && (
+                                                                <button
+                                                                    onClick={() => handleDeleteComment(c)}
+                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
+                                                                    Eliminar
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <p className="text-sm text-gray-300">{c.content}</p>
+                                            <button
+                                                onClick={() => setReplyingTo(c)}
+                                                className="text-xs text-blue-400 mt-1">
+                                                Responder
+                                            </button>
+
+                                            {replies.length > 0 && (
+                                                <div className="mt-2">
+                                                    {replies.map((reply) => renderComment(reply, depth + 1))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        };
+
+                        return rootComments.map((c) => renderComment(c));
+                    })()}
+                </div>
             </div>
         </div>
     );
 }
-

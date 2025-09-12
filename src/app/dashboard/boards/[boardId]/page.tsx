@@ -537,14 +537,17 @@ export default function BoardPage({ params }: BoardPageProps) {
 
                                                     {showMenu[card.id] && (
                                                         <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
-                                                            <Link onClick={() => {
-                                                                setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                                            }}
+                                                            <button
+                                                                onClick={() => {
+                                                                    console.log('Navegando a:', `/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
+                                                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                                                    router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
+                                                                }}
                                                                 className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                                href={`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`} >
+                                                            >
                                                                 <FaEye className="text-white text-lg" />
                                                                 <span>Ver tarjeta</span>
-                                                            </Link>
+                                                            </button>
                                                             
                                                             <button
                                                                 onClick={() => {
@@ -558,10 +561,10 @@ export default function BoardPage({ params }: BoardPageProps) {
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDelete(card.id)}
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                                                className="flex items-center justify-between w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
                                                             >
-                                                                <FaTrash className="text-white text-lg" />
                                                                 <span>Eliminar tarjeta</span>
+                                                                <FaTrash className="text-white text-lg" />
                                                             </button>
                                                         </div>
                                                     )}
