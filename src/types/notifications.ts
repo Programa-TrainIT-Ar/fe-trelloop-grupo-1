@@ -1,4 +1,9 @@
-export type NotificationType = "BOARD_MEMBER_ADDED" | "CARD_ASSIGNED";
+export type NotificationType =
+  | "BOARD_MEMBER_ADDED"
+  | "CARD_ASSIGNED"
+  | "COMMENT_NEW"
+  | "COMMENT_REPLY";
+
 
 export interface AppNotification {
   id: string;
