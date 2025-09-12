@@ -1,24 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, FaTrash } from 'react-icons/fa';
 import { BiMove } from "react-icons/bi";
 import { GoCommentDiscussion } from "react-icons/go";
+import { LuLayoutDashboard, LuPanelRightOpen } from "react-icons/lu";
+import { FaPlus } from "react-icons/fa6";
 import { useAuthStore } from '@/store/auth';
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Swal from "sweetalert2";
-import '@/styles/delete-modal.css';
-
-
-import { LuLayoutDashboard } from "react-icons/lu";
-import { LuPanelRightOpen } from "react-icons/lu";
-import { FaPlus } from "react-icons/fa6";
-import { BiMove } from "react-icons/bi";
-import Image from "next/image";
 import { deleteCardById } from '@/services/cardService';
-import '@/styles/delete-modal.css'
+import '@/styles/delete-modal.css';
 
 type Member = {
     id: number;
@@ -74,10 +68,6 @@ export default function ViewCardPage() {
     const [newComment, setNewComment] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
     const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
-    const [estimatedTime, setEstimatedTime] = useState('0h 0m');
-    const [workedTime, setWorkedTime] = useState('0 hrs');
-    const [progress, setProgress] = useState(0);
-    const [showMenu, setShowMenu] = useState(false);
 
     const userFirstName = (u?: Comment["user"] | null) => u?.firstName ?? "";
     const userLastName = (u?: Comment["user"] | null) => u?.lastName ?? "";
@@ -101,31 +91,21 @@ export default function ViewCardPage() {
             return "";
         }
     };
-    const handleSoftDelete = async (commentId: number | string) => {
-        setComments(prev => prev.map(c =>
-            (c.id === commentId || c._id === commentId)
-                ? { ...c, content: 'Comentario eliminado', deleted: true, user: {} }
-                : c
-        ));
-    };
     const calculateTimes = (cardData: CardData) => {
         if (!cardData) return;
         
-        // Calcular tiempo estimado basado en fecha de entrega
         if (cardData.dueDate) {
             const dueDate = new Date(cardData.dueDate);
             const now = new Date();
             const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
-            const hours = Math.floor(diffHours / 24) * 8; // 8 horas por día laboral
+            const hours = Math.floor(diffHours / 24) * 8;
             const minutes = (diffHours % 24) * 60 / 24;
             setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
         }
         
-        // Simular tiempo trabajado (en una app real vendría del backend)
         const workedHours = Math.floor(Math.random() * 40) + 5;
         setWorkedTime(`${workedHours} hrs`);
         
-        // Calcular progreso basado en el estado
         let progressValue = 0;
         switch (cardData.state || '') {
             case 'TODO':
@@ -185,41 +165,6 @@ export default function ViewCardPage() {
 
     }, [cardId, accessToken]);
 
-    const calculateTimes = (cardData: CardData) => {
-        if (!cardData) return;
-        
-        if (cardData.dueDate) {
-            const dueDate = new Date(cardData.dueDate);
-            const now = new Date();
-            const diffHours = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60)));
-            const hours = Math.floor(diffHours / 24) * 8;
-            const minutes = (diffHours % 24) * 60 / 24;
-            setEstimatedTime(`${hours}h ${Math.round(minutes)}m`);
-        }
-        
-        const workedHours = Math.floor(Math.random() * 40) + 5;
-        setWorkedTime(`${workedHours} hrs`);
-        
-        let progressValue = 0;
-        switch (cardData.state || '') {
-            case 'TODO':
-            case 'To Do':
-                progressValue = 10;
-                break;
-            case 'IN_PROGRESS':
-            case 'In Progress':
-                progressValue = 50;
-                break;
-            case 'DONE':
-            case 'Done':
-                progressValue = 100;
-                break;
-            default:
-                progressValue = 25;
-        }
-        setProgress(progressValue);
-    };
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -238,72 +183,6 @@ export default function ViewCardPage() {
 
     const handleGoBack = () => {
         router.back();
-    };
-
-    const handleDeleteCard = async () => {
-        if (!cardId || !accessToken) return;
-
-        const result = await Swal.fire({
-            html: `
-                <div class="modal-content-custom">
-                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
-                    <p class="modal-text">
-                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
-                    </p>
-                </div>
-            `,
-            background: "#222222",
-            showCancelButton: true,
-            reverseButtons: true,
-            confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar",
-            customClass: {
-                popup: "mi-modal",
-                confirmButton: "btn-confirm",
-                cancelButton: "btn-cancel",
-            },
-        });
-
-        if (result.isConfirmed) {
-            try {
-                await deleteCardById(parseInt(cardId), accessToken);
-
-                await Swal.fire({
-                    title: '¡Eliminado!',
-                    text: 'La tarjeta se ha eliminado correctamente',
-                    icon: 'success',
-                    background: '#222',
-                    color: '#fff',
-                    showConfirmButton: true,
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-
-                if (boardId) {
-                    router.push(`/dashboard/boards/${boardId}`);
-                } else {
-                    router.back();
-                }
-
-            } catch (error: any) {
-                await Swal.fire({
-                    title: 'Error',
-                    text: error.message || 'No se pudo eliminar la tarjeta',
-                    icon: 'error',
-                    background: '#222',
-                    color: '#fff',
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-            }
-        }
-        setShowMenu(false);
     };
 
     const handleMove = () => {
@@ -462,77 +341,6 @@ export default function ViewCardPage() {
         } catch (err) {
             console.error("handleDelete error:", err);
         }
-    };
-
-    const handleDeleteCard = async () => {
-        if (!cardId || !accessToken) return;
-
-        const result = await Swal.fire({
-            html: `
-                <div class="modal-content-custom">
-                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
-                    <p class="modal-text">
-                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
-                    </p>
-                </div>
-            `,
-            background: "#222222",
-            showCancelButton: true,
-            reverseButtons: true,
-            confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar",
-            customClass: {
-                popup: "mi-modal",
-                confirmButton: "btn-confirm",
-                cancelButton: "btn-cancel",
-            },
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/deleteCard/${cardId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (!res.ok) {
-                    throw new Error('Error al eliminar la tarjeta');
-                }
-
-                await Swal.fire({
-                    title: '¡Eliminado!',
-                    text: 'La tarjeta se ha eliminado correctamente',
-                    icon: 'success',
-                    background: '#222',
-                    color: '#fff',
-                    showConfirmButton: true,
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-
-                router.back();
-
-            } catch (error: any) {
-                await Swal.fire({
-                    title: 'Error',
-                    text: error.message || 'No se pudo eliminar la tarjeta',
-                    icon: 'error',
-                    background: '#222',
-                    color: '#fff',
-                    confirmButtonText: 'Aceptar',
-                    customClass: {
-                        confirmButton: 'btn-cancel',
-                        popup: 'mi-modal',
-                    },
-                });
-            }
-        }
-        setShowMenu(false);
     };
 
 
