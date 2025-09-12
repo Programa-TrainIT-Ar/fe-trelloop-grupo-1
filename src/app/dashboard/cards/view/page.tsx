@@ -15,7 +15,7 @@ import '@/styles/delete-modal.css';
 import { LuLayoutDashboard } from "react-icons/lu";
 import { LuPanelRightOpen } from "react-icons/lu";
 import { FaPlus } from "react-icons/fa6";
-import { BiMove } from "react-icons/bi";
+// import { BiMove } from "react-icons/bi";
 import Image from "next/image";
 import { deleteCardById } from '@/services/cardService';
 import '@/styles/delete-modal.css'
@@ -74,10 +74,10 @@ export default function ViewCardPage() {
     const [newComment, setNewComment] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
     const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
-    const [estimatedTime, setEstimatedTime] = useState('0h 0m');
-    const [workedTime, setWorkedTime] = useState('0 hrs');
-    const [progress, setProgress] = useState(0);
-    const [showMenu, setShowMenu] = useState(false);
+    // const [estimatedTime, setEstimatedTime] = useState('0h 0m');
+    // const [workedTime, setWorkedTime] = useState('0 hrs');
+    // const [progress, setProgress] = useState(0);
+    // const [showMenu, setShowMenu] = useState(false);
 
     const userFirstName = (u?: Comment["user"] | null) => u?.firstName ?? "";
     const userLastName = (u?: Comment["user"] | null) => u?.lastName ?? "";
