@@ -11,7 +11,7 @@ import React, {
 import type { AppNotification, NotificationType } from "@/types/notifications";
 import { subscribeToUserChannel, disconnectPusher } from "@/lib/pusherClient";
 import { createNotificationServiceHooks } from "@/services/notificationService";
-import { useAuthStore } from "@/store/auth/store";
+import { useAuthStore } from "@/store/auth";
 
 type Ctx = {
   notifications: AppNotification[];
@@ -153,11 +153,14 @@ export function NotificationProvider({
 
   // Cargar notificaciones históricas desde el backend (carga inicial)
   const loadHistoricalNotifications = useCallback(async () => {
-    if (!token || !userId) return;
+    if (!token || !userId) {
+      console.log("[NotificationProvider] No token or userId, skipping load");
+      return;
+    }
 
     try {
       setLoading(true);
-      console.log("[NotificationProvider] Loading historical notifications");
+      console.log("[NotificationProvider] Loading historical notifications with token:", token?.substring(0, 10) + '...');
 
       const result = await notificationService.loadNotifications({
         limit: 20,
@@ -176,6 +179,11 @@ export function NotificationProvider({
         "[NotificationProvider] Error loading historical notifications:",
         error,
       );
+      // Si es error 401, podría ser que el token expiró
+      if (error instanceof Error && error.message.includes('401')) {
+        console.log("[NotificationProvider] Token might be expired, clearing notifications");
+        setNotifications([]);
+      }
     } finally {
       setLoading(false);
     }
