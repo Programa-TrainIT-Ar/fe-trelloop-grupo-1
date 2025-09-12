@@ -225,7 +225,7 @@ export function NotificationProvider({
       loadHistoricalNotifications();
     } else if (!userId || !token) {
       setNotifications([]);
-
+    }
   }, [userId, token]);
 
   // Utilidad para probar la UI sin backend
