@@ -190,6 +190,72 @@ export default function ViewCardPage() {
         setShowMenu(false);
     };
 
+    const handleDeleteCard = async () => {
+        if (!cardId || !accessToken) return;
+
+        const result = await Swal.fire({
+            html: `
+                <div class="modal-content-custom">
+                    <img class="modal-icon" src="https://cdn-icons-png.flaticon.com/512/595/595067.png" alt="Warning" />
+                    <p class="modal-text">
+                        ¿Estás seguro de que quieres proceder con esta acción?<br/>No será reversible.
+                    </p>
+                </div>
+            `,
+            background: "#222222",
+            showCancelButton: true,
+            reverseButtons: true,
+            confirmButtonText: "Eliminar",
+            cancelButtonText: "Cancelar",
+            customClass: {
+                popup: "mi-modal",
+                confirmButton: "btn-confirm",
+                cancelButton: "btn-cancel",
+            },
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await deleteCardById(parseInt(cardId), accessToken);
+
+                await Swal.fire({
+                    title: '¡Eliminado!',
+                    text: 'La tarjeta se ha eliminado correctamente',
+                    icon: 'success',
+                    background: '#222',
+                    color: '#fff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+
+                if (boardId) {
+                    router.push(`/dashboard/boards/${boardId}`);
+                } else {
+                    router.back();
+                }
+
+            } catch (error: any) {
+                await Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la tarjeta',
+                    icon: 'error',
+                    background: '#222',
+                    color: '#fff',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        confirmButton: 'btn-cancel',
+                        popup: 'mi-modal',
+                    },
+                });
+            }
+        }
+        setShowMenu(false);
+    };
+
     const handleAddComment = async () => {
         if (!cardId) return;
         if (!newComment.trim()) return;
@@ -412,8 +478,8 @@ export default function ViewCardPage() {
                     <h1 className="text-3xl font-bold mb-8">
                         {card?.title || "Cargando..."}
                     </h1>
-                    <div className="flex gap-3 w-full">
-                    <div className="w-4/6">
+                    <div className="flex gap-6 w-full">
+                        <div className="flex-1">
                         <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
                         <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
 
@@ -528,9 +594,6 @@ export default function ViewCardPage() {
                             </div>
                         </div>
 
-                    
-                 
-                      
                         <div className="flex justify-end mt-6 gap-4">
                             <button 
                                 onClick={handleGoBack}
@@ -545,145 +608,145 @@ export default function ViewCardPage() {
                                 Guardar
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Columna derecha - Comentarios */}
-            <div className="flex flex-col h-full border-l border-gray-700 p-4 w-80">
-                <div className="flex items-center gap-2 mb-4">
-                    <GoCommentDiscussion className="text-lg" />
-                    <h3 className="text-white font-semibold">Comentarios</h3>
-                </div>
-
-                {/* Input de comentario */}
-                <div className="flex items-start gap-2 mb-6">
-                    <img
-                        src={
-                            user?.avatar ||
-                            `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
-                        }
-                        alt="avatar"
-                        className="w-9 h-9 rounded-full"
-                    />
-                    <div className="w-full">
-                        {replyingTo && (
-                            <div className="text-sm text-gray-400 mb-2">
-                                Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
-                                <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
-                                    Cancelar
-                                </button>
-                            </div>
-                        )}
-                        <textarea
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Escribe aquí..."
-                            className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button
-                                onClick={handleAddComment}
-                                className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
-                            >
-                                Enviar
-                            </button>
                         </div>
-                    </div>
-                </div>
 
-                {/* Lista de comentarios */}
-                <div className="flex-1 overflow-y-auto space-y-4">
-                    {(() => {
-                        const rootComments = comments.filter((c) => c.parentId == null);
+                        {/* Columna derecha - Comentarios */}
+                        <div className="flex flex-col border-l border-gray-700 pl-6 w-80">
+                            <div className="flex items-center gap-2 mb-4">
+                                <GoCommentDiscussion className="text-lg" />
+                                <h3 className="text-white font-semibold">Comentarios</h3>
+                            </div>
 
-                        const renderComment = (c: Comment, depth = 0) => {
-                            const cid = c.id ?? c._id;
-                            if (cid == null) return null;
-
-                            const author = c.user;
-                            const authorFirst = userFirstName(author ?? undefined);
-                            const authorLast = userLastName(author ?? undefined);
-                            const authorId = author?.id;
-                            const replies = comments.filter(
-                                (cm) => String(cm.parentId) === String(cid)
-                            );
-
-                            return (
-                                <div
-                                    key={String(cid)}
-                                    className="mb-3"
-                                    style={{
-                                        marginLeft: Math.min(depth * 20, 40),
-                                    }}
-                                >
-                                    <div className="flex gap-2">
-                                        <img
-                                            src={
-                                                author?.avatar ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                    `${authorFirst || "?"} ${authorLast || ""}`
-                                                )}`
-                                            }
-                                            alt={`${authorFirst || "?"} ${authorLast || ""}`}
-                                            className="w-8 h-8 rounded-full"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-sm font-semibold">
-                                                    {authorFirst} {authorLast}
-                                                    <span className="ml-2 text-gray-400 text-xs">
-                                                        {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
-                                                    </span>
-                                                </p>
-
-                                                <div className="relative">
-                                                    <FaEllipsisV
-                                                        className="text-sm cursor-pointer"
-                                                        onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
-                                                    />
-                                                    {openMenuId === cid && (
-                                                        <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
-                                                            {authorId === user?.id && (
-                                                                <button
-                                                                    onClick={() => handleEditComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
-                                                                    Editar
-                                                                </button>
-                                                            )}
-                                                            {(authorId === user?.id || user?.id === card?.responsable?.id) && (
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
-                                                                    Eliminar
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <p className="text-sm text-gray-300">{c.content}</p>
-                                            <button
-                                                onClick={() => setReplyingTo(c)}
-                                                className="text-xs text-blue-400 mt-1">
-                                                Responder
+                            {/* Input de comentario */}
+                            <div className="flex items-start gap-2 mb-6">
+                                <img
+                                    src={
+                                        user?.avatar ||
+                                        `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
+                                    }
+                                    alt="avatar"
+                                    className="w-9 h-9 rounded-full"
+                                />
+                                <div className="w-full">
+                                    {replyingTo && (
+                                        <div className="text-sm text-gray-400 mb-2">
+                                            Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
+                                            <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
+                                                Cancelar
                                             </button>
-
-                                            {replies.length > 0 && (
-                                                <div className="mt-2">
-                                                    {replies.map((reply) => renderComment(reply, depth + 1))}
-                                                </div>
-                                            )}
                                         </div>
+                                    )}
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Escribe aquí..."
+                                        className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
+                                    />
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            onClick={handleAddComment}
+                                            className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
+                                        >
+                                            Enviar
+                                        </button>
                                     </div>
                                 </div>
-                            );
-                        };
+                            </div>
 
-                        return rootComments.map((c) => renderComment(c));
-                    })()}
-                </div>
+                            {/* Lista de comentarios */}
+                            <div className="flex-1 overflow-y-auto space-y-4">
+                                {(() => {
+                                    const rootComments = comments.filter((c) => c.parentId == null);
+
+                                    const renderComment = (c: Comment, depth = 0) => {
+                                        const cid = c.id ?? c._id;
+                                        if (cid == null) return null;
+
+                                        const author = c.user;
+                                        const authorFirst = userFirstName(author ?? undefined);
+                                        const authorLast = userLastName(author ?? undefined);
+                                        const authorId = author?.id;
+                                        const replies = comments.filter(
+                                            (cm) => String(cm.parentId) === String(cid)
+                                        );
+
+                                        return (
+                                            <div
+                                                key={String(cid)}
+                                                className="mb-3"
+                                                style={{
+                                                    marginLeft: Math.min(depth * 20, 40),
+                                                }}
+                                            >
+                                                <div className="flex gap-2">
+                                                    <img
+                                                        src={
+                                                            author?.avatar ||
+                                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                                `${authorFirst || "?"} ${authorLast || ""}`
+                                                            )}`
+                                                        }
+                                                        alt={`${authorFirst || "?"} ${authorLast || ""}`}
+                                                        className="w-8 h-8 rounded-full"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="text-sm font-semibold">
+                                                                {authorFirst} {authorLast}
+                                                                <span className="ml-2 text-gray-400 text-xs">
+                                                                    {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
+                                                                </span>
+                                                            </p>
+
+                                                            <div className="relative">
+                                                                <FaEllipsisV
+                                                                    className="text-sm cursor-pointer"
+                                                                    onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
+                                                                />
+                                                                {openMenuId === cid && (
+                                                                    <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
+                                                                        {authorId === user?.id && (
+                                                                            <button
+                                                                                onClick={() => handleEditComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
+                                                                                Editar
+                                                                            </button>
+                                                                        )}
+                                                                        {(authorId === user?.id || user?.id === card?.responsable?.id) && (
+                                                                            <button
+                                                                                onClick={() => handleDeleteComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
+                                                                                Eliminar
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="text-sm text-gray-300">{c.content}</p>
+                                                        <button
+                                                            onClick={() => setReplyingTo(c)}
+                                                            className="text-xs text-blue-400 mt-1">
+                                                            Responder
+                                                        </button>
+
+                                                        {replies.length > 0 && (
+                                                            <div className="mt-2">
+                                                                {replies.map((reply) => renderComment(reply, depth + 1))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    };
+
+                                    return rootComments.map((c) => renderComment(c));
+                                })()}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
