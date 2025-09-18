@@ -2,20 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FaPlus, FaTag, FaTimes, FaSearch, FaRegTrashAlt } from 'react-icons/fa';
+import { FaPlus, FaTag, FaTimes, FaRegTrashAlt } from 'react-icons/fa';
 import PrioritySelector from '@/components/card/PrioritySelector';
 import PriorityBadge from '@/components/card/PriorityBagde';
 import Calendar from '@/components/ui/Calendar';
 import Swal from 'sweetalert2';
-import StateBadge from '@/components/card/StateBadge';
-import StateSelector from '@/components/card/StateSelector';
-
 
 interface User {
   id: number;
   first_name: string;
   last_name: string;
   email: string;
+}
+
+interface BoardList {
+  id: number;
+  name: string;
+  position?: number;
 }
 
 function CreateCardPage() {
@@ -26,40 +29,20 @@ function CreateCardPage() {
   const [token, setToken] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [lead, setLead] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [reminder, setReminder] = useState<string>("none");
-  const [customDays, setCustomDays] = useState<string>("");
-  const [isCustomizing, setIsCustomizing] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
+
   const [responsable, setResponsable] = useState<User | null>(null);
-  const [newResponsable, setNewResponsable] = useState("");
-
-  const defaultOptions = [
-    { value: "1", label: "1 día antes" },
-    { value: "2", label: "2 días antes" },
-    { value: "3", label: "3 días antes" },
-
-  ];
-
-  const [state, setState] = useState<'TODO' | 'IN_PROGRESS' | 'DONE' | ''>('')
+  const [newResponsable, setNewResponsable] = useState('');
 
   const [priority, setPriority] = useState<'Baja' | 'Media' | 'Alta' | ''>('');
 
-  const stateLabels: Record<string, string> = {
-    'TODO': 'Por hacer',
-    'IN_PROGRESS': 'En progreso',
-    'DONE': 'Hecho',
-  };
-
-  const stateColors: Record<string, string> = {
-    'TODO': 'bg-[#60584E]',
-    'IN_PROGRESS': 'bg-[#2E90FA]',
-    'DONE': 'bg-[#12B76A]',
-  };
+  // 👇 listas (únicas)
+  const [lists, setLists] = useState<BoardList[]>([]);
+  const [listId, setListId] = useState<number | ''>('');
+  const [newListName, setNewListName] = useState('');
 
   useEffect(() => {
     try {
@@ -81,6 +64,31 @@ function CreateCardPage() {
     }
   }, [router]);
 
+  // Cargar listas del tablero
+  useEffect(() => {
+    if (!token || !boardId) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/list/by-board/${boardId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (!res.ok) {
+          console.error('Error cargando listas:', res.status, await res.text());
+          return;
+        }
+
+        const data = await res.json();
+        // backend responde { items: [...] }
+        setLists((data.items ?? data.lists ?? data) as BoardList[]);
+      } catch (e) {
+        console.error('Error cargando listas:', e);
+      }
+    })();
+  }, [token, boardId]);
+
   const handleAddTag = () => {
     const trimmed = newTag.trim();
     if (trimmed && !tags.includes(trimmed)) {
@@ -89,12 +97,9 @@ function CreateCardPage() {
     }
   };
 
-
   const handleRemoveTag = (index: number) => {
     setTags(tags.filter((_, i) => i !== index));
   };
-
-
 
   const handleAddResponsable = async () => {
     const trimmed = newResponsable.trim();
@@ -136,15 +141,24 @@ function CreateCardPage() {
   const handleCreateCard = async () => {
     if (!token || !boardId || !title.trim()) return;
 
-    const cardData = {
+    
+    const payload: any = {
       title,
       description,
       boardId: parseInt(boardId),
       responsableId: responsable?.id || null,
       beginDate: startDate?.toISOString(),
       dueDate: endDate?.toISOString(),
-      state: state || "TODO"
+      tags,
+      priority: priority || null, 
     };
+
+    if (listId !== '') {
+      payload.listId = Number(listId);
+    } else if (newListName.trim()) {
+      payload.listName = newListName.trim();
+    }
+    
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/card/createCard`, {
@@ -153,7 +167,7 @@ function CreateCardPage() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(cardData),
+        body: JSON.stringify(payload),
       });
 
       const responseData = await res.json();
@@ -162,9 +176,7 @@ function CreateCardPage() {
         throw new Error(`Error ${res.status}: ${responseData.error || 'Error desconocido'}`);
       }
 
-
-
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         text: "Tarjeta creada exitosamente",
         background: "rgb(26, 26, 26)",
@@ -256,10 +268,12 @@ function CreateCardPage() {
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[127px]"
+                className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus;border-purple-500 bg-[#313131] h-[127px]"
                 placeholder="Escribe aquí ..."
               />
             </div>
+
+            {/* Responsable */}
             <div>
               <label htmlFor="responsable" className="block font-medium mb-2 text-sm">
                 Responsable
@@ -305,79 +319,109 @@ function CreateCardPage() {
               )}
             </div>
 
-            {/* Separador*/}
-
+            {/* Prioridad */}
             <div>
-              <div>
-                <label className="block font-medium mb-2 text-sm">Prioridad</label>
-                <PrioritySelector value={priority} onChange={setPriority} />
-                {priority && <PriorityBadge label={priority} />}
-              </div>
+              <label className="block font-medium mb-2 text-sm">Prioridad</label>
+              <PrioritySelector value={priority} onChange={setPriority} />
+              {priority && <PriorityBadge label={priority} />}
+            </div>
 
+            {/* LISTA */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Seleccionar lista existente */}
               <div>
-                <label className="block font-medium mb-2 mt-4 text-sm">Estado</label>
-                <StateSelector value={state} onChange={setState} />
-                {state && <StateBadge label={state} labelsMap={stateLabels} colorsMap={stateColors}/>}
-              </div>
-              <div>
-                <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
-                  Etiquetas
-                </label>
-                <div className="relative">
-                  <input
-                    id="tags"
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                    className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
-                    placeholder="Agregar etiqueta..."
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddTag}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    <FaPlus />
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
-                    >
-                      <FaTag className="text-gray-400" />
-                      {tag}
-                      <FaTimes
-                        className="cursor-pointer hover:text-red-400 transition"
-                        onClick={() => handleRemoveTag(i)}
-                      />
-                    </span>
+                <label className="block font-medium mb-2 text-sm">Lista</label>
+                <select
+                  value={listId === '' ? '' : String(listId)}
+                  onChange={(e) => setListId(e.target.value ? Number(e.target.value) : '')}
+                  className="block w-full h-11 px-3 rounded-xl border-2 border-[#3C3C3CB2] bg-[#313131B3] text-base text-white"
+                >
+                  <option value="">Selecciona una lista…</option>
+                  {lists.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
                   ))}
-                </div>
+                </select>
+                {lists.length === 0 && (
+                  <p className="text-sm text-gray-400 mt-2">Este tablero aún no tiene listas.</p>
+                )}
               </div>
 
-              <div className="flex justify-end gap-4 pt-6">
+              {/* Crear nueva lista al vuelo */}
+              <div>
+                <label className="block font-medium mb-2 text-sm">O crea una lista nueva</label>
+                <input
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="Ej: Trabajo, Estudio..."
+                  className="block w-full h-11 px-3 rounded-xl border-2 border-[#3C3C3CB2] bg-[#313131B3] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500"
+                />
+                
+              </div>
+            </div>
+
+
+            {/* Etiquetas (visual) */}
+            <div>
+              <label htmlFor="tags" className="block font-medium mb-2 mt-4 text-sm">
+                Etiquetas
+              </label>
+              <div className="relative">
+                <input
+                  id="tags"
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  className="mt-2 p-3 pr-10 bg-[#313131B3] block w-full rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-base font-light text-white placeholder:text-[#797676] focus:outline-none focus:border-purple-500 bg-[#313131] h-[41px]"
+                  placeholder="Agregar etiqueta..."
+                />
                 <button
-                  onClick={() => router.push(`/dashboard/boards/${boardId}`)}
-                  className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
+                  type="button"
+                  onClick={handleAddTag}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCreateCard}
-                  disabled={!title.trim()}
-                  className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
-                >
-                  Crear Tarjeta
+                  <FaPlus />
                 </button>
               </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full border border-gray-500 text-sm flex items-center gap-1"
+                  >
+                    <FaTag className="text-gray-400" />
+                    {tag}
+                    <FaTimes
+                      className="cursor-pointer hover:text-red-400 transition"
+                      onClick={() => handleRemoveTag(i)}
+                    />
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4 pt-6">
+              <button
+                onClick={() => router.push(`/dashboard/boards/${boardId}`)}
+                className="text-state-default font-light border border-state-default rounded-lg px-16 py-2 text-sm hover:bg-background-medium transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateCard}
+                disabled={!title.trim()}
+                className="bg-state-default font-light text-white rounded-lg px-16 py-2 text-sm hover:bg-state-hover transition"
+              >
+                Crear Tarjeta
+              </button>
             </div>
           </div>
         </div>
