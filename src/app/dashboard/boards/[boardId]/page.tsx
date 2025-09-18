@@ -376,7 +376,7 @@ export default function BoardPage({ params }: BoardPageProps) {
 
     const handleDragEnd = async (result: DropResult) => {
         const { source, destination, draggableId } = result;
-        if (!destination) return; // Si no hay destino, salir
+        if (!destination) return; 
 
         if (
             source.droppableId === destination.droppableId && 
