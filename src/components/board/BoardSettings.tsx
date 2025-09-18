@@ -48,8 +48,8 @@ export const BoardSettings = () => {
 
   const isFormValid =
     boardName.trim() !== "" &&
-    description.trim() !== "" &&
-    imageFile !== null;
+    description.trim() !== "" ;
+    
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -170,6 +170,7 @@ export const BoardSettings = () => {
 
   const handleCreateBoard = async () => {
     if (!isFormValid) return;
+    if (imageFile) formData.append("image", imageFile);
 
     if (!accessToken) {
       await alertError("No hay token disponible. Inicia sesión primero.");
@@ -289,8 +290,10 @@ export const BoardSettings = () => {
             placeholder="Escribe aquí..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            maxLength={200}
             className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm placeholder-white/40 outline-none resize-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
           />
+          <p className="text-xs text-gray-400 mt-1">{description.length}/200 caracteres</p>
         </div>
 
         {/* Miembros */}

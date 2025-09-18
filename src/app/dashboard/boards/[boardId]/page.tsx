@@ -18,12 +18,15 @@ import EmptyBadge from '@/components/ui/EmptyBadge';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
 import { deleteCardById } from '@/services/cardService';
-import { de } from 'date-fns/locale';
+import { ca, de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import { MembersList } from '@/components/card/memberList';
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine } from "react-icons/lu";
 import { LuArrowLeftFromLine } from "react-icons/lu";
+import Link from "next/link";
+import { updateCardStatus } from "@/services/cardService";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 
 
@@ -38,13 +41,19 @@ interface Card {
     dueDate?: string;
     beginDate?: string;
     members?: { id: number; first_name: string; last_name: string; email: string; }[];
+    position: number;
 }
-
+interface Column {
+    id: string;
+    title: string;
+    cards: Card[];
+}
 interface BoardPageProps {
     params: Promise<{
         boardId: string;
     }>;
 }
+
 
 export default function BoardPage({ params }: BoardPageProps) {
     const [boardId, setBoardId] = useState<string | null>(null);
@@ -370,6 +379,44 @@ export default function BoardPage({ params }: BoardPageProps) {
         }
     };
 
+    const handleDragEnd = async (result: DropResult) => {
+        const { source, destination, draggableId } = result;
+        if (!destination) return; 
+
+        if (
+            source.droppableId === destination.droppableId && 
+            source.index === destination.index
+        ) {
+            return;
+        }
+
+        const cardId = Number(draggableId);
+        const newState = destination.droppableId;
+        const newPosition = destination.index;
+
+        const updatedCards = Array.from(cards);
+        const [movedCard] = updatedCards.splice(source.index, 1);
+        movedCard.state = newState;
+        updatedCards.splice(newPosition, 0, movedCard);
+        setCards(updatedCards);
+
+        try{
+            await updateCardStatus(
+                cardId,
+                Number(boardId),
+                newState,
+                newPosition,
+                accessToken!
+            );
+        }catch(error){
+            console.error("Error actualizando el estado de la tarjeta:", error);
+            refreshData();
+        }
+    };
+
+        
+    
+
     return (
         <>
 
@@ -508,163 +555,222 @@ export default function BoardPage({ params }: BoardPageProps) {
                 </>
             ) : (
                 <>
-                    <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
-                        {uniqueStates.map((state) => {
-                            const cardsInState = cards.filter(card => card.state === state);
-                            const translatedState = stateLabels[state] || state;
-                            const headerColorClass = stateColors[state] || 'bg-gray-500';
+                    {activeSection === "listas" && (
+                        <DragDropContext onDragEnd={handleDragEnd}>
+                            <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
+                                {uniqueStates.map((state) => {
+                                    const cardsInState = cards.filter((card) => card.state === state);
+                                    const translatedState = stateLabels[state] || state;
+                                    const headerColorClass = stateColors[state] || "bg-gray-500";
 
-                            return (
-
-                                <div key={state} className='flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4'>
-                                    <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', headerColorClass)}>
-                                        <h2>{translatedState}</h2>
-                                        <div className='flex gap-3 items-center'>
-                                            <h2>{cardsInState.length}</h2>
-                                            <button>
-                                                <FiEdit />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {cardsInState.map(card => (
-                                        <div key={card.id} className='bg-[--global-color-neutral-700] p-4 rounded-lg text-white'>
-                                            <div className='flex justify-between items-start'>
-                                                <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
-
-                                                <div className="relative inline-block text-left">
-                                                    <button
-                                                        onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
-                                                        className="text-white text-lg hover:opacity-80"
+                                    return (
+                                        <Droppable droppableId={state} key={state}>
+                                            {(provided) => (
+                                                <div
+                                                    {...provided.droppableProps}
+                                                    ref={provided.innerRef}
+                                                    className="flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4"
+                                                >
+                                                    <div
+                                                        className={clsx(
+                                                            "flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white",
+                                                            headerColorClass
+                                                        )}
                                                     >
-                                                        <FaEllipsisH />
-                                                    </button>
+                                                        <h2>{translatedState}</h2>
 
-                                                    {showMenu[card.id] && (
-                                                        <div 
-                                                            ref={(el) => {
-                                                                if (el) {
-                                                                    menuRefs.current.set(card.id, el);
-                                                                } else {
-                                                                    menuRefs.current.delete(card.id);
-                                                                }
-                                                            }}
-                                                            className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4"
-                                                        >
-                                                            <button
-                                                                onClick={() => {
-                                                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                                                    router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
-                                                                }}
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                            >
-                                                                <FaEye className="text-white text-lg" />
-                                                                <span>Ver tarjeta</span>
-                                                            </button>
-                                                            
-                                                            <button
-                                                                onClick={() => {
-                                                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                                                    router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
-                                                                }}
-                                                                className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                                            >
-                                                                <FaPen className="text-white text-lg" />
-                                                                <span>Editar tarjeta</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(card.id)}
-                                                                className="flex items-center justify-between w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
-                                                            >
-                                                                <span>Eliminar tarjeta</span>
-                                                                <FaTrash className="text-white text-lg" />
+                                                        <div className="flex gap-3 items-center">
+                                                            <h2>{cardsInState.length}</h2>
+                                                            <button>
+                                                                <FiEdit />
                                                             </button>
                                                         </div>
-                                                    )}
+                                                    </div>
+
+                                                    {cardsInState.map((card, index) => (
+                                                        <Draggable
+                                                            key={card.id.toString()}
+                                                            draggableId={card.id.toString()}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    className="bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4"
+                                                                >
+                                                                    <div className="flex justify-between items-start">
+                                                                        <h3 className="mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2">
+                                                                            {card.title}
+                                                                        </h3>
+                                                                        <p className="mb-3">
+                                                                            {card.description || "Sin descripción"}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <div
+                                                                        ref={menuRef}
+                                                                        className="relative inline-block text-left"
+                                                                    >
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                setShowMenu((prev) => ({
+                                                                                    ...prev,
+                                                                                    [card.id]: !prev[card.id],
+                                                                                }))
+                                                                            }
+                                                                            className="text-white text-lg hover:opacity-80"
+                                                                        >
+                                                                            <FaEllipsisH />
+                                                                        </button>
+
+                                                                        {showMenu[card.id] && (
+                                                                            <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+                                                                                <Link
+                                                                                    onClick={() =>
+                                                                                        setShowMenu((prev) => ({
+                                                                                            ...prev,
+                                                                                            [card.id]: false,
+                                                                                        }))
+                                                                                    }
+                                                                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                                                                    href={`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`}
+                                                                                >
+                                                                                    <FaEye className="text-white text-lg" />
+                                                                                    <span>Ver tarjeta</span>
+                                                                                </Link>
+
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setShowMenu((prev) => ({
+                                                                                            ...prev,
+                                                                                            [card.id]: false,
+                                                                                        }));
+                                                                                        router.push(
+                                                                                            `/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                                                                >
+                                                                                    <FaPen className="text-white text-lg" />
+                                                                                    <span>Editar tarjeta</span>
+                                                                                </button>
+
+                                                                                <button
+                                                                                    onClick={() => handleDelete(card.id)}
+                                                                                    className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                                                                >
+                                                                                    <FaTrash className="text-white text-lg" />
+                                                                                    <span>Eliminar tarjeta</span>
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex items-center justify-between mt-3">
+                                                                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                                                                            <Image
+                                                                                src={"https://picsum.photos/200/200?random=1"}
+                                                                                width={60}
+                                                                                height={60}
+                                                                                alt="User profile photo"
+                                                                                className="object-cover"
+                                                                            />
+                                                                        </div>
+                                                                        <button>
+                                                                            <BsShare />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+
+                                                    {provided.placeholder}
+
+                                                    <div className="mt-auto">
+                                                        <button
+                                                            onClick={() =>
+                                                                (window.location.href = `/dashboard/cards/create?boardId=${boardId}`)
+                                                            }
+                                                            className="flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg"
+                                                        >
+                                                            <FaPlus />
+                                                            Agregar tarea
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
+                                        </Droppable>
+                                    );
+                                })}
 
-                                            <p className='mb-3'>{card.description || 'Sin descripción'}</p>
-
-                                            <div className='flex items-center justify-between'>
-                                                <div className='w-12 h-12 rounded-full overflow-hidden'>
-                                                    <Image
-                                                        src={'https://picsum.photos/200/200?random=1'}
-                                                        width={60}
-                                                        height={60}
-                                                        alt="User profile photo"
-                                                        className="object-cover"
-                                                    />
-                                                </div>
-                                                <button><BsShare /></button>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    <div className='mt-auto'>
+                                {/* Botón para agregar nueva lista */}
+                                <div className="relative">
+                                    <div>
                                         <button
-                                            onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}`}
-                                            className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'
+                                            id="list-menu-button"
+                                            type="button"
+                                            aria-haspopup="true"
+                                            aria-expanded={isListMenuOpen ? "true" : "false"}
+                                            onClick={toggleListMenu}
+                                            className="relative rounded-xl p-3 text-2xl text-white bg-black"
                                         >
                                             <FaPlus />
-                                            Agregar tarea
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        role="menu"
+                                        tabIndex={1}
+                                        aria-labelledby="user-menu-button"
+                                        aria-orientation="vertical"
+                                        className={`${isListMenuOpen ? "" : "hidden"
+                                            } shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
+                                    >
+                                        <input
+                                            className="mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600"
+                                            type="text"
+                                            placeholder="Escribe aquí..."
+                                            value={newListName}
+                                            onChange={(e) => setNewListName(e.target.value)}
+                                        />
+
+                                        <a
+                                            id="list-menu-item-0"
+                                            role="menuitem"
+                                            href="#"
+                                            tabIndex={1}
+                                            className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]"
+                                        >
+                                            <LuArrowRightFromLine /> Insertar lista después
+                                        </a>
+                                        <a
+                                            id="list-menu-item-1"
+                                            role="menuitem"
+                                            href="#"
+                                            tabIndex={1}
+                                            className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]"
+                                        >
+                                            <LuArrowLeftFromLine /> Insertar lista antes
+                                        </a>
+                                        <button
+                                            id="list-menu-item-2"
+                                            role="menuitem"
+                                            tabIndex={1}
+                                            onClick={handleAddNewStateList}
+                                            className="gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
+                                        >
+                                            Agregar lista
                                         </button>
                                     </div>
                                 </div>
-
-
-                            );
-                        })}
-                        <div className='relative'>
-                            <div>
-                                <button
-                                    id="list-menu-button"
-                                    type="button"
-                                    aria-haspopup="true"
-                                    aria-expanded={isListMenuOpen ? "true" : "false"}
-                                    onClick={toggleListMenu}
-                                    className='relative rounded-xl p-3 text-2xl text-white bg-black'>
-                                    <FaPlus />
-                                </button>
                             </div>
-
-                            <div
-                                role="menu"
-                                tabIndex={1}
-                                aria-labelledby="user-menu-button"
-                                aria-orientation="vertical"
-                                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
-
-
-                                <input
-                                    className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
-                                    type="text"
-                                    placeholder='Escribe aquí...'
-                                    value={newListName}
-                                    onChange={(e) => setNewListName(e.target.value)}
-                                />
-
-
-                                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                                    <LuArrowRightFromLine /> Insertar lista después
-                                </a>
-                                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                                    <LuArrowLeftFromLine /> Insertar lista antes
-                                </a>
-                                <button
-                                    id="list-menu-item-2"
-                                    role="menuitem"
-                                    tabIndex={1}
-                                    onClick={handleAddNewStateList}
-                                    className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
-                                    Agregar lista
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-
+                        </DragDropContext>
+                    )}
                 </>
+
             )}
         </>
     );
