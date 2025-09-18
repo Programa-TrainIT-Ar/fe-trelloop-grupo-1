@@ -1,20 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaArrowLeft, FaEllipsisV, FaTimes, FaClock, FaPlay, FaPercent, FaTrash } from 'react-icons/fa';
+import { BiMove } from "react-icons/bi";
 import { GoCommentDiscussion } from "react-icons/go";
+import { LuLayoutDashboard, LuPanelRightOpen } from "react-icons/lu";
+import { FaPlus } from "react-icons/fa6";
 import { useAuthStore } from '@/store/auth';
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Swal from "sweetalert2";
-import { LuLayoutDashboard } from "react-icons/lu";
-import { LuPanelRightOpen } from "react-icons/lu";
-import { FaPlus } from "react-icons/fa6";
-import { BiMove } from "react-icons/bi";
-import Image from "next/image";
 import { deleteCardById } from '@/services/cardService';
-import '@/styles/delete-modal.css'
+import '@/styles/delete-modal.css';
 
 type Member = {
     id: number;
@@ -30,6 +28,7 @@ type CardData = {
     members?: Member[];
     dueDate?: string;
     state?: string;
+    beginDate?: string;
 };
 
 interface Comment {
@@ -92,52 +91,6 @@ export default function ViewCardPage() {
             return "";
         }
     };
-
-    useEffect(() => {
-        if (!cardId || !accessToken) {
-            console.log('ViewCardPage - Missing cardId or accessToken:', { cardId, accessToken: !!accessToken });
-            return;
-        }
-        
-        console.log('ViewCardPage - Fetching card data for cardId:', cardId);
-        fetch(`${process.env.NEXT_PUBLIC_API}/card/getCard/${cardId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-            },
-        })
-            .then(res => {
-                console.log('ViewCardPage - Card fetch response status:', res.status);
-                return res.json();
-            })
-            .then(data => {
-                console.log('ViewCardPage - Card data received:', data);
-                setCard(data);
-                calculateTimes(data);
-            })
-            .catch(error => {
-                console.error('ViewCardPage - Error fetching card:', error);
-                setCard(null);
-            });
-
-        // Cargar comentarios
-        fetch(`${process.env.NEXT_PUBLIC_API}/comment/list?cardId=${cardId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                const arr = Array.isArray(data) ? data : data.items ?? [];
-                setComments(arr);
-            })
-            .catch(() => setComments([]));
-
-    }, [cardId, accessToken]);
-
     const calculateTimes = (cardData: CardData) => {
         if (!cardData) return;
         
@@ -174,6 +127,45 @@ export default function ViewCardPage() {
     };
 
     useEffect(() => {
+        if (!cardId || !accessToken) {
+            console.log('ViewCardPage - Missing cardId or accessToken:', { cardId, accessToken: !!accessToken });
+            return;
+        }
+        
+        console.log('ViewCardPage - Fetching card data for cardId:', cardId);
+        fetch(`${process.env.NEXT_PUBLIC_API}/card/getCard/${cardId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        })
+            .then(res => res.json())
+            .then(data => {
+                setCard(data);
+                calculateTimes(data);
+            })
+            .catch(() => setCard(null));
+
+
+        // Cargar comentarios
+        fetch(`${process.env.NEXT_PUBLIC_API}/comment/list?cardId=${cardId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                const arr = Array.isArray(data) ? data : data.items ?? [];
+                setComments(arr);
+            })
+            .catch(() => setComments([]));
+
+    }, [cardId, accessToken]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setShowMenu(false);
@@ -191,6 +183,11 @@ export default function ViewCardPage() {
 
     const handleGoBack = () => {
         router.back();
+    };
+
+    const handleMove = () => {
+        console.log('Mover tarjeta');
+        setShowMenu(false);
     };
 
     const handleDeleteCard = async () => {
@@ -256,11 +253,6 @@ export default function ViewCardPage() {
                 });
             }
         }
-        setShowMenu(false);
-    };
-
-    const handleMove = () => {
-        console.log('Mover tarjeta');
         setShowMenu(false);
     };
 
@@ -417,22 +409,6 @@ export default function ViewCardPage() {
         }
     };
 
-    // Early return for loading/error states
-    if (!cardId) {
-        return (
-            <div className="flex items-center justify-center h-screen text-white">
-                <div className="text-center">
-                    <h2 className="text-2xl mb-4">Error: ID de tarjeta no encontrado</h2>
-                    <button 
-                        onClick={() => router.back()}
-                        className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-                    >
-                        Volver
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     if (!accessToken) {
         return (
@@ -468,7 +444,7 @@ export default function ViewCardPage() {
                 <div className="flex items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] mb-6">
                     <FaArrowLeft onClick={handleGoBack} className="cursor-pointer text-lg" />
                     <p className="text-sm">Volver al tablero</p>
-                    <div ref={menuRef} className="relative ml-auto">
+                    <div className="relative ml-auto">
                         <FaEllipsisV 
                             onClick={() => setShowMenu(!showMenu)}
                             className="cursor-pointer text-lg" 
@@ -476,7 +452,10 @@ export default function ViewCardPage() {
                         {showMenu && (
                             <div className="absolute right-0 top-8 w-48 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
                                 <button
-                                    onClick={handleMove}
+                                    onClick={() => {
+                                        console.log('Mover tarjeta');
+                                        setShowMenu(false);
+                                    }}
                                     className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
                                 >
                                     <BiMove className="text-white text-lg" />
@@ -499,8 +478,8 @@ export default function ViewCardPage() {
                     <h1 className="text-3xl font-bold mb-8">
                         {card?.title || "Cargando..."}
                     </h1>
-                    
-                    <div className="w-full">
+                    <div className="flex gap-6 w-full">
+                        <div className="flex-1">
                         <label className="text-white font-bold text-xl" htmlFor="Card description label">Descripción:</label>
                         <textarea className="text-xl text-white my-3 p-3 bg-transparent border-2 border-[#3C3C3CB2] rounded-xl w-full h-40" name="description" id=""></textarea>
 
@@ -574,7 +553,9 @@ export default function ViewCardPage() {
                                         <p className="text-sm p-2" style={{ color: "#ffffffff" }}>Tiempo estimado</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm " style={{ color: "#ffffff" }}>{estimatedTime}</p>
+                                        <p className="text-sm " style={{ color: "#ffffff" }}>
+                                            {estimatedTime}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -585,7 +566,9 @@ export default function ViewCardPage() {
                                         <p className="text-sm p-2" style={{ color: "#ffffff" }}>Tiempo trabajado</p>
                                     </div>
                                     <div>
-                                        <p className="text-base " style={{ color: "#ffffff" }}>{workedTime}</p>
+                                        <p className="text-base " style={{ color: "#ffffff" }}>
+                                            {workedTime}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -596,154 +579,174 @@ export default function ViewCardPage() {
                                         <p className="text-sm p-2" style={{ color: "#ffffff" }}>Progreso</p>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                        <div className="h-2.5 rounded-full" style={{ width: `${progress}%`, background: "var(--global-color-primary-500)" }}></div>
+                                        <div
+                                            className="h-2.5 rounded-full"
+                                            style={{
+                                                width: `${progress}%`,
+                                                background: "var(--global-color-primary-500)",
+                                            }}
+                                        ></div>
                                     </div>
+                                    <p className="text-xs mt-1" style={{ color: "#ffffff" }}>
+                                        {progress}%
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex justify-end mt-6 gap-4">
-                            <button className="py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] hover:bg-[--global-color-primary-500]">Cancelar</button>
-                            <button className="py-2 px-12 rounded-xl bg-[--global-color-primary-500] hover:bg-[--global-color-primary-400]">Guardar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Columna derecha - Comentarios */}
-            <div className="flex flex-col h-full border-l border-gray-700 p-4 w-80">
-                <div className="flex items-center gap-2 mb-4">
-                    <GoCommentDiscussion className="text-lg" />
-                    <h3 className="text-white font-semibold">Comentarios</h3>
-                </div>
-
-                {/* Input de comentario */}
-                <div className="flex items-start gap-2 mb-6">
-                    <img
-                        src={
-                            user?.avatar ||
-                            `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
-                        }
-                        alt="avatar"
-                        className="w-9 h-9 rounded-full"
-                    />
-                    <div className="w-full">
-                        {replyingTo && (
-                            <div className="text-sm text-gray-400 mb-2">
-                                Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
-                                <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
-                                    Cancelar
-                                </button>
-                            </div>
-                        )}
-                        <textarea
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Escribe aquí..."
-                            className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button
-                                onClick={handleAddComment}
-                                className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
+                            <button 
+                                onClick={handleGoBack}
+                                className="py-2 px-12 rounded-xl border-2 border-[--global-color-primary-500] text-white hover:bg-[--global-color-primary-500] transition-colors"
                             >
-                                Enviar
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={() => console.log('Guardar cambios')}
+                                className="py-2 px-12 rounded-xl bg-[--global-color-primary-500] text-white hover:bg-[--global-color-primary-400] transition-colors"
+                            >
+                                Guardar
                             </button>
                         </div>
-                    </div>
-                </div>
+                        </div>
 
-                {/* Lista de comentarios */}
-                <div className="flex-1 overflow-y-auto space-y-4">
-                    {(() => {
-                        const rootComments = comments.filter((c) => c.parentId == null);
+                        {/* Columna derecha - Comentarios */}
+                        <div className="flex flex-col border-l border-gray-700 pl-6 w-80">
+                            <div className="flex items-center gap-2 mb-4">
+                                <GoCommentDiscussion className="text-lg" />
+                                <h3 className="text-white font-semibold">Comentarios</h3>
+                            </div>
 
-                        const renderComment = (c: Comment, depth = 0) => {
-                            const cid = c.id ?? c._id;
-                            if (cid == null) return null;
-
-                            const author = c.user;
-                            const authorFirst = userFirstName(author ?? undefined);
-                            const authorLast = userLastName(author ?? undefined);
-                            const authorId = author?.id;
-                            const replies = comments.filter(
-                                (cm) => String(cm.parentId) === String(cid)
-                            );
-
-                            return (
-                                <div
-                                    key={String(cid)}
-                                    className="mb-3"
-                                    style={{
-                                        marginLeft: Math.min(depth * 20, 40),
-                                    }}
-                                >
-                                    <div className="flex gap-2">
-                                        <img
-                                            src={
-                                                author?.avatar ||
-                                                `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                                    `${authorFirst || "?"} ${authorLast || ""}`
-                                                )}`
-                                            }
-                                            alt={`${authorFirst || "?"} ${authorLast || ""}`}
-                                            className="w-8 h-8 rounded-full"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-sm font-semibold">
-                                                    {authorFirst} {authorLast}
-                                                    <span className="ml-2 text-gray-400 text-xs">
-                                                        {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
-                                                    </span>
-                                                </p>
-
-                                                <div className="relative">
-                                                    <FaEllipsisV
-                                                        className="text-sm cursor-pointer"
-                                                        onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
-                                                    />
-                                                    {openMenuId === cid && (
-                                                        <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
-                                                            {authorId === user?.id && (
-                                                                <button
-                                                                    onClick={() => handleEditComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
-                                                                    Editar
-                                                                </button>
-                                                            )}
-                                                            {(authorId === user?.id || user?.id === card?.responsable?.id) && (
-                                                                <button
-                                                                    onClick={() => handleDeleteComment(c)}
-                                                                    className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
-                                                                    Eliminar
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <p className="text-sm text-gray-300">{c.content}</p>
-                                            <button
-                                                onClick={() => setReplyingTo(c)}
-                                                className="text-xs text-blue-400 mt-1">
-                                                Responder
+                            {/* Input de comentario */}
+                            <div className="flex items-start gap-2 mb-6">
+                                <img
+                                    src={
+                                        user?.avatar ||
+                                        `https://ui-avatars.com/api/?name=${userFirstName(user) || "Tu"}+${userLastName(user)}`
+                                    }
+                                    alt="avatar"
+                                    className="w-9 h-9 rounded-full"
+                                />
+                                <div className="w-full">
+                                    {replyingTo && (
+                                        <div className="text-sm text-gray-400 mb-2">
+                                            Respondiendo a <b>{userFirstName(replyingTo.user) || "usuario"}</b>
+                                            <button onClick={() => setReplyingTo(null)} className="ml-2 text-red-400">
+                                                Cancelar
                                             </button>
-
-                                            {replies.length > 0 && (
-                                                <div className="mt-2">
-                                                    {replies.map((reply) => renderComment(reply, depth + 1))}
-                                                </div>
-                                            )}
                                         </div>
+                                    )}
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Escribe aquí..."
+                                        className="w-full bg-[#232323] border border-gray-600 rounded-lg p-4 text-sm"
+                                    />
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            onClick={handleAddComment}
+                                            className="px-6 py-2 rounded-lg bg-[#5B4BDB] hover:bg-[#4a3dc7] text-sm font-medium"
+                                        >
+                                            Enviar
+                                        </button>
                                     </div>
                                 </div>
-                            );
-                        };
+                            </div>
 
-                        return rootComments.map((c) => renderComment(c));
-                    })()}
+                            {/* Lista de comentarios */}
+                            <div className="flex-1 overflow-y-auto space-y-4">
+                                {(() => {
+                                    const rootComments = comments.filter((c) => c.parentId == null);
+
+                                    const renderComment = (c: Comment, depth = 0) => {
+                                        const cid = c.id ?? c._id;
+                                        if (cid == null) return null;
+
+                                        const author = c.user;
+                                        const authorFirst = userFirstName(author ?? undefined);
+                                        const authorLast = userLastName(author ?? undefined);
+                                        const authorId = author?.id;
+                                        const replies = comments.filter(
+                                            (cm) => String(cm.parentId) === String(cid)
+                                        );
+
+                                        return (
+                                            <div
+                                                key={String(cid)}
+                                                className="mb-3"
+                                                style={{
+                                                    marginLeft: Math.min(depth * 20, 40),
+                                                }}
+                                            >
+                                                <div className="flex gap-2">
+                                                    <img
+                                                        src={
+                                                            author?.avatar ||
+                                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                                `${authorFirst || "?"} ${authorLast || ""}`
+                                                            )}`
+                                                        }
+                                                        alt={`${authorFirst || "?"} ${authorLast || ""}`}
+                                                        className="w-8 h-8 rounded-full"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="text-sm font-semibold">
+                                                                {authorFirst} {authorLast}
+                                                                <span className="ml-2 text-gray-400 text-xs">
+                                                                    {c.createdAt ? formatRelativeTime(c.createdAt) : ""}
+                                                                </span>
+                                                            </p>
+
+                                                            <div className="relative">
+                                                                <FaEllipsisV
+                                                                    className="text-sm cursor-pointer"
+                                                                    onClick={() => setOpenMenuId(openMenuId === cid ? null : cid)}
+                                                                />
+                                                                {openMenuId === cid && (
+                                                                    <div className="absolute right-0 mt-2 w-32 bg-[#2b2b2b] rounded-lg shadow-lg text-sm z-50">
+                                                                        {authorId === user?.id && (
+                                                                            <button
+                                                                                onClick={() => handleEditComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a]">
+                                                                                Editar
+                                                                            </button>
+                                                                        )}
+                                                                        {(authorId === user?.id || user?.id === card?.responsable?.id) && (
+                                                                            <button
+                                                                                onClick={() => handleDeleteComment(c)}
+                                                                                className="block w-full text-left px-3 py-2 hover:bg-[#3a3a3a] text-red-400">
+                                                                                Eliminar
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="text-sm text-gray-300">{c.content}</p>
+                                                        <button
+                                                            onClick={() => setReplyingTo(c)}
+                                                            className="text-xs text-blue-400 mt-1">
+                                                            Responder
+                                                        </button>
+
+                                                        {replies.length > 0 && (
+                                                            <div className="mt-2">
+                                                                {replies.map((reply) => renderComment(reply, depth + 1))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    };
+
+                                    return rootComments.map((c) => renderComment(c));
+                                })()}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
