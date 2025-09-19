@@ -655,6 +655,54 @@ export default function BoardPage({ params }: BoardPageProps) {
         </>
       ) : (
         <>
+          {/* Botón para crear nuevas listas - arriba a la derecha */}
+          <div className='flex justify-end mb-4'>
+            <div className='relative'>
+              <button
+                id="list-menu-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={isListMenuOpen ? "true" : "false"}
+                onClick={toggleListMenu}
+                className='relative rounded-xl p-3 text-2xl text-white bg-black'
+              >
+                <FaPlus />
+              </button>
+
+              <div
+                role="menu"
+                tabIndex={1}
+                aria-labelledby="list-menu-button"
+                aria-orientation="vertical"
+                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 top-12 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
+              >
+                <input
+                  className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
+                  type="text"
+                  placeholder='Nombre de la lista…'
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                />
+
+                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowRightFromLine /> Insertar lista después
+                </a>
+                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowLeftFromLine /> Insertar lista antes
+                </a>
+                <button
+                  id="list-menu-item-2"
+                  role="menuitem"
+                  tabIndex={1}
+                  onClick={handleAddNewStateList}
+                  className="gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
+                >
+                  Agregar lista
+                </button>
+              </div>
+            </div>
+          </div>
+
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
               {lists.map((list) => {
@@ -798,52 +846,6 @@ export default function BoardPage({ params }: BoardPageProps) {
               })}
             </div>
           </DragDropContext>
-
-          {/* Botón para crear nuevas listas (menú lateral) */}
-          <div className='relative mt-4'>
-            <div>
-              <button
-                id="list-menu-button"
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={isListMenuOpen ? "true" : "false"}
-                onClick={toggleListMenu}
-                className='relative rounded-xl p-3 text-2xl text-white bg-black'>
-                <FaPlus />
-              </button>
-            </div>
-
-            <div
-              role="menu"
-              tabIndex={1}
-              aria-labelledby="user-menu-button"
-              aria-orientation="vertical"
-              className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
-            >
-              <input
-                className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
-                type="text"
-                placeholder='Nombre de la lista…'
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-              />
-
-              <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowRightFromLine /> Insertar lista después
-              </a>
-              <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowLeftFromLine /> Insertar lista antes
-              </a>
-              <button
-                id="list-menu-item-2"
-                role="menuitem"
-                tabIndex={1}
-                onClick={handleAddNewStateList}
-                className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
-                Agregar lista
-              </button>
-            </div>
-          </div>
         </>
       )}
     </>

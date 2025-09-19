@@ -170,7 +170,6 @@ export const BoardSettings = () => {
 
   const handleCreateBoard = async () => {
     if (!isFormValid) return;
-    if (imageFile) formData.append("image", imageFile);
 
     if (!accessToken) {
       await alertError("No hay token disponible. Inicia sesión primero.");
