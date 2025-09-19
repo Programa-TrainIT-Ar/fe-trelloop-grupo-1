@@ -208,32 +208,29 @@ export async function searchUsersByEmail(email: string, token: string) {
     throw error;
   }
 }
-export const updateCardStatus = async (
+export const moveCard = async (
   cardId: number,
-  boardId: number,
-  newState: string,
-  newPosition: number,
+  toListId: number,
   token: string
 ) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API}/updateCardStatus/${cardId}`,
+    `${process.env.NEXT_PUBLIC_API}/card/move/${cardId}`,
     {
-      method: "PUT",
+      method: "PATCH", 
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        boardId,
-        state: newState,
-        position: newPosition,
+        toListId,
       }),
     }
   );
 
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Error al actualizar la tarjeta");
+    
+    const text = await res.text().catch(() => "");
+    throw new Error(`Error moviendo la tarjeta: ${res.status} - ${text}`);
   }
 
   return await res.json();
