@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { useBoardStore } from "@/store/boards";
 import { FaPlus } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
-import { FaRegTrashAlt } from "react-icons/fa";
+import { FaRegTrashAlt, FaCalendarDay } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { SlOptions } from "react-icons/sl";
 import { BsShare } from "react-icons/bs";
@@ -21,6 +21,12 @@ import { deleteCardById } from '@/services/cardService';
 import '@/styles/delete-modal.css'
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine, LuArrowLeftFromLine } from "react-icons/lu";
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@/styles/datepicker.css';
+
+registerLocale('es', es);
 
 interface Card {
   id: number;
@@ -661,7 +667,17 @@ export default function BoardPage({ params }: BoardPageProps) {
                               alt="User profile photo"
                               className="object-cover"
                             />
+                    
                           </div>
+                          <DatePicker
+                            selected={card.dueDate ? new Date(card.dueDate) : null}
+                            locale="es"
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="Seleccionar fecha"
+                            showIcon
+                            icon={<FaCalendarDay />}
+                            className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2 text-white text-sm border-none outline-none w-36 text-center'
+                          />
                           <button><BsShare /></button>
                         </div>
                       </div>
