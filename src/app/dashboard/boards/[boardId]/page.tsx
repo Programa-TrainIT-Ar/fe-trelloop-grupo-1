@@ -17,7 +17,8 @@ import StateBadge from '@/components/card/StateBadge';
 import EmptyBadge from '@/components/ui/EmptyBadge';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
-import { deleteCardById } from '@/services/cardService';
+import { deleteCardById, moveCard } from '@/services/cardService';
+import { ca, de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine, LuArrowLeftFromLine } from "react-icons/lu";
@@ -27,6 +28,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '@/styles/datepicker.css';
 
 registerLocale('es', es);
+import Link from "next/link";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface Card {
   id: number;
@@ -48,11 +51,13 @@ interface List {
   name: string;
   position: number;
   created_by?: number;
+  cards?: Card[];
 }
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
 }
+
 
 export default function BoardPage({ params }: BoardPageProps) {
   const [boardId, setBoardId] = useState<string | null>(null);
@@ -428,6 +433,86 @@ export default function BoardPage({ params }: BoardPageProps) {
     }
   };
 
+  const handleDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return; // soltado fuera de droppable
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const cardId = Number(draggableId);
+    const sourceListId = Number(source.droppableId);
+    const destListId = Number(destination.droppableId);
+
+    // --- 1) crear copia agrupada por lista para manipular indices con facilidad ---
+    const grouped = new Map<number, Card[]>();
+    lists.forEach((l) => {
+      grouped.set(
+        l.id,
+        cards.filter((c) => (c.listId ?? null) === l.id)
+      );
+    });
+
+    // arrays clonados
+    const srcArr = grouped.get(sourceListId) ? [...(grouped.get(sourceListId) as Card[])] : [];
+    const dstArr = grouped.get(destListId) ? [...(grouped.get(destListId) as Card[])] : [];
+
+    // intentar extraer la card desde la srcArr por index (la index proviene del droppable)
+    let movedCard: Card | undefined;
+    if (srcArr.length > source.index) {
+      movedCard = srcArr.splice(source.index, 1)[0];
+    } else {
+      // fallback: buscar por id en el estado global (por si las fuentes estaban desincronizadas)
+      const findIdx = cards.findIndex((c) => c.id === cardId);
+      if (findIdx === -1) return;
+      movedCard = { ...cards[findIdx] };
+      // eliminar de su array original si existe
+      const originArr = grouped.get(movedCard.listId ?? -1) ?? [];
+      const pos = originArr.findIndex((c) => c.id === cardId);
+      if (pos !== -1) originArr.splice(pos, 1);
+    }
+
+    if (!movedCard) return;
+
+    // actualizar metadatos locales
+    movedCard = {
+      ...movedCard,
+      listId: destListId,
+      state: lists.find((l) => l.id === destListId)?.name ?? movedCard.state,
+    };
+
+    // insertar en destino
+    dstArr.splice(destination.index, 0, movedCard);
+
+    // reconstruir arreglo `cards` plano respetando orden de listas (para la UI)
+    const newCards: Card[] = [];
+    lists.forEach((l) => {
+      if (l.id === sourceListId) {
+        newCards.push(...srcArr);
+      } else if (l.id === destListId) {
+        newCards.push(...dstArr);
+      } else {
+        newCards.push(...(grouped.get(l.id) ?? []));
+      }
+    });
+
+    // agregar cards que no pertenecen a ninguna lista conocida (si existen)
+    const others = cards.filter((c) => !lists.some((l) => l.id === (c.listId ?? null)) && c.id !== cardId);
+    if (others.length) newCards.push(...others);
+
+    // mostrar cambio optimista en UI
+    setCards(newCards);
+
+    // persistir en backend. Si falla, refrescamos (revert)
+    try {
+      if (!accessToken) throw new Error("No se encontró token de autenticación");
+      await moveCard(cardId, destListId, accessToken);
+      // opcional: actualizar posición/orden en backend si tu API lo soporta
+    } catch (err) {
+      console.error("Error moviendo la tarjeta:", err);
+      // si algo falló — recargar desde servidor para sincronizar
+      await refreshData();
+    }
+
+  };
   return (
     <>
       <div className='relative flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl dark:bg-[--global-color-neutral-800]'>
@@ -570,105 +655,114 @@ export default function BoardPage({ params }: BoardPageProps) {
         </>
       ) : (
         <>
-          <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
-            {lists.map((list) => {
-              const cardsInList = cards.filter(card =>
-                card.listId != null ? card.listId === list.id
-                  : (card.state || '').toLowerCase() === list.name.toLowerCase()
-              );
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
+              {lists.map((list) => {
+                const cardsInList = cards.filter((card) =>
+                  card.listId != null ? card.listId === list.id
+                    : (card.state || '').toLowerCase() === list.name.toLowerCase()
+                );
 
-              return (
-                <div key={list.id} className='flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4'>
-                  <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', 'bg-zinc-700')}>
-                    <h2 title={list.name} className='truncate max-w-[70%]'>{list.name}</h2>
-                    <div className='flex gap-3 items-center'>
-                      <h2>{cardsInList.length}</h2>
-                      <button title="Renombrar lista"><FiEdit /></button>
-                      <button
-                        title={(!isOwner && cardsInList.length > 0) ? 'Solo el dueño puede eliminar listas con tarjetas' : 'Eliminar lista'}
-                        onClick={() => handleDeleteList(list, cardsInList.length)}
-                        className={clsx('transition-opacity', { 'opacity-50 cursor-not-allowed': !isOwner && cardsInList.length > 0 })}
+                return (
+                  <Droppable droppableId={String(list.id)} key={list.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={clsx('flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4', {
+                          'ring-2 ring-offset-2 ring-blue-500': snapshot.isDraggingOver
+                        })}
                       >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
-
-                  {cardsInList.map(card => {
-                    const effectivePriority = getEffectivePriority(card);
-                    return (
-                      <div key={card.id} className='bg-[--global-color-neutral-700] p-4 rounded-lg text-white'>
-                        <div className='flex justify-between items-start'>
-                          <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
-
-                          <div className="relative inline-block text-left">
+                        <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', 'bg-zinc-700')}>
+                          <h2 title={list.name} className='truncate max-w-[70%]'>{list.name}</h2>
+                          <div className='flex gap-3 items-center'>
+                            <h2>{cardsInList.length}</h2>
+                            <button title="Renombrar lista"><FiEdit /></button>
                             <button
-                              onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
-                              className="text-white text-lg hover:opacity-80"
+                              title={(!isOwner && cardsInList.length > 0) ? 'Solo el dueño puede eliminar listas con tarjetas' : 'Eliminar lista'}
+                              onClick={() => handleDeleteList(list, cardsInList.length)}
+                              className={clsx('transition-opacity', { 'opacity-50 cursor-not-allowed': !isOwner && cardsInList.length > 0 })}
                             >
-                              <FaEllipsisH />
+                              <FaTrash />
                             </button>
-
-                            {showMenu[card.id] && (
-                              <div
-                                ref={(el) => {
-                                  if (el) { menuRefs.current.set(card.id, el); } else { menuRefs.current.delete(card.id); }
-                                }}
-                                className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4"
-                              >
-                                <button
-                                  onClick={() => {
-                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                    router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
-                                  }}
-                                  className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                >
-                                  <FaEye className="text-white text-lg" />
-                                  <span>Ver tarjeta</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setShowMenu(prev => ({ ...prev, [card.id]: false }));
-                                    router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
-                                  }}
-                                  className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                                >
-                                  <FaPen className="text-white text-lg" />
-                                  <span>Editar tarjeta</span>
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(card.id)}
-                                  className="flex items-center justify-between w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
-                                >
-                                  <span>Eliminar tarjeta</span>
-                                  <FaTrash className="text-white text-lg" />
-                                </button>
-                              </div>
-                            )}
                           </div>
                         </div>
 
-                        {/* Prioridad en la card de la lista */}
-                        <div className='mt-2'>
-                          {effectivePriority
-                            ? <PriorityBadge label={effectivePriority} />
-                            : <EmptyBadge text="Sin prioridad" />}
-                        </div>
+                        {cardsInList.map((card, index) => {
+                          const effectivePriority = getEffectivePriority(card);
+                          return (
+                            <Draggable key={String(card.id)} draggableId={String(card.id)} index={index}>
+                              {(providedDraggable, snapshotDraggable) => (
+                                <div
+                                  ref={providedDraggable.innerRef}
+                                  {...providedDraggable.draggableProps}
+                                  {...providedDraggable.dragHandleProps}
+                                  className={clsx('bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4', {
+                                    'opacity-90 shadow-lg': snapshotDraggable.isDragging
+                                  })}
+                                >
+                                  <div className='flex justify-between items-start'>
+                                    <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
-                        <p className='mt-3'>{card.description || 'Sin descripción'}</p>
+                                    <div className="relative inline-block text-left">
+                                      <button
+                                        onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
+                                        className="text-white text-lg hover:opacity-80"
+                                      >
+                                        <FaEllipsisH />
+                                      </button>
 
-                        <div className='flex items-center justify-between mt-3'>
-                          <div className='w-12 h-12 rounded-full overflow-hidden'>
-                            <Image
-                              src={'https://picsum.photos/200/200?random=1'}
-                              width={60}
-                              height={60}
-                              alt="User profile photo"
-                              className="object-cover"
-                            />
+                                      {showMenu[card.id] && (
+                                        <div
+                                          ref={(el) => {
+                                            if (el) { menuRefs.current.set(card.id, el); } else { menuRefs.current.delete(card.id); }
+                                          }}
+                                          className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4"
+                                        >
+                                          <button
+                                            onClick={() => {
+                                              setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                              router.push(`/dashboard/cards/view?cardId=${card.id}&boardId=${boardId}`);
+                                            }}
+                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                                          >
+                                            <FaEye className="text-white text-lg" />
+                                            <span>Ver tarjeta</span>
+                                          </button>
+
+                                          <button
+                                            onClick={() => {
+                                              setShowMenu(prev => ({ ...prev, [card.id]: false }));
+                                              router.push(`/dashboard/cards/edit?cardId=${card.id}&boardId=${boardId}`);
+                                            }}
+                                            className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-2"
+                                          >
+                                            <FaPen className="text-white text-lg" />
+                                            <span>Editar tarjeta</span>
+                                          </button>
+                                          <button
+                                            onClick={() => handleDelete(card.id)}
+                                            className="flex items-center justify-between w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors mt-1"
+                                          >
+                                            <span>Eliminar tarjeta</span>
+                                            <FaTrash className="text-white text-lg" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className='mt-2'>
+                                    {effectivePriority ? <PriorityBadge label={effectivePriority} /> : <EmptyBadge text="Sin prioridad" />}
+                                  </div>
+
+                                  <p className='mt-3'>{card.description || 'Sin descripción'}</p>
+
+                                  <div className='flex items-center justify-between mt-3'>
+                                    <div className='w-12 h-12 rounded-full overflow-hidden'>
+                                      <Image src={'https://picsum.photos/200/200?random=1'} width={60} height={60} alt="User profile photo" className="object-cover" />
                     
-                          </div>
+                                    </div>
                           <DatePicker
                             selected={card.dueDate ? new Date(card.dueDate) : null}
                             locale="es"
@@ -678,68 +772,76 @@ export default function BoardPage({ params }: BoardPageProps) {
                             icon={<FaCalendarDay />}
                             className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2 text-white text-sm border-none outline-none w-36 text-center'
                           />
-                          <button><BsShare /></button>
+                                    <button><BsShare /></button>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+
+                        {provided.placeholder}
+
+                        <div className='mt-auto'>
+                          <button
+                            onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}&listId=${list.id}`}
+                            className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'
+                          >
+                            <FaPlus />
+                            Agregar tarea
+                          </button>
                         </div>
                       </div>
-                    );
-                  })}
+                    )}
+                  </Droppable>
+                );
+              })}
+            </div>
+          </DragDropContext>
 
-                  <div className='mt-auto'>
-                    <button
-                      onClick={() => window.location.href = `/dashboard/cards/create?boardId=${boardId}&listId=${list.id}`}
-                      className='flex items-center py-2 gap-2 justify-center w-full text-white bg-[--global-color-primary-500] rounded-lg'
-                    >
-                      <FaPlus />
-                      Agregar tarea
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          {/* Botón para crear nuevas listas (menú lateral) */}
+          <div className='relative mt-4'>
+            <div>
+              <button
+                id="list-menu-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={isListMenuOpen ? "true" : "false"}
+                onClick={toggleListMenu}
+                className='relative rounded-xl p-3 text-2xl text-white bg-black'>
+                <FaPlus />
+              </button>
+            </div>
 
-            <div className='relative'>
-              <div>
-                <button
-                  id="list-menu-button"
-                  type="button"
-                  aria-haspopup="true"
-                  aria-expanded={isListMenuOpen ? "true" : "false"}
-                  onClick={toggleListMenu}
-                  className='relative rounded-xl p-3 text-2xl text-white bg-black'>
-                  <FaPlus />
-                </button>
-              </div>
+            <div
+              role="menu"
+              tabIndex={1}
+              aria-labelledby="user-menu-button"
+              aria-orientation="vertical"
+              className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
+            >
+              <input
+                className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
+                type="text"
+                placeholder='Nombre de la lista…'
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+              />
 
-              <div
-                role="menu"
+              <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                <LuArrowRightFromLine /> Insertar lista después
+              </a>
+              <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                <LuArrowLeftFromLine /> Insertar lista antes
+              </a>
+              <button
+                id="list-menu-item-2"
+                role="menuitem"
                 tabIndex={1}
-                aria-labelledby="user-menu-button"
-                aria-orientation="vertical"
-                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}>
-
-                <input
-                  className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
-                  type="text"
-                  placeholder='Nombre de la lista…'
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                />
-
-                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                  <LuArrowRightFromLine /> Insertar lista después
-                </a>
-                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                  <LuArrowLeftFromLine /> Insertar lista antes
-                </a>
-                <button
-                  id="list-menu-item-2"
-                  role="menuitem"
-                  tabIndex={1}
-                  onClick={handleAddNewStateList}
-                  className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
-                  Agregar lista
-                </button>
-              </div>
+                onClick={handleAddNewStateList}
+                className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
+                Agregar lista
+              </button>
             </div>
           </div>
         </>

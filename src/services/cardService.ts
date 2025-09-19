@@ -208,3 +208,30 @@ export async function searchUsersByEmail(email: string, token: string) {
     throw error;
   }
 }
+export const moveCard = async (
+  cardId: number,
+  toListId: number,
+  token: string
+) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API}/card/move/${cardId}`,
+    {
+      method: "PATCH", 
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        toListId,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    
+    const text = await res.text().catch(() => "");
+    throw new Error(`Error moviendo la tarjeta: ${res.status} - ${text}`);
+  }
+
+  return await res.json();
+};
