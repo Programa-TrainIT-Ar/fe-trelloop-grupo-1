@@ -48,8 +48,8 @@ export const BoardSettings = () => {
 
   const isFormValid =
     boardName.trim() !== "" &&
-    description.trim() !== "" &&
-    imageFile !== null;
+    description.trim() !== "" ;
+    
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -178,7 +178,10 @@ export const BoardSettings = () => {
 
     const formData = new FormData();
     formData.append("name", boardName);
-    formData.append("description", description);
+
+    const safeDescription = validateDescription(description);
+  
+    formData.append("description", safeDescription);
     formData.append("isPublic", visibility === "public" ? "true" : "false");
     if (imageFile) formData.append("image", imageFile);
 
@@ -246,6 +249,14 @@ export const BoardSettings = () => {
       await alertError(msg);
     }
   };
+  
+  const validateDescription = (desc: string) => {
+  
+    const raw = desc;
+
+  
+  return raw.slice(0, 200);
+};
 
   return (
     // Sin bg para heredar el gris del layout
@@ -288,9 +299,11 @@ export const BoardSettings = () => {
             rows={4}
             placeholder="Escribe aquí..."
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => setDescription(validateDescription(e.target.value))}
+            
             className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-sm placeholder-white/40 outline-none resize-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/30 transition"
           />
+          <p>{description.length}/200</p>
         </div>
 
         {/* Miembros */}
