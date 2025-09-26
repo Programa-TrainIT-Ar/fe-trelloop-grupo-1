@@ -3,12 +3,10 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { useBoardStore } from "@/store/boards";
 import { FaPlus } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
-import { SlOptions } from "react-icons/sl";
 import { BsShare } from "react-icons/bs";
 import Image from 'next/image';
 import clsx from 'clsx';
@@ -18,22 +16,20 @@ import EmptyBadge from '@/components/ui/EmptyBadge';
 import Swal from 'sweetalert2';
 import { FaPen, FaTrash, FaEllipsisH, FaEye } from 'react-icons/fa';
 import { deleteCardById, moveCard } from '@/services/cardService';
-import { ca, de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine, LuArrowLeftFromLine } from "react-icons/lu";
-import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface Card {
   id: number;
   title: string;
-  description?: string;
-  responsableId?: number;
-  responsable?: { id: number; first_name: string; last_name: string; email: string; };
+  description?: string | null;
+  responsableId?: number | null;
+  responsable?: { id: number; first_name: string; last_name: string; email: string; } | null;
   priority?: 'Baja' | 'Media' | 'Alta' | null;
-  state?: string;            // fallback mientras migran
-  listId?: number | null;    // clave para columnas
+  state?: string | null;
+  listId?: number | null;
   dueDate?: string | null;
   beginDate?: string | null;
   members?: { id: number; first_name: string; last_name: string; email: string; }[];
@@ -45,13 +41,11 @@ interface List {
   name: string;
   position: number;
   created_by?: number;
-  cards?: Card[];
 }
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
 }
-
 
 export default function BoardPage({ params }: BoardPageProps) {
   const [boardId, setBoardId] = useState<string | null>(null);
@@ -66,12 +60,13 @@ export default function BoardPage({ params }: BoardPageProps) {
   const router = useRouter();
   const [showSharePanel, setShowSharePanel] = useState(false);
 
+  // Menú “+” para crear listas
   const [isListMenuOpen, setIsListMenuOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const listMenuRef = useRef<HTMLDivElement | null>(null);
 
   const API = process.env.NEXT_PUBLIC_API;
 
-  // userId del token (para permisos sobre listas)
   const myUserId = useMemo(() => {
     if (!accessToken) return null;
     try {
@@ -88,6 +83,17 @@ export default function BoardPage({ params }: BoardPageProps) {
   }, [boardData, myUserId]);
 
   useEffect(() => {
+    if (!isListMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (listMenuRef.current && !listMenuRef.current.contains(e.target as Node)) {
+        setIsListMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [isListMenuOpen]);
+
+  useEffect(() => {
     const getParams = async () => {
       const { boardId: id } = await params;
       setBoardId(id);
@@ -95,13 +101,12 @@ export default function BoardPage({ params }: BoardPageProps) {
     getParams();
   }, [params]);
 
-  // Helpers de prioridad
   const calculatePriority = (dueDate?: string | null): 'Baja' | 'Media' | 'Alta' | null => {
     if (!dueDate) return null;
     const today = new Date();
     const due = new Date(dueDate);
     const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return 'Alta';      // vencida
+    if (diffDays < 0) return 'Alta';
     if (diffDays <= 3) return 'Alta';
     if (diffDays <= 7) return 'Media';
     return 'Baja';
@@ -109,12 +114,10 @@ export default function BoardPage({ params }: BoardPageProps) {
   const getEffectivePriority = (c: Card): 'Baja' | 'Media' | 'Alta' | null =>
     c.priority ?? calculatePriority(c.dueDate);
 
-  // Refrescar datos (board, listas, cards)
   const refreshData = async () => {
     if (!boardId || !accessToken) return;
 
     try {
-      // Board
       const boardRes = await fetch(`${API}/board/getBoard/${boardId}`, {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       });
@@ -126,7 +129,6 @@ export default function BoardPage({ params }: BoardPageProps) {
         boardMembers = bd.members || [];
       }
 
-      // Lists
       const listRes = await fetch(`${API}/list/by-board/${boardId}`, {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       });
@@ -147,17 +149,14 @@ export default function BoardPage({ params }: BoardPageProps) {
         setLists([]);
       }
 
-      // Cards
       const res = await fetch(`${API}/card/getCards/${boardId}`, {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       });
 
       if (res.ok) {
         const cardsData = await res.json();
-
         const cardsWithData = await Promise.all(
           cardsData.map(async (raw: any) => {
-            // normalización de campos del backend
             const base: Card = {
               id: raw.id,
               title: raw.title,
@@ -184,8 +183,7 @@ export default function BoardPage({ params }: BoardPageProps) {
               }
 
               return { ...base, members, responsable };
-            } catch (error) {
-              console.error(`Error fetching data for card ${base.id}:`, error);
+            } catch {
               return { ...base, members: [], responsable: null };
             }
           })
@@ -198,14 +196,12 @@ export default function BoardPage({ params }: BoardPageProps) {
     }
   };
 
-  // on focus vuelve a cargar
   useEffect(() => {
     const handleFocus = () => refreshData();
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [boardId, accessToken]);
 
-  // cerrar menús al click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const openMenus = Object.entries(showMenu).filter(([_, isOpen]) => isOpen);
@@ -228,9 +224,7 @@ export default function BoardPage({ params }: BoardPageProps) {
   if (!boardData) return <div className='text-white'>Cargando...</div>;
 
   const handleSectionChange = (section: 'backlog' | 'listas') => setActiveSection(section);
-  const toggleListMenu = () => setIsListMenuOpen(!isListMenuOpen);
 
-  // crear lista vacía
   const handleAddNewStateList = async () => {
     if (!newListName.trim()) {
       Swal.fire({
@@ -299,7 +293,6 @@ export default function BoardPage({ params }: BoardPageProps) {
     }
   };
 
-  // Backlog (mantengo tu visual)
   const defaultStates = ['TODO', 'IN_PROGRESS', 'DONE'];
   const uniqueStates = Array.from(new Set(cards.map(c => c.state || ''))).filter(Boolean).sort();
   const customStates = uniqueStates.filter(state => !defaultStates.includes(state));
@@ -370,7 +363,7 @@ export default function BoardPage({ params }: BoardPageProps) {
     if (!canDelete) {
       Swal.fire({
         title: 'Acción no permitida',
-        text: 'Solo el dueño puede eliminar listas con tarjetas. Los miembros solo pueden eliminar listas vacías.',
+        text: 'Solo el dueño puede eliminar listas con tarjetas.',
         icon: 'info',
         background: '#222',
         color: '#fff',
@@ -429,14 +422,13 @@ export default function BoardPage({ params }: BoardPageProps) {
 
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
-    if (!destination) return; // soltado fuera de droppable
+    if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     const cardId = Number(draggableId);
     const sourceListId = Number(source.droppableId);
     const destListId = Number(destination.droppableId);
 
-    // --- 1) crear copia agrupada por lista para manipular indices con facilidad ---
     const grouped = new Map<number, Card[]>();
     lists.forEach((l) => {
       grouped.set(
@@ -445,20 +437,16 @@ export default function BoardPage({ params }: BoardPageProps) {
       );
     });
 
-    // arrays clonados
     const srcArr = grouped.get(sourceListId) ? [...(grouped.get(sourceListId) as Card[])] : [];
     const dstArr = grouped.get(destListId) ? [...(grouped.get(destListId) as Card[])] : [];
 
-    // intentar extraer la card desde la srcArr por index (la index proviene del droppable)
     let movedCard: Card | undefined;
     if (srcArr.length > source.index) {
       movedCard = srcArr.splice(source.index, 1)[0];
     } else {
-      // fallback: buscar por id en el estado global (por si las fuentes estaban desincronizadas)
       const findIdx = cards.findIndex((c) => c.id === cardId);
       if (findIdx === -1) return;
       movedCard = { ...cards[findIdx] };
-      // eliminar de su array original si existe
       const originArr = grouped.get(movedCard.listId ?? -1) ?? [];
       const pos = originArr.findIndex((c) => c.id === cardId);
       if (pos !== -1) originArr.splice(pos, 1);
@@ -466,17 +454,14 @@ export default function BoardPage({ params }: BoardPageProps) {
 
     if (!movedCard) return;
 
-    // actualizar metadatos locales
     movedCard = {
       ...movedCard,
       listId: destListId,
       state: lists.find((l) => l.id === destListId)?.name ?? movedCard.state,
     };
 
-    // insertar en destino
     dstArr.splice(destination.index, 0, movedCard);
 
-    // reconstruir arreglo `cards` plano respetando orden de listas (para la UI)
     const newCards: Card[] = [];
     lists.forEach((l) => {
       if (l.id === sourceListId) {
@@ -488,27 +473,23 @@ export default function BoardPage({ params }: BoardPageProps) {
       }
     });
 
-    // agregar cards que no pertenecen a ninguna lista conocida (si existen)
     const others = cards.filter((c) => !lists.some((l) => l.id === (c.listId ?? null)) && c.id !== cardId);
     if (others.length) newCards.push(...others);
 
-    // mostrar cambio optimista en UI
     setCards(newCards);
 
-    // persistir en backend. Si falla, refrescamos (revert)
     try {
       if (!accessToken) throw new Error("No se encontró token de autenticación");
       await moveCard(cardId, destListId, accessToken);
-      // opcional: actualizar posición/orden en backend si tu API lo soporta
     } catch (err) {
       console.error("Error moviendo la tarjeta:", err);
-      // si algo falló — recargar desde servidor para sincronizar
       await refreshData();
     }
-
   };
+
   return (
     <>
+      {/* Header */}
       <div className='relative flex justify-between mb-6 ps-1 pe-6 py-1 w-full h-[54px] text-lg text-white border border-[--global-color-neutral-700] rounded-2xl dark:bg-[--global-color-neutral-800]'>
         <div className='flex gap-6'>
           <button
@@ -564,6 +545,7 @@ export default function BoardPage({ params }: BoardPageProps) {
 
       {activeSection === 'backlog' ? (
         <>
+          {/* Encabezado backlog */}
           <div className='grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_auto] items-center gap-3 px-4 py-3 text-lg bg-[#313131B3] rounded-xl border-2 border-[#3C3C3CB2] backdrop-blur-[3.6px] text-white mb-6 text-center'>
             <input id="default-checkbox" type="checkbox" className="w-4 h-4 bg-transparent rounded-sm" />
             <h6>Descripción</h6>
@@ -649,8 +631,9 @@ export default function BoardPage({ params }: BoardPageProps) {
         </>
       ) : (
         <>
+          {/* LISTAS + botón “+” como columna al final */}
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
+            <div className="flex flex-row gap-6 w-full overflow-x-auto overflow-y-visible items-start h-[calc(100vh-180px)]">
               {lists.map((list) => {
                 const cardsInList = cards.filter((card) =>
                   card.listId != null ? card.listId === list.id
@@ -663,11 +646,12 @@ export default function BoardPage({ params }: BoardPageProps) {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={clsx('flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4', {
-                          'ring-2 ring-offset-2 ring-blue-500': snapshot.isDraggingOver
-                        })}
+                        className={clsx(
+                          'flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4',
+                          { 'ring-2 ring-offset-2 ring-blue-500': snapshot.isDraggingOver }
+                        )}
                       >
-                        <div className={clsx('flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white', 'bg-zinc-700')}>
+                        <div className='flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white bg-zinc-700'>
                           <h2 title={list.name} className='truncate max-w-[70%]'>{list.name}</h2>
                           <div className='flex gap-3 items-center'>
                             <h2>{cardsInList.length}</h2>
@@ -780,54 +764,64 @@ export default function BoardPage({ params }: BoardPageProps) {
                   </Droppable>
                 );
               })}
+
+              {/* 👉 Columna del botón “+” dentro del MISMO flex, alineada arriba */}
+              <div className="flex-none w-12 self-start">
+                <div className="relative inline-block" ref={listMenuRef}>
+                  <button
+                    type="button"
+                    aria-haspopup="true"
+                    aria-expanded={isListMenuOpen ? "true" : "false"}
+                    onClick={() => setIsListMenuOpen(v => !v)}
+                    className="rounded-xl p-3 text-2xl text-white bg-black"
+                    title="Agregar lista"
+                  >
+                    <FaPlus />
+                  </button>
+
+                  {/* Popover hacia la DERECHA del botón */}
+                  <div
+                    role="menu"
+                    tabIndex={-1}
+                    className={[
+                      "absolute top-0 left-full ml-3", // sale a la derecha
+                      "w-60 rounded-xl bg-black z-50 p-3 shadow-lg ring-1 ring-black/50",
+                      "flex flex-col gap-y-3",
+                      isListMenuOpen
+                        ? "opacity-100 translate-y-0 pointer-events-auto"
+                        : "opacity-0 -translate-y-1 pointer-events-none",
+                      "transition-all duration-150 ease-out"
+                    ].join(" ")}
+                  >
+                    <input
+                      className="rounded-md px-3 py-2 text-white bg-transparent border border-gray-600 placeholder-gray-500"
+                      type="text"
+                      placeholder="Nombre de la lista…"
+                      value={newListName}
+                      onChange={(e) => setNewListName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddNewStateList(); }}
+                    />
+
+                    <button type="button" className="flex items-center gap-2 text-left px-3 py-2 text-sm text-white hover:bg-zinc-800 rounded-md">
+                      <LuArrowRightFromLine /> Insertar lista después
+                    </button>
+
+                    <button type="button" className="flex items-center gap-2 text-left px-3 py-2 text-sm text-white hover:bg-zinc-800 rounded-md">
+                      <LuArrowLeftFromLine /> Insertar lista antes
+                    </button>
+
+                    <button
+                      onClick={handleAddNewStateList}
+                      className="mt-1 py-2 text-sm rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
+                    >
+                      Agregar lista
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {/* FIN columna “+” */}
             </div>
           </DragDropContext>
-
-          {/* Botón para crear nuevas listas (menú lateral) */}
-          <div className='relative mt-4'>
-            <div>
-              <button
-                id="list-menu-button"
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={isListMenuOpen ? "true" : "false"}
-                onClick={toggleListMenu}
-                className='relative rounded-xl p-3 text-2xl text-white bg-black'>
-                <FaPlus />
-              </button>
-            </div>
-
-            <div
-              role="menu"
-              tabIndex={1}
-              aria-labelledby="user-menu-button"
-              aria-orientation="vertical"
-              className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
-            >
-              <input
-                className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
-                type="text"
-                placeholder='Nombre de la lista…'
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-              />
-
-              <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowRightFromLine /> Insertar lista después
-              </a>
-              <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowLeftFromLine /> Insertar lista antes
-              </a>
-              <button
-                id="list-menu-item-2"
-                role="menuitem"
-                tabIndex={1}
-                onClick={handleAddNewStateList}
-                className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
-                Agregar lista
-              </button>
-            </div>
-          </div>
         </>
       )}
     </>
