@@ -65,7 +65,7 @@ export function NotificationProvider({
       channel = subscribeToUserChannel(userId);
 
       const handler = (data: AppNotification) => {
-        console.log("[NotificationProvider] Received notification:", data);
+        console.log("[NotificationProvider] ✅ Received notification from Pusher:", data);
         setNotifications((prev) => {
           // Evitar duplicados
           const exists = prev.some((n) => n.id === data.id);
@@ -80,21 +80,34 @@ export function NotificationProvider({
       };
 
       channel.bind("notification", handler);
-      console.log("[NotificationProvider] Notification handler bound successfully");
+      console.log("[NotificationProvider] Notification handler bound successfully to channel:", `private-user-${userId}`);
+
+      // Agregar más eventos para debugging
+      channel.bind("pusher:subscription_succeeded", () => {
+        console.log("[NotificationProvider] ✅ Successfully subscribed to notifications channel");
+      });
+
+      channel.bind("pusher:subscription_error", (error: any) => {
+        console.error("[NotificationProvider] ❌ Subscription error:", error);
+      });
+
+
 
       return () => {
         try {
           console.log("[NotificationProvider] Cleaning up Pusher subscription");
           channel.unbind("notification", handler);
+          channel.unbind("pusher:subscription_succeeded");
+          channel.unbind("pusher:subscription_error");
           channel.unsubscribe();
         } catch (e) {
           console.warn("[NotificationProvider] Error during cleanup:", e);
         }
       };
     } catch (error) {
-      console.error("[NotificationProvider] Error setting up Pusher:", error);
+      console.error("[NotificationProvider] ❌ Error setting up Pusher:", error);
     }
-  }, [userId]);
+  }, [userId, token]);
 
   // Cleanup on unmount
   useEffect(() => {
