@@ -22,6 +22,15 @@ export async function registerController(usuario: UsuarioConConfirmacion) {
     if (!firstName || !lastName || !email || !password || !confirmPassword ) {
         return { error: true, message: "Por favor, completa todos los campos", type: "form" };
     }
+    
+    // Validar que nombres y apellidos solo contengan letras y espacios
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(firstName)) {
+        return { error: true, message: "Formato incorrecto, intente nuevamente", type: "firstName" };
+    }
+    if (!nameRegex.test(lastName)) {
+        return { error: true, message: "Formato incorrecto, intente nuevamente", type: "lastName" };
+    }
     if (!email.includes("@")) {
      
         return { error: true, message: "Por favor ingresa un correo válido", type: "email" };
@@ -49,8 +58,8 @@ export async function registerController(usuario: UsuarioConConfirmacion) {
         password,
     });
 
-    if (response.error && !response.type) {
-        return { ...response, type: "" };
+    if (response.error) {
+        return response;
     }
     return response;
 }
