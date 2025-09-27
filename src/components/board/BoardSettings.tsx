@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FaLock, FaGlobe, FaPlus, FaTag, FaCamera, FaUser, FaTimes } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { useAuthStore } from "@/store/auth";
+import { useBoardStore } from "@/store/boards";
 import Swal from "sweetalert2";
 
 interface User {
@@ -35,6 +36,7 @@ export const BoardSettings = () => {
 
   const accessToken = useAuthStore((s) => s.accessToken);
   const userEmail = useAuthStore((s) => s.user?.email);
+  const { boards } = useBoardStore();
 
   const [boardName, setBoardName] = useState("");
   const [description, setDescription] = useState("");
@@ -44,6 +46,7 @@ export const BoardSettings = () => {
   const [members, setMembers] = useState<User[]>([]);
   const [newMember, setNewMember] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [lastRequestTime, setLastRequestTime] = useState(0);
 
   const router = useRouter();
 
@@ -172,6 +175,14 @@ export const BoardSettings = () => {
   const handleCreateBoard = async () => {
     if (!isFormValid || isCreating) return;
 
+    // Prevenir múltiples requests en menos de 2 segundos
+    const now = Date.now();
+    if (now - lastRequestTime < 2000) {
+      await alertError("Por favor espera un momento antes de crear otro tablero.");
+      return;
+    }
+    setLastRequestTime(now);
+
     if (!accessToken) {
       await alertError("No hay token disponible. Inicia sesión primero.");
       return;
@@ -179,8 +190,21 @@ export const BoardSettings = () => {
 
     setIsCreating(true);
 
+    // Verificar nombres duplicados usando el store de boards
+    if (boards && boards.length > 0) {
+      const existingNames = boards.map((board: any) => {
+        const name = board.name || board.title || board.boardName;
+        return name?.toLowerCase();
+      }).filter(Boolean);
+      
+      if (existingNames.includes(boardName.trim().toLowerCase())) {
+        await alertError("Ya existe un tablero con ese nombre. Por favor, elige otro nombre.");
+        return;
+      }
+    }
+
     const formData = new FormData();
-    formData.append("name", boardName);
+    formData.append("name", boardName.trim());
 
     const safeDescription = validateDescription(description);
   
@@ -204,6 +228,9 @@ export const BoardSettings = () => {
       
       if (!res.ok) {
         const errorText = await res.text();
+        if (res.status === 409 || errorText.includes('nombre') || errorText.includes('name')) {
+          throw new Error("Ya existe un tablero con ese nombre. Por favor, elige otro nombre.");
+        }
         throw new Error(`Error al crear el tablero: ${res.status} - ${errorText}`);
       }
 
@@ -234,7 +261,7 @@ export const BoardSettings = () => {
 
       await Swal.fire({
         icon: "success",
-        text: "Tablero creado con éxito",
+        text: `Tablero "${boardName}" creado con éxito`,
         background: "rgb(26, 26, 26)",
         iconColor: "#6A5FFF",
         color: "#FFFFFF",
