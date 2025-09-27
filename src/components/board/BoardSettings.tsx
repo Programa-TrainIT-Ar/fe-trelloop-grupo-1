@@ -43,6 +43,7 @@ export const BoardSettings = () => {
 
   const [members, setMembers] = useState<User[]>([]);
   const [newMember, setNewMember] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const router = useRouter();
 
@@ -169,12 +170,14 @@ export const BoardSettings = () => {
   };
 
   const handleCreateBoard = async () => {
-    if (!isFormValid) return;
+    if (!isFormValid || isCreating) return;
 
     if (!accessToken) {
       await alertError("No hay token disponible. Inicia sesión primero.");
       return;
     }
+
+    setIsCreating(true);
 
     const formData = new FormData();
     formData.append("name", boardName);
@@ -247,6 +250,8 @@ export const BoardSettings = () => {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al crear el tablero";
       await alertError(msg);
+    } finally {
+      setIsCreating(false);
     }
   };
   
@@ -282,7 +287,7 @@ export const BoardSettings = () => {
 
         {/* Nombre */}
         <div>
-          <label className="block font-medium mb-2 text-sm">Nombre de tablero</label>
+          <label className="block font-medium mb-2 text-sm">Nombre de tablero *</label>
           <input
             type="text"
             placeholder="Escribe aquí..."
@@ -461,12 +466,12 @@ export const BoardSettings = () => {
           </button>
           <button
             type="button"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isCreating}
             onClick={handleCreateBoard}
-            className={`w-full bg-purple-600 font-light text-white rounded-lg py-3 text-sm hover:bg-purple-700 transition ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""
+            className={`w-full bg-purple-600 font-light text-white rounded-lg py-3 text-sm hover:bg-purple-700 transition ${!isFormValid || isCreating ? "opacity-50 cursor-not-allowed" : ""
               }`}
           >
-            Crear tablero
+            {isCreating ? "Creando..." : "Crear tablero"}
           </button>
         </div>
       </div>

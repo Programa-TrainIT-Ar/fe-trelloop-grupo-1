@@ -33,8 +33,8 @@ export default function NotificationFilters({ onFilterChange, onSearch }: Notifi
             onClick={() => handleFilterClick(filter.key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               activeFilter === filter.key
-                ? 'bg-white text-black'
-                : 'bg-gray-600 text-white hover:bg-gray-500'
+                ? 'bg-[#6A5FFF] text-white'
+                : 'bg-[#747171] text-white hover:bg-[#6A5FFF] hover:text-white'
             }`}
           >
             <span>{filter.title}</span>

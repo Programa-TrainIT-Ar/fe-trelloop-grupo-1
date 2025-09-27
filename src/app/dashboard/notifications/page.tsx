@@ -162,7 +162,7 @@ export default function NotificationsPage() {
             {/* Notificaciones de Hoy */}
             {todayNotifications.slice(0, Math.min(visibleCount, todayNotifications.length)).length > 0 && (
               <div>
-                <h2 className="text-lg font-medium mb-4 text-white">Hoy</h2>
+                <h2 className="text-lg font-light mb-4 text-white">Hoy</h2>
                 <div className="space-y-3">
                   {todayNotifications.slice(0, Math.min(visibleCount, todayNotifications.length)).map((n: AppNotification) => (
                     <div
@@ -214,7 +214,7 @@ export default function NotificationsPage() {
                       </div>
                       
                       {/* Flecha */}
-                      <div className="text-gray-400 flex-shrink-0">
+                      <div className="text-white flex-shrink-0">
                         <FaArrowRight />
                       </div>
                     </div>
@@ -226,7 +226,7 @@ export default function NotificationsPage() {
             {/* Notificaciones Anteriores */}
             {previousNotifications.slice(0, Math.max(0, visibleCount - todayNotifications.length)).length > 0 && (
               <div>
-                <h2 className="text-lg font-medium mb-4 text-white">Anteriores</h2>
+                <h2 className="text-lg font-light mb-4 text-white">Anteriores</h2>
                 <div className="space-y-3">
                   {previousNotifications.slice(0, Math.max(0, visibleCount - todayNotifications.length)).map((n: AppNotification) => (
                     <div
@@ -277,8 +277,8 @@ export default function NotificationsPage() {
                       </div>
                       
                       {/* Flecha */}
-                      <div className="text-gray-400 flex-shrink-0">
-                        →
+                      <div className="text-white flex-shrink-0">
+                         <FaArrowRight />
                       </div>
                     </div>
                   ))}
