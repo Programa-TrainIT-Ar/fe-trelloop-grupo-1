@@ -121,6 +121,9 @@ export default function RegisterView() {
                   placeholder="Escribe tus nombres"
                   required
                 />
+                {error.type === "firstName" && (
+                  <p className="mt-1 text-sm text-red-500">{error.message}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="lastName" className="label-register">
@@ -137,6 +140,9 @@ export default function RegisterView() {
                   placeholder="Ecribe tus apellidos"
                   required
                 />
+                {error.type === "lastName" && (
+                  <p className="mt-1 text-sm text-red-500">{error.message}</p>
+                )}
               </div>
               <div className="col-span-2">
                 <label htmlFor="email" className="label-register">

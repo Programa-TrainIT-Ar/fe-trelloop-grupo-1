@@ -1,3 +1,4 @@
+"use client";
 import SideNav from "@/components/User/sidenav";
 import SearchBar from "@/components/User/searchbar";
 import React from "react";

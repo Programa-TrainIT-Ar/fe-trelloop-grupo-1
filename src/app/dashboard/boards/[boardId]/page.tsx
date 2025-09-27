@@ -150,6 +150,7 @@ export default function BoardPage({ params }: BoardPageProps) {
         normalized.sort((a, b) => a.position - b.position);
         setLists(normalized);
       } else {
+        console.error('Error loading lists:', listRes.status, await listRes.text());
         setLists([]);
       }
 
@@ -744,12 +745,11 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 <div
                                   ref={providedDraggable.innerRef}
                                   {...providedDraggable.draggableProps}
-                                  {...providedDraggable.dragHandleProps}
                                   className={clsx('bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4', {
                                     'opacity-90 shadow-lg': snapshotDraggable.isDragging
                                   })}
                                 >
-                                  <div className='flex justify-between items-start'>
+                                  <div className='flex justify-between items-start' {...providedDraggable.dragHandleProps}>
                                     <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
                                     <div className="relative inline-block text-left">
@@ -811,15 +811,45 @@ export default function BoardPage({ params }: BoardPageProps) {
                                       <Image src={'https://picsum.photos/200/200?random=1'} width={60} height={60} alt="User profile photo" className="object-cover" />
                     
                                     </div>
-                          <DatePicker
-                            selected={card.dueDate ? new Date(card.dueDate) : null}
-                            locale="es"
-                            dateFormat="dd/MM/yyyy"
-                            placeholderText="Seleccionar fecha"
-                            showIcon
-                            icon={<FaCalendarDay />}
-                            className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2 text-white text-sm border-none outline-none w-36 text-center'
-                          />
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                          >
+                            <DatePicker
+                              selected={card.dueDate ? new Date(card.dueDate) : null}
+                              onChange={async (date) => {
+                                if (!accessToken) return;
+                                try {
+                                  const response = await fetch(`${API}/card/updateCard/${card.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${accessToken}`
+                                    },
+                                    body: JSON.stringify({
+                                      dueDate: date ? date.toISOString().split('T')[0] : null
+                                    })
+                                  });
+                                  if (response.ok) {
+                                    refreshData();
+                                  }
+                                } catch (error) {
+                                  console.error('Error updating due date:', error);
+                                }
+                              }}
+                              locale="es"
+                              dateFormat="dd/MM/yyyy"
+                              placeholderText="Fecha límite"
+                              showIcon
+                              icon={<FaCalendarDay />}
+                              className={`mb-3 rounded-2xl py-1 px-2 text-sm border-none outline-none w-36 text-center ${
+                                card.dueDate && new Date(card.dueDate) < new Date() 
+                                  ? 'bg-red-600 text-white' 
+                                  : 'bg-[--global-color-neutral-600] text-white'
+                              }`}
+                            />
+                          </div>
                                     <button><BsShare /></button>
                                   </div>
                                 </div>

@@ -28,8 +28,11 @@ const response = await fetch(`${API}/auth/register`, {
         const data = await response.json();
 
         if (!response.ok) {
+            // Si es error 409 (Conflict), probablemente es correo duplicado
+            if (response.status === 409) {
+                return { error: true, message: "El usuario ya existe", type: "email" };
+            }
             return { error: true, message: data.message || "no se pudo registrar el usuario" };
-
         }
 
         return { error: false, message: "" };
