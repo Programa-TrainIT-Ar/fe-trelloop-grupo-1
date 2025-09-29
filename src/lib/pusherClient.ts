@@ -35,20 +35,18 @@ function initPusher(): Pusher | null {
     return null;
   }
 
-  const token = getAccessToken();
-  if (!token) {
-    console.warn("[pusher] No JWT access token found; private channels may fail");
-  }
-
   pusher = new Pusher(key, {
     cluster,
     forceTLS: true,
     authEndpoint,
     auth: {
       headers: {
-        Authorization: token ? `Bearer ${token}` : "",
+        get Authorization() {
+          const token = getAccessToken();
+          return token ? `Bearer ${token}` : "";
+        },
       },
-      params: {}, // params opcional si quieres enviar algo extra
+      params: {},
     },
   });
 

@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { useBoardStore } from "@/store/boards";
 import { FaPlus } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
-import { FaRegTrashAlt } from "react-icons/fa";
+import { FaRegTrashAlt, FaCalendarDay } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { SlOptions } from "react-icons/sl";
 import { BsShare } from "react-icons/bs";
@@ -22,6 +22,12 @@ import { ca, de } from 'date-fns/locale';
 import '@/styles/delete-modal.css'
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine, LuArrowLeftFromLine } from "react-icons/lu";
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@/styles/datepicker.css';
+
+registerLocale('es', es);
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
@@ -171,6 +177,7 @@ export default function BoardPage({ params }: BoardPageProps) {
         normalized.sort((a, b) => a.position - b.position);
         setLists(normalized);
       } else {
+        console.error('Error loading lists:', listRes.status, await listRes.text());
         setLists([]);
       }
 
@@ -676,6 +683,54 @@ export default function BoardPage({ params }: BoardPageProps) {
         </>
       ) : (
         <>
+          {/* Botón para crear nuevas listas - arriba a la derecha */}
+          <div className='flex justify-end mb-4'>
+            <div className='relative'>
+              <button
+                id="list-menu-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={isListMenuOpen ? "true" : "false"}
+                onClick={toggleListMenu}
+                className='relative rounded-xl p-3 text-2xl text-white bg-black'
+              >
+                <FaPlus />
+              </button>
+
+              <div
+                role="menu"
+                tabIndex={1}
+                aria-labelledby="list-menu-button"
+                aria-orientation="vertical"
+                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 top-12 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
+              >
+                <input
+                  className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
+                  type="text"
+                  placeholder='Nombre de la lista…'
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                />
+
+                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowRightFromLine /> Insertar lista después
+                </a>
+                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowLeftFromLine /> Insertar lista antes
+                </a>
+                <button
+                  id="list-menu-item-2"
+                  role="menuitem"
+                  tabIndex={1}
+                  onClick={handleAddNewStateList}
+                  className="gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
+                >
+                  Agregar lista
+                </button>
+              </div>
+            </div>
+          </div>
+
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
               {lists.map((list) => {
@@ -717,12 +772,11 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 <div
                                   ref={providedDraggable.innerRef}
                                   {...providedDraggable.draggableProps}
-                                  {...providedDraggable.dragHandleProps}
                                   className={clsx('bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4', {
                                     'opacity-90 shadow-lg': snapshotDraggable.isDragging
                                   })}
                                 >
-                                  <div className='flex justify-between items-start'>
+                                  <div className='flex justify-between items-start' {...providedDraggable.dragHandleProps}>
                                     <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
                                     <div className="relative inline-block text-left">
@@ -782,7 +836,47 @@ export default function BoardPage({ params }: BoardPageProps) {
                                   <div className='flex items-center justify-between mt-3'>
                                     <div className='w-12 h-12 rounded-full overflow-hidden'>
                                       <Image src={'https://picsum.photos/200/200?random=1'} width={60} height={60} alt="User profile photo" className="object-cover" />
+                    
                                     </div>
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                          >
+                            <DatePicker
+                              selected={card.dueDate ? new Date(card.dueDate) : null}
+                              onChange={async (date) => {
+                                if (!accessToken) return;
+                                try {
+                                  const response = await fetch(`${API}/card/updateCard/${card.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${accessToken}`
+                                    },
+                                    body: JSON.stringify({
+                                      dueDate: date ? date.toISOString().split('T')[0] : null
+                                    })
+                                  });
+                                  if (response.ok) {
+                                    refreshData();
+                                  }
+                                } catch (error) {
+                                  console.error('Error updating due date:', error);
+                                }
+                              }}
+                              locale="es"
+                              dateFormat="dd/MM/yyyy"
+                              placeholderText="Fecha límite"
+                              showIcon
+                              icon={<FaCalendarDay />}
+                              className={`mb-3 rounded-2xl py-1 px-2 text-sm border-none outline-none w-36 text-center ${
+                                card.dueDate && new Date(card.dueDate) < new Date() 
+                                  ? 'bg-red-600 text-white' 
+                                  : 'bg-[--global-color-neutral-600] text-white'
+                              }`}
+                            />
+                          </div>
                                     <button><BsShare /></button>
                                   </div>
                                 </div>
@@ -809,52 +903,6 @@ export default function BoardPage({ params }: BoardPageProps) {
               })}
             </div>
           </DragDropContext>
-
-          {/* Botón para crear nuevas listas (menú lateral) */}
-          <div className='relative mt-4'>
-            <div>
-              <button
-                id="list-menu-button"
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={isListMenuOpen ? "true" : "false"}
-                onClick={toggleListMenu}
-                className='relative rounded-xl p-3 text-2xl text-white bg-black'>
-                <FaPlus />
-              </button>
-            </div>
-
-            <div
-              role="menu"
-              tabIndex={1}
-              aria-labelledby="user-menu-button"
-              aria-orientation="vertical"
-              className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
-            >
-              <input
-                className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
-                type="text"
-                placeholder='Nombre de la lista…'
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-              />
-
-              <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowRightFromLine /> Insertar lista después
-              </a>
-              <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
-                <LuArrowLeftFromLine /> Insertar lista antes
-              </a>
-              <button
-                id="list-menu-item-2"
-                role="menuitem"
-                tabIndex={1}
-                onClick={handleAddNewStateList}
-                className=" gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]">
-                Agregar lista
-              </button>
-            </div>
-          </div>
         </>
       )}
     </>
