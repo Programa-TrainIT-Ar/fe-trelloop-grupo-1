@@ -55,12 +55,12 @@ interface List {
 }
 
 interface BoardPageProps {
-  params: Promise<{ boardId: string }>;
+  params: { boardId: string };
 }
 
 
 export default function BoardPage({ params }: BoardPageProps) {
-  const [boardId, setBoardId] = useState<string | null>(null);
+  const [boardId, setBoardId] = useState<string | null>(params.boardId ?? null);
   const [boardData, setBoardData] = useState<any>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const [lists, setLists] = useState<List[]>([]);
@@ -94,11 +94,9 @@ export default function BoardPage({ params }: BoardPageProps) {
   }, [boardData, myUserId]);
 
   useEffect(() => {
-    const getParams = async () => {
-      const { boardId: id } = await params;
-      setBoardId(id);
-    };
-    getParams();
+    if (params?.boardId) setBoardId(params.boardId);
+
+
   }, [params]);
 
   // Helpers de prioridad
@@ -124,6 +122,35 @@ export default function BoardPage({ params }: BoardPageProps) {
       const boardRes = await fetch(`${API}/board/getBoard/${boardId}`, {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       });
+
+      if (boardRes.status === 403) {
+        Swal.fire({
+          title: 'Acceso denegado',
+          text: 'No tienes permiso para ver este tablero.',
+          icon: 'error',
+          background: '#222',
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: { confirmButton: 'btn-cancel', popup: 'mi-modal' }
+        });
+        router.push("/dashboard"); // o redirige a otra página segura
+        return;
+      }
+
+      if (!boardRes.ok) {
+        Swal.fire({
+          title: 'Error',
+          text: 'El tablero no existe o no se pudo cargar.',
+          icon: 'warning',
+          background: '#222',
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: { confirmButton: 'btn-cancel', popup: 'mi-modal' }
+        });
+        router.push("/dashboard");
+        return;
+      }
+
 
       let boardMembers: any[] = [];
       if (boardRes.ok) {
