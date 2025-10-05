@@ -101,14 +101,14 @@ export function BoardCard(props) {
             <div className="board-info"></div>
             <div className="z-10">
               <div className="flex justify-between items-center">
-                <p className="board-title ">{props.name}</p>
+                <p className="board-title text-white font-bold text-lg truncate max-w-[70%] ">{props.name}</p>
                 <button
                   onClick={handleFavorite}
                   className="bg-transparent text-[#F200FF] flex items-center">
                     {isFavorite ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl"/>}
                 </button>
               </div>
-              <p className="text-sm mb-1 font-normal board-description">
+              <p className="board-description text-sm mb-1 font-normal text-gray-300 overflow-hidden text-ellipsis line-clamp-2">
                 {props.description.length > 27
                   ? fixDescriptionLength(props.description) + "..."
                   : props.description}

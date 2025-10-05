@@ -5,6 +5,7 @@ import { StaticImageData } from "next/image";
 import { useBoardStore } from "@/store/boards/store";
 import { useAuthStore } from "@/store/auth";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 interface Board {
   id: number;
@@ -21,6 +22,7 @@ const BoardListView = () => {
   const getBoards = useBoardStore((state) => state.getBoards);
   const token = useAuthStore.getState().accessToken;
   const boards = useBoardStore((state) => state.boards);
+  const error = useBoardStore((state) => state.error);
   const router = useRouter();
   const [favoriteBoardIds, setFavoriteBoardIds] = useState<number[]>([]);
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(true);
@@ -30,7 +32,16 @@ const BoardListView = () => {
       router.push("/");
     }
 
-      getBoards()
+      getBoards();
+
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: error,
+        confirmButtonColor: "#3085d6",
+      });
+    }
 
     
 
@@ -62,7 +73,7 @@ const BoardListView = () => {
 
     fetchFavoriteBoards();
 
-  }, [token, router, getBoards]);
+  }, [token, router, getBoards,error]);
 
   if (isLoadingFavorites) {
     return <p className="text-white">Cargando tableros...</p>;

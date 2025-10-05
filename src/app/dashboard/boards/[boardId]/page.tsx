@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { FaPlus } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
-import { FaRegTrashAlt } from "react-icons/fa";
+import { FaRegTrashAlt, FaCalendarDay } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { BsShare } from "react-icons/bs";
 import Image from 'next/image';
@@ -19,6 +19,13 @@ import { deleteCardById, moveCard } from '@/services/cardService';
 import '@/styles/delete-modal.css'
 import ShareBoardPanel from '@/components/board/ShareBoardPanel';
 import { LuArrowRightFromLine, LuArrowLeftFromLine } from "react-icons/lu";
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+import '@/styles/datepicker.css';
+
+registerLocale('es', es);
+import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface Card {
@@ -44,11 +51,11 @@ interface List {
 }
 
 interface BoardPageProps {
-  params: Promise<{ boardId: string }>;
+  params: { boardId: string };
 }
 
 export default function BoardPage({ params }: BoardPageProps) {
-  const [boardId, setBoardId] = useState<string | null>(null);
+  const [boardId, setBoardId] = useState<string | null>(params.boardId ?? null);
   const [boardData, setBoardData] = useState<any>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const [lists, setLists] = useState<List[]>([]);
@@ -83,22 +90,9 @@ export default function BoardPage({ params }: BoardPageProps) {
   }, [boardData, myUserId]);
 
   useEffect(() => {
-    if (!isListMenuOpen) return;
-    const onDown = (e: MouseEvent) => {
-      if (listMenuRef.current && !listMenuRef.current.contains(e.target as Node)) {
-        setIsListMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [isListMenuOpen]);
+    if (params?.boardId) setBoardId(params.boardId);
 
-  useEffect(() => {
-    const getParams = async () => {
-      const { boardId: id } = await params;
-      setBoardId(id);
-    };
-    getParams();
+
   }, [params]);
 
   const calculatePriority = (dueDate?: string | null): 'Baja' | 'Media' | 'Alta' | null => {
@@ -121,6 +115,35 @@ export default function BoardPage({ params }: BoardPageProps) {
       const boardRes = await fetch(`${API}/board/getBoard/${boardId}`, {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
       });
+
+      if (boardRes.status === 403) {
+        Swal.fire({
+          title: 'Acceso denegado',
+          text: 'No tienes permiso para ver este tablero.',
+          icon: 'error',
+          background: '#222',
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: { confirmButton: 'btn-cancel', popup: 'mi-modal' }
+        });
+        router.push("/dashboard"); // o redirige a otra página segura
+        return;
+      }
+
+      if (!boardRes.ok) {
+        Swal.fire({
+          title: 'Error',
+          text: 'El tablero no existe o no se pudo cargar.',
+          icon: 'warning',
+          background: '#222',
+          color: '#fff',
+          confirmButtonText: 'Aceptar',
+          customClass: { confirmButton: 'btn-cancel', popup: 'mi-modal' }
+        });
+        router.push("/dashboard");
+        return;
+      }
+
 
       let boardMembers: any[] = [];
       if (boardRes.ok) {
@@ -146,6 +169,7 @@ export default function BoardPage({ params }: BoardPageProps) {
         normalized.sort((a, b) => a.position - b.position);
         setLists(normalized);
       } else {
+        console.error('Error loading lists:', listRes.status, await listRes.text());
         setLists([]);
       }
 
@@ -631,7 +655,54 @@ export default function BoardPage({ params }: BoardPageProps) {
         </>
       ) : (
         <>
-          {/* LISTAS + botón “+” como columna al final */}
+          {/* Botón para crear nuevas listas - arriba a la derecha */}
+          <div className='flex justify-end mb-4'>
+            <div className='relative'>
+              <button
+                id="list-menu-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={isListMenuOpen ? "true" : "false"}
+                onClick={toggleListMenu}
+                className='relative rounded-xl p-3 text-2xl text-white bg-black'
+              >
+                <FaPlus />
+              </button>
+
+              <div
+                role="menu"
+                tabIndex={1}
+                aria-labelledby="list-menu-button"
+                aria-orientation="vertical"
+                className={`${isListMenuOpen ? '' : 'hidden'} shadow-xl/20 absolute right-0 top-12 z-50 w-60 origin-top-right rounded-xl bg-black flex flex-col gap-y-3 py-3 shadow-lg ring-1 ring-black/5 focus:outline-none`}
+              >
+                <input
+                  className='mx-4 mt-2 rounded-md ps-3 py-1 text-white bg-transparent border border-gray-500 placeholder-gray-600'
+                  type="text"
+                  placeholder='Nombre de la lista…'
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                />
+
+                <a id="list-menu-item-0" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowRightFromLine /> Insertar lista después
+                </a>
+                <a id="list-menu-item-1" role="menuitem" href="#" tabIndex={1} className="flex gap-3 items-center ps-6 py-2 text-sm text-white hover:bg-[--global-color-neutral-800]">
+                  <LuArrowLeftFromLine /> Insertar lista antes
+                </a>
+                <button
+                  id="list-menu-item-2"
+                  role="menuitem"
+                  tabIndex={1}
+                  onClick={handleAddNewStateList}
+                  className="gap-3 text-center py-2 text-sm mx-4 rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
+                >
+                  Agregar lista
+                </button>
+              </div>
+            </div>
+          </div>
+
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="flex flex-row gap-6 w-full overflow-x-auto overflow-y-visible items-start h-[calc(100vh-180px)]">
               {lists.map((list) => {
@@ -674,12 +745,11 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 <div
                                   ref={providedDraggable.innerRef}
                                   {...providedDraggable.draggableProps}
-                                  {...providedDraggable.dragHandleProps}
                                   className={clsx('bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4', {
                                     'opacity-90 shadow-lg': snapshotDraggable.isDragging
                                   })}
                                 >
-                                  <div className='flex justify-between items-start'>
+                                  <div className='flex justify-between items-start' {...providedDraggable.dragHandleProps}>
                                     <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
                                     <div className="relative inline-block text-left">
@@ -739,7 +809,47 @@ export default function BoardPage({ params }: BoardPageProps) {
                                   <div className='flex items-center justify-between mt-3'>
                                     <div className='w-12 h-12 rounded-full overflow-hidden'>
                                       <Image src={'https://picsum.photos/200/200?random=1'} width={60} height={60} alt="User profile photo" className="object-cover" />
+                    
                                     </div>
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                          >
+                            <DatePicker
+                              selected={card.dueDate ? new Date(card.dueDate) : null}
+                              onChange={async (date) => {
+                                if (!accessToken) return;
+                                try {
+                                  const response = await fetch(`${API}/card/updateCard/${card.id}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${accessToken}`
+                                    },
+                                    body: JSON.stringify({
+                                      dueDate: date ? date.toISOString().split('T')[0] : null
+                                    })
+                                  });
+                                  if (response.ok) {
+                                    refreshData();
+                                  }
+                                } catch (error) {
+                                  console.error('Error updating due date:', error);
+                                }
+                              }}
+                              locale="es"
+                              dateFormat="dd/MM/yyyy"
+                              placeholderText="Fecha límite"
+                              showIcon
+                              icon={<FaCalendarDay />}
+                              className={`mb-3 rounded-2xl py-1 px-2 text-sm border-none outline-none w-36 text-center ${
+                                card.dueDate && new Date(card.dueDate) < new Date() 
+                                  ? 'bg-red-600 text-white' 
+                                  : 'bg-[--global-color-neutral-600] text-white'
+                              }`}
+                            />
+                          </div>
                                     <button><BsShare /></button>
                                   </div>
                                 </div>
@@ -764,62 +874,6 @@ export default function BoardPage({ params }: BoardPageProps) {
                   </Droppable>
                 );
               })}
-
-              {/* 👉 Columna del botón “+” dentro del MISMO flex, alineada arriba */}
-              <div className="flex-none w-12 self-start">
-                <div className="relative inline-block" ref={listMenuRef}>
-                  <button
-                    type="button"
-                    aria-haspopup="true"
-                    aria-expanded={isListMenuOpen ? "true" : "false"}
-                    onClick={() => setIsListMenuOpen(v => !v)}
-                    className="rounded-xl p-3 text-2xl text-white bg-black"
-                    title="Agregar lista"
-                  >
-                    <FaPlus />
-                  </button>
-
-                  {/* Popover hacia la DERECHA del botón */}
-                  <div
-                    role="menu"
-                    tabIndex={-1}
-                    className={[
-                      "absolute top-0 left-full ml-3", // sale a la derecha
-                      "w-60 rounded-xl bg-black z-50 p-3 shadow-lg ring-1 ring-black/50",
-                      "flex flex-col gap-y-3",
-                      isListMenuOpen
-                        ? "opacity-100 translate-y-0 pointer-events-auto"
-                        : "opacity-0 -translate-y-1 pointer-events-none",
-                      "transition-all duration-150 ease-out"
-                    ].join(" ")}
-                  >
-                    <input
-                      className="rounded-md px-3 py-2 text-white bg-transparent border border-gray-600 placeholder-gray-500"
-                      type="text"
-                      placeholder="Nombre de la lista…"
-                      value={newListName}
-                      onChange={(e) => setNewListName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddNewStateList(); }}
-                    />
-
-                    <button type="button" className="flex items-center gap-2 text-left px-3 py-2 text-sm text-white hover:bg-zinc-800 rounded-md">
-                      <LuArrowRightFromLine /> Insertar lista después
-                    </button>
-
-                    <button type="button" className="flex items-center gap-2 text-left px-3 py-2 text-sm text-white hover:bg-zinc-800 rounded-md">
-                      <LuArrowLeftFromLine /> Insertar lista antes
-                    </button>
-
-                    <button
-                      onClick={handleAddNewStateList}
-                      className="mt-1 py-2 text-sm rounded-md text-white bg-[--global-color-primary-500] hover:bg-[--global-color-primary-700]"
-                    >
-                      Agregar lista
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {/* FIN columna “+” */}
             </div>
           </DragDropContext>
         </>
