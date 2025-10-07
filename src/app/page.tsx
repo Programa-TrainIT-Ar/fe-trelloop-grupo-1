@@ -1,7 +1,6 @@
 "use client";
-// --prueba--
-
-import { useState, useEffect } from "react";
+import {Hero} from "@/components/ui/Hero";
+import {Footer} from "@/components/common/Footer";
 
 export default function Home() {
  
