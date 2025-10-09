@@ -684,7 +684,7 @@ export default function BoardPage({ params }: BoardPageProps) {
       ) : (
         <>
           {/* Botón para crear nuevas listas - arriba a la derecha */}
-          <div className='flex justify-end mb-4'>
+          <div className='flex justify-end mb-4 relative overflow-visible'>
             <div className='relative'>
               <button
                 id="list-menu-button"
