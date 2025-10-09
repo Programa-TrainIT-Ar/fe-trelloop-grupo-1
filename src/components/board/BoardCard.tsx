@@ -90,13 +90,15 @@ export function BoardCard(props) {
       ) : (
         <div className="card-size flex-col items-center mb-5">
           <div className="board-card p-5 text-white flex flex-col justify-between">
-            <Image
-              src={props.image}
-              className="background-card-image"
-              alt="Imagen de tablero"
-              layout="fill"
-              objectFit="cover"
-            />
+            {props.image && (
+              <Image
+                src={props.image}
+                className="background-card-image"
+                alt="Imagen de tablero"
+                layout="fill"
+                objectFit="cover"
+              />
+            )}
 
             <div className="board-info"></div>
             <div className="z-10">

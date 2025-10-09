@@ -90,3 +90,25 @@
     margin-left: 1rem;
 }
 
+/* SweetAlert2 custom styles */
+.swal2-container {
+    z-index: 99999 !important;
+}
+
+.swal2-popup {
+    z-index: 99999 !important;
+}
+
+.swal2-backdrop-show {
+    z-index: 99998 !important;
+}
+.swal2-outline-confirm {
+    background: transparent !important;
+    border: 2px solid #6A5FFF !important;
+    color: #6A5FFF !important;
+}
+
+.swal2-outline-confirm:hover {
+    background: #6A5FFF !important;
+    color: white !important;
+}

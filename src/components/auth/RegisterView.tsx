@@ -12,7 +12,6 @@ import Swal from "sweetalert2";
 import "../../styles/register.css";
 import "../../styles/globals.css";
 import { registerController } from "@/lib/registerController";
-import BoardMenu from "@/components/board/BoardMenu";
 
 export default function RegisterView() {
   const router = useRouter();
@@ -41,6 +40,30 @@ export default function RegisterView() {
       [name]: value,
     }));
   }
+
+  const handleGoBack = () => {
+    Swal.fire({
+      icon: "warning",
+      title: "¿Estás seguro que deseas salir?",
+      text: "Los datos no guardados se perderán.",
+      background: "rgb(26, 26, 26)",
+      iconColor: "#6A5FFF",
+      color: "#FFFFFF",
+      showCancelButton: true,
+      confirmButtonColor: "#6A5FFF",
+      cancelButtonColor: "#FB7A7A",
+      confirmButtonText: "Salir",
+      cancelButtonText: "Cancelar",
+      customClass: {
+        popup: "swal2-dark",
+        confirmButton: "swal2-outline-confirm",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.push("/");
+      }
+    });
+  };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,7 +97,6 @@ export default function RegisterView() {
 
   return (
     <>
-      
       <Image
         alt="elipse-izquierdo"
         src={elipseIzquierdo}
@@ -102,10 +124,11 @@ export default function RegisterView() {
           </div>
 
           <div className="w-full md:w-7/12 flex justify-center">
-            <form
-              className="grid grid-cols-2 gap-4 w-[661px] mt-[80px]"
-              onSubmit={handleSubmit}
-            >
+            <div className="w-[661px] mt-[80px]">
+              <form
+                className="grid grid-cols-2 gap-4"
+                onSubmit={handleSubmit}
+              >
               <div>
                 <label htmlFor="firstName" className="label-register">
                   Nombres
@@ -267,6 +290,7 @@ export default function RegisterView() {
                 </div>
               </div>
             </form>
+            </div>
           </div>
         </div>
       </div>

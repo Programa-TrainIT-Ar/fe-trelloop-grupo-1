@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, use } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { FaPlus } from "react-icons/fa6";
@@ -51,11 +52,12 @@ interface List {
 }
 
 interface BoardPageProps {
-  params: { boardId: string };
+  params: Promise<{ boardId: string }>;
 }
 
 export default function BoardPage({ params }: BoardPageProps) {
-  const [boardId, setBoardId] = useState<string | null>(params.boardId ?? null);
+  const resolvedParams = use(params);
+  const [boardId, setBoardId] = useState<string | null>(resolvedParams.boardId ?? null);
   const [boardData, setBoardData] = useState<any>(null);
   const [cards, setCards] = useState<Card[]>([]);
   const [lists, setLists] = useState<List[]>([]);
@@ -63,7 +65,9 @@ export default function BoardPage({ params }: BoardPageProps) {
   const { accessToken } = useAuthStore();
   const [activeSection, setActiveSection] = useState<'backlog' | 'listas'>('backlog');
   const [showMenu, setShowMenu] = useState<{ [key: string]: boolean }>({});
+  const [menuPosition, setMenuPosition] = useState<{ [key: string]: { top: number, left: number } }>({});
   const menuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const buttonRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const router = useRouter();
   const [showSharePanel, setShowSharePanel] = useState(false);
 
@@ -90,10 +94,8 @@ export default function BoardPage({ params }: BoardPageProps) {
   }, [boardData, myUserId]);
 
   useEffect(() => {
-    if (params?.boardId) setBoardId(params.boardId);
-
-
-  }, [params]);
+    if (resolvedParams?.boardId) setBoardId(resolvedParams.boardId);
+  }, [resolvedParams]);
 
   const calculatePriority = (dueDate?: string | null): 'Baja' | 'Media' | 'Alta' | null => {
     if (!dueDate) return null;
@@ -248,6 +250,7 @@ export default function BoardPage({ params }: BoardPageProps) {
   if (!boardData) return <div className='text-white'>Cargando...</div>;
 
   const handleSectionChange = (section: 'backlog' | 'listas') => setActiveSection(section);
+  const toggleListMenu = () => setIsListMenuOpen(!isListMenuOpen);
 
   const handleAddNewStateList = async () => {
     if (!newListName.trim()) {
@@ -663,7 +666,7 @@ export default function BoardPage({ params }: BoardPageProps) {
                 type="button"
                 aria-haspopup="true"
                 aria-expanded={isListMenuOpen ? "true" : "false"}
-                onClick={toggleListMenu}
+                onClick={() => setIsListMenuOpen(!isListMenuOpen)}
                 className='relative rounded-xl p-3 text-2xl text-white bg-black'
               >
                 <FaPlus />
@@ -704,7 +707,7 @@ export default function BoardPage({ params }: BoardPageProps) {
           </div>
 
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="flex flex-row gap-6 w-full overflow-x-auto overflow-y-visible items-start h-[calc(100vh-180px)]">
+            <div className="flex flex-row gap-6 w-full overflow-x-auto h-[calc(100vh-180px)]">
               {lists.map((list) => {
                 const cardsInList = cards.filter((card) =>
                   card.listId != null ? card.listId === list.id
@@ -718,9 +721,10 @@ export default function BoardPage({ params }: BoardPageProps) {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className={clsx(
-                          'flex-none w-80 p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4',
+                          'flex-none w-80 h-full p-1 border border-[--global-color-neutral-700] rounded-2xl bg-[--global-color-neutral-800] flex flex-col gap-4 overflow-y-auto',
                           { 'ring-2 ring-offset-2 ring-blue-500': snapshot.isDraggingOver }
                         )}
+                        style={{ overflow: 'visible' }}
                       >
                         <div className='flex justify-between items-center px-2 py-1 text-xl rounded-lg text-center text-white bg-zinc-700'>
                           <h2 title={list.name} className='truncate max-w-[70%]'>{list.name}</h2>
@@ -745,27 +749,49 @@ export default function BoardPage({ params }: BoardPageProps) {
                                 <div
                                   ref={providedDraggable.innerRef}
                                   {...providedDraggable.draggableProps}
+                                  {...providedDraggable.dragHandleProps}
                                   className={clsx('bg-[--global-color-neutral-700] p-4 rounded-lg text-white mb-4', {
                                     'opacity-90 shadow-lg': snapshotDraggable.isDragging
                                   })}
                                 >
-                                  <div className='flex justify-between items-start' {...providedDraggable.dragHandleProps}>
+                                  <div className='flex justify-between items-start'>
                                     <h3 className='mb-3 bg-[--global-color-neutral-600] rounded-2xl py-1 px-2'>{card.title}</h3>
 
                                     <div className="relative inline-block text-left">
                                       <button
-                                        onClick={() => setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }))}
+                                        ref={(el) => {
+                                          if (el) { buttonRefs.current.set(card.id, el); } else { buttonRefs.current.delete(card.id); }
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const buttonEl = buttonRefs.current.get(card.id);
+                                          if (buttonEl) {
+                                            const rect = buttonEl.getBoundingClientRect();
+                                            setMenuPosition(prev => ({
+                                              ...prev,
+                                              [card.id]: {
+                                                top: rect.bottom + 5,
+                                                left: rect.left - 200
+                                              }
+                                            }));
+                                          }
+                                          setShowMenu(prev => ({ ...prev, [card.id]: !prev[card.id] }));
+                                        }}
                                         className="text-white text-lg hover:opacity-80"
                                       >
                                         <FaEllipsisH />
                                       </button>
 
-                                      {showMenu[card.id] && (
+                                      {showMenu[card.id] && createPortal(
                                         <div
                                           ref={(el) => {
                                             if (el) { menuRefs.current.set(card.id, el); } else { menuRefs.current.delete(card.id); }
                                           }}
-                                          className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4"
+                                          className="fixed w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[99999] p-4"
+                                          style={{
+                                            top: `${menuPosition[card.id]?.top || 0}px`,
+                                            left: `${menuPosition[card.id]?.left || 0}px`
+                                          }}
                                         >
                                           <button
                                             onClick={() => {
@@ -795,7 +821,8 @@ export default function BoardPage({ params }: BoardPageProps) {
                                             <span>Eliminar tarjeta</span>
                                             <FaTrash className="text-white text-lg" />
                                           </button>
-                                        </div>
+                                        </div>,
+                                        document.body
                                       )}
                                     </div>
                                   </div>

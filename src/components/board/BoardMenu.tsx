@@ -130,7 +130,7 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
       </button>
 
       {showMenu && (
-        <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[9999] p-4">
+        <div className="absolute left-0 top-[36px] w-56 rounded-xl bg-zinc-900 text-white shadow-lg z-[99999] p-4">
           <button
             onClick={handleEdit}
             className="flex items-center gap-3 w-full text-left text-base py-2 hover:bg-zinc-800 rounded-lg transition-colors"

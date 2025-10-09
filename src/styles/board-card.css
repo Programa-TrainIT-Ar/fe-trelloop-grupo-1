@@ -273,3 +273,16 @@
 .member-name {
     font-size: 1rem;
 }
+/* Fix for dropdown menu visibility */
+.board-card {
+    overflow: visible !important;
+}
+
+.card-size {
+    overflow: visible !important;
+}
+
+/* Ensure dropdown menu appears above other elements */
+.relative {
+    overflow: visible !important;
+}
