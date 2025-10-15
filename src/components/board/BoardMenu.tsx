@@ -10,8 +10,8 @@ import '../../styles/delModal.css'
 
 
 interface BoardMenuProps {
-  creatorId: string;
-  currentUserId: string;
+  creatorId?: string;
+  currentUserId?: string;
   boardId: number;  
 }
 
@@ -20,6 +20,8 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement | null>(null);
   const removeBoard = useBoardStore(state => state.removeBoard);
+
+  
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -118,7 +120,10 @@ const BoardMenu: React.FC<BoardMenuProps> = ({ creatorId, currentUserId, boardId
     }
   };
 
-  if (creatorId !== currentUserId) return null;
+  if (String(creatorId) !== String(currentUserId)) {
+  return null;
+}
+
 
   return (
     <div ref={menuRef} className="relative inline-block text-left">
